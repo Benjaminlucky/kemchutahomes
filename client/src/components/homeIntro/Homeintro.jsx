@@ -19,7 +19,7 @@ function Homeintro() {
             transition={{ duration: 1 }} // Animation duration
           >
             <div className="intro__titleWrapper flex gap-2 justify-center">
-              <div className="title flex flex-col gap-1 md:gap-2 font-bold text-center text-3xl md:text-7xl">
+              <div className="title flex flex-col uppercase gap-1 md:gap-2 font-bold text-center text-2xl md:text-7xl">
                 <h1>Building Futures,</h1>
                 <h1>
                   One <span className="text-customPurple-500">Estate</span> at a
