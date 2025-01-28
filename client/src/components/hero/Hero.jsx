@@ -89,9 +89,9 @@ function Hero() {
                     <div className="size__plot text-left">
                       <Link
                         to={data.link}
-                        className="bg-customPurple-500 w-full px-5 py-3 text-cent rounded-sm"
+                        className="bg-customPurple-500 uppercase font-bold w-full px-3 py-2 text-cent rounded-sm"
                       >
-                        Subscribe
+                        Subscribe now
                       </Link>
                     </div>
                   </div>
