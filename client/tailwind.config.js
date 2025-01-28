@@ -20,6 +20,18 @@ export default {
           800: "#4B0FA7",
           900: "#3F0C91", // Darkest tone
         },
+        customBlack: {
+          50: "#f5f5f5", // Very light gray
+          100: "#e5e5e5", // Light gray
+          200: "#d4d4d4", // Lighter gray
+          300: "#a3a3a3", // Medium-light gray
+          400: "#737373", // Medium gray
+          500: "#525252", // Dark gray
+          600: "#404040", // Darker gray
+          700: "#262626", // Very dark gray
+          800: "#171717", // Almost black
+          900: "#000000", // Pure black
+        },
       },
     },
   },
