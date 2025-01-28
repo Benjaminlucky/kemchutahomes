@@ -1,0 +1,7 @@
+.mainNavContent {
+  position: fixed !important;
+  top: 0;
+  background: white;
+  z-index: 50;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}

@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { mainLink, userLink } from "../../../data";
 import { IoMenu } from "react-icons/io5";
 import { IoCloseCircle } from "react-icons/io5";
+import "./header.css";
 
 function Header() {
   const location = useLocation();
@@ -16,8 +17,8 @@ function Header() {
   return (
     <div className="mainNavWrapper w-full">
       {/* Desktop Navigation */}
-      <div className="mainNavContent w-10/12 mx-auto md:py-5">
-        <div className="desktop__nav w-full flex items-center">
+      <div className="mainNavContent w-full  md:py-5 top-0 bg-white z-50 shadow-md">
+        <div className="desktop__nav w-10/12 mx-auto flex items-center">
           <div className="desktopNav__wrapper hidden md:flex w-full items-center justify-between">
             <div className="logo">
               <Link to="/">
@@ -97,7 +98,7 @@ function Header() {
                 <div className="bNavContent flex flex-col gap-3 w-11/12 mx-auto">
                   <Link
                     to="/signup"
-                    className="bg-customPurple-500 px-4 py-2 rounded-full text-center font-bold text-white border border-1 border-transparent  hover:border-customPurple-500 hover:bg-transparent hover:text-black"
+                    className="bg-customPurple-500 px-4 py-2 rounded-full text-center font-bold text-white border border-1 border-transparent hover:border-customPurple-500 hover:bg-transparent hover:text-black"
                   >
                     Get Started
                   </Link>
