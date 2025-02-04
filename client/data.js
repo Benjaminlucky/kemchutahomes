@@ -1,3 +1,5 @@
+import { LuSend } from "react-icons/lu";
+
 export const mainLink = [
   {
     name: "Home",
@@ -96,5 +98,140 @@ export const services = [
     service: "Real Estate Advisory",
     description:
       "At Kemchuta Homes Limited, we offer expert consultancy and advisory services for individuals and organizations seeking to navigate the real estate industry effectively. Whether you're new to real estate or an experienced investor, our team provides personalized guidance to help you make informed decisions. We specialize in market analysis, investment strategies, and property development insights, ensuring that your real estate ventures are based on solid expertise. Our goal is to empower you with the knowledge and support needed to maximize opportunities, mitigate risks, and achieve your objectives in the real estate market.",
+  },
+];
+
+export const developingEstate = [
+  {
+    estate: "Oxford Heights Estate",
+    location: "Awoyaya Lagos",
+    price: "7,000,000",
+    deposit: "Initial Deposit -  ₦1,000,000",
+    sqm: "500/sqm",
+    img: "./assets/oxfordAwoyayahero.png",
+  },
+  {
+    estate: "Kings Ocean Estate",
+    location: "Monastery Road, Sangotedo Lagos",
+    price: "32,000,000",
+    deposit: "Initial Deposit -  ₦5,000,000",
+    sqm: "500/sqm",
+    img: "./assets/kingsOceanHero.png",
+  },
+  {
+    estate: "Ife City Estate",
+    location: "Ilamija Epe Lagos",
+    price: "30,000,000",
+    deposit: "Initial Deposit -  ₦5,000,000",
+    sqm: "500/sqm",
+    img: "./assets/ifeCityHero.png",
+  },
+  {
+    estate: "Executive Villa Estate",
+    location: "Ilamija Epe Lagos",
+    price: "35,000,000",
+    deposit: "Initial Deposit -  ₦5,000,000",
+    sqm: "500/sqm",
+    img: "./assets/executiveVillaHero.png",
+  },
+  {
+    estate: "Laverna Gardens Estate",
+    location: "Eleko Lagos",
+    price: "15,000,000",
+    deposit: "Initial Deposit -  ₦3,000,000",
+    sqm: "500/sqm",
+    img: "./assets/lavernaGardensHero.png",
+  },
+];
+
+export const whychooseus = [
+  {
+    why: " Expertise and Experience",
+    desc: "Seasoned professionals with diverse backgrounds.",
+    icon: LuSend,
+  },
+  {
+    why: "Integrity and Transparency",
+    desc: "Our clients trust us because we prioritize their interests, communicate openly, and uphold ethical standards in all our dealings.",
+    icon: LuSend,
+  },
+  {
+    why: "Innovation and Adaptability",
+    desc: "We are dedicated to staying ahead of the curve, embracing new technologies, and adopting sustainable practices to deliver exceptional value.",
+    icon: LuSend,
+  },
+  {
+    why: "Customer-centric Approach",
+    desc: "We tailor our services to your unique needs, ensuring a personalized and stress-free experience.",
+    icon: LuSend,
+  },
+  {
+    why: "Community Impact",
+    desc: "We strive to make a positive impact on the areas where we operate.",
+    icon: LuSend,
+  },
+];
+
+export const allocate = [
+  {
+    img: "./assets/allocate1.jpeg",
+  },
+  {
+    img: "./assets/allocate2.jpeg",
+  },
+  {
+    img: "./assets/allocate3.jpeg",
+  },
+  {
+    img: "./assets/allocate4.jpeg",
+  },
+  {
+    img: "./assets/allocate5.jpeg",
+  },
+  {
+    img: "./assets/allocate6.jpeg",
+  },
+];
+
+export const reviews = [
+  {
+    name: "Alexander Ilori",
+    review:
+      "Kemchuta Homes made my land purchase seamless and stress-free! Their team was professional, transparent, and guided me every step of the way. Highly recommended!",
+    img: "./assets/review1.jpg",
+    rating: 5,
+    investment: "Oxford Heights Investor",
+  },
+  {
+    name: "Roseline Omobola",
+    review:
+      "A fantastic experience from start to finish! The team at Kemchuta Homes was patient, reliable, and made owning land in Lagos a smooth and enjoyable process",
+    img: "./assets/review2.jpg",
+    rating: 4,
+    investment: "Laverna Gardens Investor",
+  },
+  {
+    name: "Julian Omorodion",
+    review:
+      "I was impressed by their honesty and professionalism. Kemchuta Homes provided genuine land with no hidden issues, and the process was surprisingly straightforward!",
+    img: "./assets/review3.jpg",
+    rating: 5,
+    investment: "Elegant Homes Investor",
+  },
+  {
+    name: "Jude Obaro",
+    review:
+      "Kemchuta Homes exceeded my expectations! They handled everything with care, ensuring a hassle-free experience. I now own prime land in Lagos with confidence!",
+    img: "./assets/review4.jpg",
+    rating: 4.2,
+    investment: "Nortland Estate Investors",
+  },
+  {
+    name: "Saheed Ogundipe",
+    review:
+      "From inquiry to ownership, the service was top-notch! Their dedication to customer satisfaction made buying land in Lagos easy and stress-free. Highly trustworthy!",
+    img: "./assets/review5.avif",
+    rating: 3,
+    investment: "Twins City Investor",
   },
 ];
