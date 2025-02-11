@@ -54,7 +54,9 @@ function Hero() {
                   <div className="logo">
                     <img
                       src={data.estateLogo}
-                      className="w-[100px] md:w-[200px] object-cover itm-center"
+                      className={`w-[100px] md:w-[200px] object-cover itm-center ${
+                        index === 2 ? "!w-[90px]" : ""
+                      }`}
                       alt={`${data.estateName} 'Logo`}
                     />
                   </div>
@@ -82,7 +84,9 @@ function Hero() {
                     <div className="logo">
                       <img
                         src={data.estateLogo}
-                        className="w-[150px] md:w-[200px] object-contain md:object-cover itm-center transform !translate-y-2/2"
+                        className={`w-[150px] md:w-[200px] object-contain md:object-cover itm-center transform !translate-y-2/2 ${
+                          index === 2 ? "!w-[80px]" : ""
+                        }`}
                         alt={`${data.estateName} 'Logo`}
                       />
                     </div>

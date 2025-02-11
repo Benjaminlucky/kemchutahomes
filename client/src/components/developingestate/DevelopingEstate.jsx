@@ -43,7 +43,8 @@ function DevelopingEstate() {
             }}
           >
             <h3 className="text-3xl md:text-5xl font-bold mb-8 uppercase">
-              See our Fast Developing Estate
+              See our <span className="text-customPurple-500">Fast</span>{" "}
+              Developing Estate
             </h3>
           </motion.div>
 

@@ -45,7 +45,7 @@ function Reviews() {
           className="review__title text-3xl md:text-5xl font-bold mb-12 md:mb-32"
           variants={titleVariant}
         >
-          <h3 className="text-center">
+          <h3 className="text-center uppercase">
             What <span className="text-purple-600">Investors</span> Are Saying
           </h3>
         </motion.div>
