@@ -235,3 +235,123 @@ export const reviews = [
     investment: "Twins City Investor",
   },
 ];
+
+export const values = [
+  {
+    letter: "K",
+    title: "Knowledge",
+    text: "We continuously seek knowledge to improve our services and offerings. Through research, training, and professional development, we stay ahead in the real estate industry, ensuring that our clients benefit from informed and well-executed decisions.",
+  },
+  {
+    letter: "E",
+    title: "Excellence",
+    text: "We are committed to delivering superior quality and outstanding service. Our team strives for perfection in every project, ensuring that we provide top-tier housing solutions that meet and exceed industry standards.",
+  },
+  {
+    letter: "M",
+    title: "Motivation",
+    text: "We stay driven and dedicated to achieving our goals and vision. Passion fuels our work, inspiring us to push boundaries, overcome challenges, and continuously seek better ways to serve our clients and communities.",
+  },
+  {
+    letter: "C",
+    title: "Customer Focus",
+    text: "We prioritize our clients’ needs, offering tailored solutions and exceptional experiences. By listening attentively and responding proactively, we create long-lasting relationships built on trust, satisfaction, and mutual growth.",
+  },
+  {
+    letter: "H",
+    title: "Honesty",
+    text: "We uphold the highest ethical standards, ensuring transparency in all dealings. We believe in open communication, fair transactions, and integrity, making us a trusted and reputable name in the real estate sector.",
+  },
+  {
+    letter: "U",
+    title: "Unity",
+    text: "We foster teamwork and collaboration to achieve shared success. Our strength lies in our collective effort, where every member of our team contributes ideas, skills, and expertise to create impactful and sustainable housing solutions.",
+  },
+  {
+    letter: "T",
+    title: "Trust",
+    text: "We build lasting relationships through reliability, accountability, and commitment. Our clients, partners, and stakeholders can count on us to deliver on our promises, ensuring consistency and dependability in all our endeavors.",
+  },
+  {
+    letter: "A",
+    title: "Adaptability",
+    text: "We embrace change and innovation to provide modern and sustainable housing. In a rapidly evolving industry, we remain flexible and forward-thinking, adopting new technologies and trends that enhance the quality and efficiency of our projects.",
+  },
+];
+
+export const ourPeople = [
+  {
+    img: "./assets/ikem.jpg",
+    name: "Dr. Ikem Nwabueze",
+    role: "Chairman & CEO",
+    desc: "Dr. Ikem Nwabueze brings a wealth of expertise, with qualifications spanning across Finance, Risk Management, Statistics, Real Estate, Information Technology, and Management. His extensive academic and professional background is both locally and internationally recognized, equipping him with a diverse and comprehensive skill set to lead with vision and strategic insight.",
+  },
+  {
+    img: "./assets/henry.jpg",
+    name: "Mr. Henry Ugo",
+    role: "General Manager",
+    desc: "Mr. Henry Ugo is a distinguished Quantity Surveyor with extensive expertise in real estate development and management. His wealth of experience and exceptional skills have positioned him as a key leader in delivering successful and sustainable real estate projects.",
+  },
+  {
+    img: "./assets/gabriel.jpg",
+    name: "Mr. Gabriel Udoh",
+    role: "Logistics Manager",
+    desc: "Mr. Gabriel Udoh is a results-driven professional with over five years of diverse experience in real estate logistics. His versatility and expertise in managing logistics operations have consistently contributed to the efficient execution of real estate projects.",
+  },
+  {
+    img: "./assets/george.jpg",
+    name: "Barr. George C. Nwibo",
+    role: "Legal Counsel",
+    desc: "Barr. George C. Nwibo is an accomplished legal practitioner with extensive experience in the real estate industry. His in-depth knowledge and expertise in real estate law make him a trusted advisor, providing sound legal guidance in all aspects of the sector.",
+  },
+];
+
+export const support = [
+  {
+    name: "Contact",
+    link: "/",
+  },
+  {
+    name: "Refund Policy",
+    link: "/",
+  },
+  {
+    name: "FAQS",
+    link: "/",
+  },
+  {
+    name: "Legal",
+    link: "/",
+  },
+  {
+    name: "Terms & Conditions",
+    link: "/",
+  },
+  {
+    name: "Privacy Policy",
+    link: "/",
+  },
+];
+
+export const Social = [
+  {
+    name: "Instagram",
+    link: "/",
+  },
+  {
+    name: "Facebook",
+    link: "/",
+  },
+  {
+    name: "Linkedin",
+    link: "/",
+  },
+  {
+    name: "Twitter",
+    link: "/",
+  },
+  {
+    name: "WhatsApp",
+    link: "/",
+  },
+];
