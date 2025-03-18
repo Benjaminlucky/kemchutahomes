@@ -313,6 +313,18 @@ export const ourPeople = [
     role: "Company Lawyer",
     desc: " Chioma is a dedicated and dynamic legal practitioner with over a decade of diverse and impactful experience. She is passionate about navigating the complexities of corporate governance, property law, commercial law, intellectual property, and litigation. As the Principal Partner at De Bethel Attorneys, she brings a wealth of expertise to her practice. Currently, she serves as the In-House Counsel at Kemchuta Homes Limited, where she plays a pivotal role in ensuring legal compliance and strategic advisory.",
   },
+  {
+    img: "./assets/gloria.jpg",
+    name: "Gloria Iton Bassey",
+    role: "Admin Manager",
+    desc: "An Electronics and Communications Engineer, she serves as the Administrative Manager at Kemchuta Homes Limited. She leverages her technical background, strategic mindset, and collaborative spirit to ensure smooth operations and company growth. Committed to efficiency, she fosters a positive work environment while upholding the company’s excellence in real estate.",
+  },
+  {
+    img: "./assets/tina.jpg",
+    name: "Tina Ogochukwu",
+    role: "Marketing Manager",
+    desc: "With a Master’s in Medical Sociology, she serves as the Marketing Manager at Kemchuta Homes Limited. She leverages her analytical skills, strategic mindset, and collaborative approach to drive brand growth and market expansion. Committed to innovation, she fosters strong client relationships while upholding the company’s standard of excellence in the industry.",
+  },
 ];
 
 export const support = [
