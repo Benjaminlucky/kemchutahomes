@@ -22,7 +22,7 @@ function Header() {
           <div className="desktopNav__wrapper hidden md:flex w-full items-center justify-between">
             <div className="logo">
               <Link to="/">
-                <img src="./assets/kemchutaMainLogo.svg" alt="Logo" />
+                <img src="/assets/kemchutaMainLogo.svg" alt="Logo" />
               </Link>
             </div>
             <div className="desk__nav flex justify-end w-4/5">
@@ -67,7 +67,7 @@ function Header() {
           <div className="mobile__logo pl-5">
             <Link to="/">
               <img
-                src="./assets/kemchutaMainLogo.svg"
+                src="/assets/kemchutaMainLogo.svg"
                 alt="Kemchuta Homes Limited Logo"
                 className="w-[200px]"
               />

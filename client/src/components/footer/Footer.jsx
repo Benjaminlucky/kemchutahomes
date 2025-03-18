@@ -22,7 +22,7 @@ function Footer() {
             <div className="footers">
               <div className="top">
                 <img
-                  src="./assets/logoWhite.png"
+                  src="/assets/logoWhite.png"
                   alt="Kemchuta Homes Limited White Logo"
                 />
               </div>

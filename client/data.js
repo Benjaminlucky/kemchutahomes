@@ -1,4 +1,13 @@
 import { LuSend } from "react-icons/lu";
+import { LuFence } from "react-icons/lu";
+import { IoWater } from "react-icons/io5";
+import { MdElectricBolt } from "react-icons/md";
+import { FaWaterLadder } from "react-icons/fa6";
+import { FaPersonSwimming } from "react-icons/fa6";
+import { IoIosFitness } from "react-icons/io";
+import { GiStreetLight } from "react-icons/gi";
+import { IoIosCheckmarkCircle } from "react-icons/io";
+import { TbRoad } from "react-icons/tb";
 
 export const mainLink = [
   {
@@ -358,6 +367,7 @@ export const Social = [
 
 export const DetailedEstate = [
   {
+    id: 1,
     estate: "Oxford Heights Estate",
     address: "Phase 1 Asaba Registered Survey",
     title: "CofO in-view",
@@ -366,9 +376,66 @@ export const DetailedEstate = [
     desc: "A premier real estate destination that checks all the boxes for modern living. Oxford Heights Phase 1 Asaba, located along the Benin-Asaba Expressway, is a premier real estate destination that checks all the boxes for modern living. With a government-approved title, top-tier infrastructure, instant allocation, and flexible payment plans, it offers unmatched convenience and comfort. This estate is equipped with essential amenities such as a well-planned drainage system, CCTV surveillance, gated premises, 24-hour power supply, well-maintained roads, eco-friendly living spaces, and robust security measures, setting a new standard for residential excellence.",
     category: "Land",
     depositPercentage: "30% Initial Deposit",
-    img: "./assets/oxford.jpg",
+    img: "/assets/oxford.jpg",
+    amenities: [
+      {
+        name: "Perimeter Fence",
+        icon: LuFence,
+      },
+      {
+        name: "Portable Water",
+        icon: IoWater,
+      },
+      {
+        name: "24/7 Power Supply",
+        icon: MdElectricBolt,
+      },
+      {
+        name: "Paved Roads",
+        icon: MdElectricBolt,
+      },
+      {
+        name: "Drainage System",
+        icon: FaWaterLadder,
+      },
+      {
+        name: "Swimming Pool",
+        icon: FaPersonSwimming,
+      },
+      {
+        name: "Gym House",
+        icon: IoIosFitness,
+      },
+      {
+        name: " Street Lights",
+        icon: GiStreetLight,
+      },
+    ],
+    neighborhood: [
+      {
+        name: "Beside Enuani City",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "2 Minutes Drive to Iselle Azagba Junction",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "1 Minute Drive from Federal Housing Project",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "5 Minutes Drive to Asaba International Airport Junction",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Benin Asaba Expressway",
+        icon: IoIosCheckmarkCircle,
+      },
+    ],
   },
   {
+    id: 2,
     estate: "Kings Ocean View",
     address: "via Monastery Road Sangotedo | CofO in-view",
     title: "CofO in-view",
@@ -377,9 +444,67 @@ export const DetailedEstate = [
     desc: "Kings Oceanview Estate is your gateway to luxurious coastal living. This exclusive residential paradise is ideally located behind the vibrant Novare Mall, via Monastery Road, Sangotedo, offering you an exquisite blend of tranquility and convenience. With an enchanting ocean view along the coastal road, a visual delight that sets this estate apart and world-class amenities, this estate is designed to redefine the way you experience life. Rest assured, your investment is secure with a “Government Approved Excision” title, marking it as a property that has received the government’s seal of approval.",
     category: "Land",
     depositPercentage: "30% Initial Deposit",
-    img: "./assets/kingsOcean.jpg",
+    img: "/assets/kingsOcean.jpg",
+    amenities: [
+      {
+        name: "Perimeter Fence",
+        icon: LuFence,
+      },
+      {
+        name: "Portable Water",
+        icon: IoWater,
+      },
+      {
+        name: "24/7 Power Supply",
+        icon: MdElectricBolt,
+      },
+      {
+        name: "Paved Roads",
+        icon: MdElectricBolt,
+      },
+      {
+        name: "Drainage System",
+        icon: FaWaterLadder,
+      },
+      {
+        name: "Swimming Pool",
+        icon: FaPersonSwimming,
+      },
+      {
+        name: "Gym House",
+        icon: IoIosFitness,
+      },
+      {
+        name: " Street Lights",
+        icon: GiStreetLight,
+      },
+    ],
+    neighborhood: [
+      {
+        name: "Shoprite Sangotedo",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Fountain Spring Estate",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Lagos State Housing Estate",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "The White Dove School",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Emperor Estate",
+        icon: IoIosCheckmarkCircle,
+      },
+    ],
   },
+
   {
+    id: 3,
     estate: "Northland City Estate",
     address: "Akodo-Ise, Ibeju-Lekki | CofO in-view",
     title: "CofO in-view",
@@ -388,9 +513,66 @@ export const DetailedEstate = [
     desc: "NORTHLAND CITY beckons as a sanctuary of tranquility and investment potential, offering a unique blend of residential and commercial spaces, perfect for your holiday escapes and promising outstanding returns on investment. Situated in close proximity to bustling commercial hubs, this estate is designed to harmonize relaxation and commerce, ensuring that both residents and investors experience the ultimate in convenience and appreciation.",
     category: "Land",
     depositPercentage: "30% Initial Deposit",
-    img: "./assets/northlandCity.jpg",
+    img: "/assets/northlandCity.jpg",
+    amenities: [
+      {
+        name: "Perimeter Fence",
+        icon: LuFence,
+      },
+      {
+        name: "Portable Water",
+        icon: IoWater,
+      },
+      {
+        name: "24/7 Power Supply",
+        icon: MdElectricBolt,
+      },
+      {
+        name: "Paved Roads",
+        icon: MdElectricBolt,
+      },
+      {
+        name: "Drainage System",
+        icon: FaWaterLadder,
+      },
+      {
+        name: "Swimming Pool",
+        icon: FaPersonSwimming,
+      },
+      {
+        name: "Gym House",
+        icon: IoIosFitness,
+      },
+      {
+        name: " Street Lights",
+        icon: GiStreetLight,
+      },
+    ],
+    neighborhood: [
+      {
+        name: "The Lekki Deep Seaport",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Lekki Free Trade Zone",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "La'Campaign Tropicana",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "The Dangote Jetty",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Dangote Refinery",
+        icon: IoIosCheckmarkCircle,
+      },
+    ],
   },
   {
+    id: 4,
     estate: "Kingsville Estate Phase 2",
     address: "Ketu-Epe (Facing the Expressway) Lagos State",
     title: "CofO in-view",
@@ -399,9 +581,66 @@ export const DetailedEstate = [
     desc: "In an era where royalty is synonymous with comfort, sophistication, and the epitome of refined taste, Kingsville Estate Phase 2 emerges as a regal haven for discerning individuals seeking the perfect blend of luxury and practicality. Located in the vibrant locale of Ketu-Epe, with its frontage gracing the major expressway, this estate offers an unparalleled opportunity to live like a king, surrounded by the finest amenities and in close proximity to essential conveniences. Kingsville Estate Phase 2 enjoys a prime location, in close proximity to Ketu Police Station, Ketu College, and an array of essential amenities. What’s more, it provides a direct link to Ikorodu and neighboring states, ensuring convenience and accessibility.",
     category: "Land",
     depositPercentage: "30% Initial Deposit",
-    img: "./assets/kingvilleEstate.jpg",
+    img: "/assets/kingvilleEstate.jpg",
+    amenities: [
+      {
+        name: "Perimeter Fence",
+        icon: LuFence,
+      },
+      {
+        name: "Portable Water",
+        icon: IoWater,
+      },
+      {
+        name: "24/7 Power Supply",
+        icon: MdElectricBolt,
+      },
+      {
+        name: "Paved Roads",
+        icon: MdElectricBolt,
+      },
+      {
+        name: "Drainage System",
+        icon: FaWaterLadder,
+      },
+      {
+        name: "Swimming Pool",
+        icon: FaPersonSwimming,
+      },
+      {
+        name: "Gym House",
+        icon: IoIosFitness,
+      },
+      {
+        name: " Street Lights",
+        icon: GiStreetLight,
+      },
+    ],
+    neighborhood: [
+      {
+        name: "Epe Resort",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Michael Otedola Housing Estate",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Isimi Lagos",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Kingsville Estate",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Yaba College of Technology",
+        icon: IoIosCheckmarkCircle,
+      },
+    ],
   },
   {
+    id: 5,
     estate: "Kingsville Annex Estate",
     address: "Sala, Epe-Ikorodu Expressway, Lagos State",
     title: "CofO in-view",
@@ -410,9 +649,66 @@ export const DetailedEstate = [
     desc: "In an era where royalty embodies comfort, sophistication, and refined taste, Kingsville Annex stands as a majestic retreat for those who seek the perfect fusion of luxury and practicality. Nestled in the vibrant heart of Ketu-Epe, with a prime frontage along the major expressway, this estate presents an unparalleled opportunity to experience regal living, surrounded by top-tier amenities and essential conveniences. Strategically positioned, Kingsville Annex is just moments away from Ketu Police Station, Ketu College, and a host of essential facilities. Additionally, it offers seamless connectivity to Ikorodu and neighboring states, ensuring unmatched convenience and accessibility.",
     category: "Land",
     depositPercentage: "30% Initial Deposit",
-    img: "./assets/kingsvilleAnnex.jpg",
+    img: "/assets/kingsvilleAnnex.jpg",
+    amenities: [
+      {
+        name: "Perimeter Fence",
+        icon: LuFence,
+      },
+      {
+        name: "Portable Water",
+        icon: IoWater,
+      },
+      {
+        name: "24/7 Power Supply",
+        icon: MdElectricBolt,
+      },
+      {
+        name: "Paved Roads",
+        icon: MdElectricBolt,
+      },
+      {
+        name: "Drainage System",
+        icon: FaWaterLadder,
+      },
+      {
+        name: "Swimming Pool",
+        icon: FaPersonSwimming,
+      },
+      {
+        name: "Gym House",
+        icon: IoIosFitness,
+      },
+      {
+        name: " Street Lights",
+        icon: GiStreetLight,
+      },
+    ],
+    neighborhood: [
+      {
+        name: "Epe Resort",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Michael Otedola Housing Estate",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Isimi Lagos",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Kingsville Estate",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Yaba College of Technology",
+        icon: IoIosCheckmarkCircle,
+      },
+    ],
   },
   {
+    id: 6,
     estate: "Palm Royale City",
     address: "Origorigo, Ibeju-Lekki, Lagos State",
     title: "CofO in-view",
@@ -421,9 +717,66 @@ export const DetailedEstate = [
     desc: "Imagine waking up to the gentle rhythm of the waves, the soft caress of the ocean breeze, and a vista that stretches out like a painter’s masterpiece – this is the everyday reality at Palm Royale City. Nestled in the heart of Origorigo, Ibeju Lekki, Lagos, this exquisite estate transcends mere living; it’s a portal to an unparalleled lifestyle experience.",
     category: "Land",
     depositPercentage: "30% Initial Deposit",
-    img: "./assets/palmRoyale.jpg",
+    img: "/assets/palmRoyale.jpg",
+    amenities: [
+      {
+        name: "Perimeter Fence",
+        icon: LuFence,
+      },
+      {
+        name: "Portable Water",
+        icon: IoWater,
+      },
+      {
+        name: "24/7 Power Supply",
+        icon: MdElectricBolt,
+      },
+      {
+        name: "Paved Roads",
+        icon: MdElectricBolt,
+      },
+      {
+        name: "Drainage System",
+        icon: FaWaterLadder,
+      },
+      {
+        name: "Swimming Pool",
+        icon: FaPersonSwimming,
+      },
+      {
+        name: "Gym House",
+        icon: IoIosFitness,
+      },
+      {
+        name: " Street Lights",
+        icon: GiStreetLight,
+      },
+    ],
+    neighborhood: [
+      {
+        name: "The Lekki Deep Seaport",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Lekki Free Trade Zone",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "La'Campaign Tropicana",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "The Dangote Jetty",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Dangote Refinery",
+        icon: IoIosCheckmarkCircle,
+      },
+    ],
   },
   {
+    id: 7,
     estate: "Laverna Gardens Estate",
     address: "After Pan-Atlantic University, Eleko, Lagos State",
     title: "CofO in-view",
@@ -432,9 +785,66 @@ export const DetailedEstate = [
     desc: "Nestled behind the prestigious HFP Paving Stones in Eleko, Ibeju Lekki, Laverna Gardens emerges as a beacon of opportunity in the ever-evolving landscape of New Lagos. With an aura of exclusivity, lifestyle enhancement, and high-yield investment potential, this real estate gem is your ticket to a prosperous future. Laverna Gardens is strategically positioned in Ibeju Lekki, a dynamic and rapidly advancing Local Government Area in Lagos, Nigeria. This region is hailed as the epicenter of development in Africa, with a bustling business hub and a cascade of ongoing commercial and infrastructural projects. Investing here promises a portfolio with a potential Return on Investment (ROI) of over 300%.",
     category: "Land",
     depositPercentage: "30% Initial Deposit",
-    img: "./assets/lavernaGardens.jpg",
+    img: "/assets/lavernaGardens.jpg",
+    amenities: [
+      {
+        name: "Perimeter Fence",
+        icon: LuFence,
+      },
+      {
+        name: "Portable Water",
+        icon: IoWater,
+      },
+      {
+        name: "24/7 Power Supply",
+        icon: MdElectricBolt,
+      },
+      {
+        name: "Paved Roads",
+        icon: MdElectricBolt,
+      },
+      {
+        name: "Drainage System",
+        icon: FaWaterLadder,
+      },
+      {
+        name: "Swimming Pool",
+        icon: FaPersonSwimming,
+      },
+      {
+        name: "Gym House",
+        icon: IoIosFitness,
+      },
+      {
+        name: " Street Lights",
+        icon: GiStreetLight,
+      },
+    ],
+    neighborhood: [
+      {
+        name: "Pan Atlantic University Eleko",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Eleganza Industrial City",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Alaro City",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Amen Estate",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Eleko Beach",
+        icon: IoIosCheckmarkCircle,
+      },
+    ],
   },
   {
+    id: 8,
     estate: "Executive Villa Estate",
     address: "Sangotedo, Monastery Road, Lagos State",
     title: "CofO in-view",
@@ -443,9 +853,66 @@ export const DetailedEstate = [
     desc: "Executive Villa is a luxury gated community located in the heart of Sangotedo, Lagos, Nigeria. With its prime location, state-of-the-art amenities, and competitive pricing, Executive Villa offers residents the perfect opportunity to live a life of luxury and convenience.",
     category: "Land",
     depositPercentage: "30% Initial Deposit",
-    img: "./assets/executiveVilla.jpg",
+    img: "/assets/executiveVilla.jpg",
+    amenities: [
+      {
+        name: "Perimeter Fence",
+        icon: LuFence,
+      },
+      {
+        name: "Portable Water",
+        icon: IoWater,
+      },
+      {
+        name: "24/7 Power Supply",
+        icon: MdElectricBolt,
+      },
+      {
+        name: "Paved Roads",
+        icon: MdElectricBolt,
+      },
+      {
+        name: "Drainage System",
+        icon: FaWaterLadder,
+      },
+      {
+        name: "Swimming Pool",
+        icon: FaPersonSwimming,
+      },
+      {
+        name: "Gym House",
+        icon: IoIosFitness,
+      },
+      {
+        name: " Street Lights",
+        icon: GiStreetLight,
+      },
+    ],
+    neighborhood: [
+      {
+        name: "Shoprite Sangotedo",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Fountain Spring Estate",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Lagos State Housing Estate",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "The White Dove School",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Emperor Estate",
+        icon: IoIosCheckmarkCircle,
+      },
+    ],
   },
   {
+    id: 9,
     estate: "Oxford Heights Estate Phase 2",
     address: "Ibusa, Asaba, Delta State",
     title: "CofO in-view",
@@ -454,9 +921,66 @@ export const DetailedEstate = [
     desc: "In an era where royalty signifies comfort, sophistication, and refined taste, Oxford Heights Phase 2, Ibusa emerges as a prestigious haven for those seeking the perfect blend of luxury and practicality. Ideally situated in the thriving community of Ibusa, with a prime frontage along the major expressway, this estate offers an exclusive opportunity to experience upscale living, surrounded by premium amenities and essential conveniences. Strategically located, Oxford Heights Phase 2, Ibusa is in close proximity to key landmarks, including security establishments, educational institutions, and essential facilities. With seamless connectivity to Asaba and neighboring regions, it ensures unparalleled convenience and accessibility.",
     category: "Land",
     depositPercentage: "30% Initial Deposit",
-    img: "./assets/oxfordIbusa.jpg",
+    img: "/assets/oxfordIbusa.jpg",
+    amenities: [
+      {
+        name: "Perimeter Fence",
+        icon: LuFence,
+      },
+      {
+        name: "Portable Water",
+        icon: IoWater,
+      },
+      {
+        name: "24/7 Power Supply",
+        icon: MdElectricBolt,
+      },
+      {
+        name: "Paved Roads",
+        icon: MdElectricBolt,
+      },
+      {
+        name: "Drainage System",
+        icon: FaWaterLadder,
+      },
+      {
+        name: "Swimming Pool",
+        icon: FaPersonSwimming,
+      },
+      {
+        name: "Gym House",
+        icon: IoIosFitness,
+      },
+      {
+        name: " Street Lights",
+        icon: GiStreetLight,
+      },
+    ],
+    neighborhood: [
+      {
+        name: "Beside Enuani City",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "2 Minutes Drive to Iselle Azagba Junction",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "1 Minute Drive from Federal Housing Project",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "5 Minutes Drive to Asaba International Airport Junction",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Benin Asaba Expressway",
+        icon: IoIosCheckmarkCircle,
+      },
+    ],
   },
   {
+    id: 10,
     estate: "Oxford Heights Estate Phase 1",
     address: "Isah Ogwashi Asaba, Delta State",
     title: "CofO in-view",
@@ -465,10 +989,67 @@ export const DetailedEstate = [
     desc: "In a world where elegance meets modern living, Oxford Heights Phase 1, Ibusa stands as a distinguished destination for those who desire both luxury and convenience. Perfectly positioned in the flourishing community of Ibusa, with direct access to the major expressway, this estate offers an exceptional opportunity to enjoy refined living surrounded by top-tier amenities and essential services. With a strategic location, Oxford Heights Phase 1, Ibusa is just minutes away from key landmarks, including security hubs, educational institutions, and vital facilities. Its seamless connectivity to Asaba and neighboring regions ensures effortless accessibility and a lifestyle of comfort and ease.",
     category: "Land",
     depositPercentage: "30% Initial Deposit",
-    img: "./assets/oxfordIbusa2.jpg",
+    img: "/assets/oxfordIbusa2.jpg",
+    amenities: [
+      {
+        name: "Perimeter Fence",
+        icon: LuFence,
+      },
+      {
+        name: "Portable Water",
+        icon: IoWater,
+      },
+      {
+        name: "24/7 Power Supply",
+        icon: MdElectricBolt,
+      },
+      {
+        name: "Paved Roads",
+        icon: MdElectricBolt,
+      },
+      {
+        name: "Drainage System",
+        icon: FaWaterLadder,
+      },
+      {
+        name: "Swimming Pool",
+        icon: FaPersonSwimming,
+      },
+      {
+        name: "Gym House",
+        icon: IoIosFitness,
+      },
+      {
+        name: " Street Lights",
+        icon: GiStreetLight,
+      },
+    ],
+    neighborhood: [
+      {
+        name: "Beside Enuani City",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "2 Minutes Drive to Iselle Azagba Junction",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "1 Minute Drive from Federal Housing Project",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "5 Minutes Drive to Asaba International Airport Junction",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Benin Asaba Expressway",
+        icon: IoIosCheckmarkCircle,
+      },
+    ],
   },
   {
-    estate: "Oxford Heights Estate Phase 3",
+    id: 11,
+    estate: "Oxford Heights Park",
     address: "Sangotedo, Monastery Road, Lagos State",
     title: "CofO in-view",
     price: "10,000,000",
@@ -476,9 +1057,66 @@ export const DetailedEstate = [
     desc: "Oxford Heights Park is more than just a place to live—it’s a statement of style, comfort, and modern elegance. Located in the thriving community of Sangotedo, this exclusive estate offers a perfect blend of tranquility and accessibility, making it an ideal choice for those who value both luxury and convenience. With its prime positioning along the major expressway, Oxford Heights Park provides seamless connectivity to Asaba and surrounding areas. Residents will enjoy a well-planned environment with top-tier amenities, security, and essential facilities, creating the perfect setting for a vibrant and fulfilling lifestyle.",
     category: "Land",
     depositPercentage: "30% Initial Deposit",
-    img: "./assets/oxfordPark.jpg",
+    img: "/assets/oxfordPark.jpg",
+    amenities: [
+      {
+        name: "Perimeter Fence",
+        icon: LuFence,
+      },
+      {
+        name: "Portable Water",
+        icon: IoWater,
+      },
+      {
+        name: "24/7 Power Supply",
+        icon: MdElectricBolt,
+      },
+      {
+        name: "Paved Roads",
+        icon: TbRoad,
+      },
+      {
+        name: "Drainage System",
+        icon: FaWaterLadder,
+      },
+      {
+        name: "Swimming Pool",
+        icon: FaPersonSwimming,
+      },
+      {
+        name: "Gym House",
+        icon: IoIosFitness,
+      },
+      {
+        name: " Street Lights",
+        icon: GiStreetLight,
+      },
+    ],
+    neighborhood: [
+      {
+        name: "Shoprite Sangotedo",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Fountain Spring Estate",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Lagos State Housing Estate",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "The White Dove School",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Emperor Estate",
+        icon: IoIosCheckmarkCircle,
+      },
+    ],
   },
   {
+    id: 12,
     estate: "Agunecheibe Luxury Homes",
     address: "Okpanam, Asaba, Delta State",
     title: "CofO in-view",
@@ -487,6 +1125,62 @@ export const DetailedEstate = [
     desc: "Agunecheibe Luxury Homes redefines upscale living with a perfect blend of elegance, comfort, and modern sophistication. Nestled in a prime location, this prestigious estate offers an exclusive sanctuary for those who appreciate fine living and premium amenities.Designed for convenience and accessibility, Agunecheibe Luxury Homes provides seamless connectivity to key landmarks, essential facilities, and major road networks. With top-tier infrastructure, serene surroundings, and a commitment to luxury, this estate is the ultimate destination for those seeking a refined and fulfilling lifestyle.",
     category: "Land",
     depositPercentage: "30% Initial Deposit",
-    img: "./assets/agunecheibeLuxuryHome.jpg",
+    img: "/assets/agunecheibeLuxuryHome.jpg",
+    amenities: [
+      {
+        name: "Perimeter Fence",
+        icon: LuFence,
+      },
+      {
+        name: "Portable Water",
+        icon: IoWater,
+      },
+      {
+        name: "24/7 Power Supply",
+        icon: MdElectricBolt,
+      },
+      {
+        name: "Paved Roads",
+        icon: MdElectricBolt,
+      },
+      {
+        name: "Drainage System",
+        icon: FaWaterLadder,
+      },
+      {
+        name: "Swimming Pool",
+        icon: FaPersonSwimming,
+      },
+      {
+        name: "Gym House",
+        icon: IoIosFitness,
+      },
+      {
+        name: " Street Lights",
+        icon: GiStreetLight,
+      },
+    ],
+    neighborhood: [
+      {
+        name: "Beside Enuani City",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "2 Minutes Drive to Iselle Azagba Junction",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "1 Minute Drive from Federal Housing Project",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "5 Minutes Drive to Asaba International Airport Junction",
+        icon: IoIosCheckmarkCircle,
+      },
+      {
+        name: "Benin Asaba Expressway",
+        icon: IoIosCheckmarkCircle,
+      },
+    ],
   },
 ];
