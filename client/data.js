@@ -389,6 +389,8 @@ export const DetailedEstate = [
     category: "Land",
     depositPercentage: "30% Initial Deposit",
     img: "/assets/oxford.jpg",
+    sytemap:
+      "https://sytemap.kemchutahomesltd.com//map/kingsville-estate-phase-2",
     amenities: [
       {
         name: "Perimeter Fence",
@@ -513,6 +515,13 @@ export const DetailedEstate = [
         icon: IoIosCheckmarkCircle,
       },
     ],
+    paymentPlan: [
+      {
+        outright: "₦32,000,000",
+        plot: "500sqm",
+        initialDeposit: "₦5,000,000",
+      },
+    ],
   },
 
   {
@@ -582,13 +591,20 @@ export const DetailedEstate = [
         icon: IoIosCheckmarkCircle,
       },
     ],
+    paymentPlan: [
+      {
+        outright: "₦6,000,000",
+        plot: "500sqm",
+        initialDeposit: "₦1,000,000",
+      },
+    ],
   },
   {
     id: 4,
     estate: "Kingsville Estate Phase 2",
     address: "Ketu-Epe (Facing the Expressway) Lagos State",
     title: "CofO in-view",
-    price: "2,500,000",
+    price: "4,000,000",
     sqm: "500sqm Residential Plot",
     desc: "In an era where royalty is synonymous with comfort, sophistication, and the epitome of refined taste, Kingsville Estate Phase 2 emerges as a regal haven for discerning individuals seeking the perfect blend of luxury and practicality. Located in the vibrant locale of Ketu-Epe, with its frontage gracing the major expressway, this estate offers an unparalleled opportunity to live like a king, surrounded by the finest amenities and in close proximity to essential conveniences. Kingsville Estate Phase 2 enjoys a prime location, in close proximity to Ketu Police Station, Ketu College, and an array of essential amenities. What’s more, it provides a direct link to Ikorodu and neighboring states, ensuring convenience and accessibility.",
     category: "Land",
@@ -650,13 +666,20 @@ export const DetailedEstate = [
         icon: IoIosCheckmarkCircle,
       },
     ],
+    paymentPlan: [
+      {
+        outright: "₦4,000,000",
+        plot: "500sqm",
+        initialDeposit: "₦500,000",
+      },
+    ],
   },
   {
     id: 5,
     estate: "Kingsville Annex Estate",
     address: "Sala, Epe-Ikorodu Expressway, Lagos State",
     title: "CofO in-view",
-    price: "5,000,000",
+    price: "6,000,000",
     sqm: "500sqm Residential Plot",
     desc: "In an era where royalty embodies comfort, sophistication, and refined taste, Kingsville Annex stands as a majestic retreat for those who seek the perfect fusion of luxury and practicality. Nestled in the vibrant heart of Ketu-Epe, with a prime frontage along the major expressway, this estate presents an unparalleled opportunity to experience regal living, surrounded by top-tier amenities and essential conveniences. Strategically positioned, Kingsville Annex is just moments away from Ketu Police Station, Ketu College, and a host of essential facilities. Additionally, it offers seamless connectivity to Ikorodu and neighboring states, ensuring unmatched convenience and accessibility.",
     category: "Land",
@@ -718,6 +741,13 @@ export const DetailedEstate = [
         icon: IoIosCheckmarkCircle,
       },
     ],
+    paymentPlan: [
+      {
+        outright: "₦6,000,000",
+        plot: "500sqm",
+        initialDeposit: "₦1,000,000",
+      },
+    ],
   },
   {
     id: 6,
@@ -730,6 +760,7 @@ export const DetailedEstate = [
     category: "Land",
     depositPercentage: "30% Initial Deposit",
     img: "/assets/palmRoyale.jpg",
+    sytemap: "https://sytemap.kemchutahomesltd.com//map/palm-royale-city",
     amenities: [
       {
         name: "Perimeter Fence",
@@ -784,6 +815,13 @@ export const DetailedEstate = [
       {
         name: "Dangote Refinery",
         icon: IoIosCheckmarkCircle,
+      },
+    ],
+    paymentPlan: [
+      {
+        outright: "₦15,000,000",
+        plot: "450sqm",
+        initialDeposit: "₦5,000,000",
       },
     ],
   },
@@ -854,13 +892,20 @@ export const DetailedEstate = [
         icon: IoIosCheckmarkCircle,
       },
     ],
+    paymentPlan: [
+      {
+        outright: "₦17,000,000",
+        plot: "500sqm",
+        initialDeposit: "₦5,000,000",
+      },
+    ],
   },
   {
     id: 8,
     estate: "Executive Villa Estate",
     address: "Sangotedo, Monastery Road, Lagos State",
     title: "CofO in-view",
-    price: "25,000,000",
+    price: "30,000,000",
     sqm: "500sqm Residential Plot",
     desc: "Executive Villa is a luxury gated community located in the heart of Sangotedo, Lagos, Nigeria. With its prime location, state-of-the-art amenities, and competitive pricing, Executive Villa offers residents the perfect opportunity to live a life of luxury and convenience.",
     category: "Land",
@@ -920,6 +965,13 @@ export const DetailedEstate = [
       {
         name: "Emperor Estate",
         icon: IoIosCheckmarkCircle,
+      },
+    ],
+    paymentPlan: [
+      {
+        outright: "₦30,000,000",
+        plot: "500sqm",
+        initialDeposit: "₦5,000,000",
       },
     ],
   },
@@ -990,13 +1042,20 @@ export const DetailedEstate = [
         icon: IoIosCheckmarkCircle,
       },
     ],
+    paymentPlan: [
+      {
+        outright: "₦6,500,000",
+        plot: "450sqm",
+        initialDeposit: "₦1,000,000",
+      },
+    ],
   },
   {
     id: 10,
     estate: "Oxford Heights Estate Phase 1",
     address: "Isah Ogwashi Asaba, Delta State",
     title: "CofO in-view",
-    price: "9,000,000",
+    price: "10,000,000",
     sqm: "464sqm Residential Plot",
     desc: "In a world where elegance meets modern living, Oxford Heights Phase 1, Ibusa stands as a distinguished destination for those who desire both luxury and convenience. Perfectly positioned in the flourishing community of Ibusa, with direct access to the major expressway, this estate offers an exceptional opportunity to enjoy refined living surrounded by top-tier amenities and essential services. With a strategic location, Oxford Heights Phase 1, Ibusa is just minutes away from key landmarks, including security hubs, educational institutions, and vital facilities. Its seamless connectivity to Asaba and neighboring regions ensures effortless accessibility and a lifestyle of comfort and ease.",
     category: "Land",
@@ -1056,6 +1115,13 @@ export const DetailedEstate = [
       {
         name: "Benin Asaba Expressway",
         icon: IoIosCheckmarkCircle,
+      },
+    ],
+    paymentPlan: [
+      {
+        outright: "₦10,000,000",
+        plot: "464sqm",
+        initialDeposit: "₦3,000,000",
       },
     ],
   },
@@ -1126,6 +1192,13 @@ export const DetailedEstate = [
         icon: IoIosCheckmarkCircle,
       },
     ],
+    paymentPlan: [
+      {
+        outright: "₦12,000,000",
+        plot: "500sqm",
+        initialDeposit: "₦4,000,000",
+      },
+    ],
   },
   {
     id: 12,
@@ -1192,6 +1265,13 @@ export const DetailedEstate = [
       {
         name: "Benin Asaba Expressway",
         icon: IoIosCheckmarkCircle,
+      },
+    ],
+    paymentPlan: [
+      {
+        outright: "₦10,000,000",
+        plot: "450sqm",
+        initialDeposit: "₦3,000,000",
       },
     ],
   },

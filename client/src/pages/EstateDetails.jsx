@@ -135,6 +135,70 @@ function EstateDetails() {
                 </div>
               </div>
             </div>
+            {/* Payment Plan Section */}
+          </div>
+          <div className="paymentPlan w-full">
+            <div className="paymentWrapper">
+              <h3 className="mt-4 md:mt-12 text-2xl font-bold mb-4 md:py-8 text-center">
+                Payment Plan
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full bg-white border border-gray-200 shadow-md rounded-lg overflow-hidden">
+                  <thead className="bg-customPurple-700 text-white">
+                    <tr>
+                      <th className="py-3 px-6 text-left">Plot Size</th>
+                      <th className="py-3 px-6 text-left">Outright Price</th>
+                      <th className="py-3 px-6 text-left">Initial Deposit</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {estate?.paymentPlan?.length > 0 ? (
+                      estate.paymentPlan.map((plan, index) => (
+                        <tr
+                          key={index}
+                          className="border-b hover:bg-gray-100 transition duration-200"
+                        >
+                          <td className="py-4 px-6 font-bold">{plan.plot}</td>
+                          <td className="py-4 px-6 font-bold">
+                            {plan.outright}
+                          </td>
+                          <td className="py-4 px-6 font-bold">
+                            {plan.initialDeposit}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan="3"
+                          className="py-4 px-6 text-center text-gray-500"
+                        >
+                          No payment plans available.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          {/* Map Section */}
+          <div className="map w-full mt-12 md:mt-16 mb-12 md:mb-32">
+            <h3 className="text-2xl font-bold mb-4 text-center">
+              {estate?.title ? `${estate.estate} Layout` : null}
+            </h3>
+            {estate?.sytemap ? (
+              <iframe
+                src={estate.sytemap}
+                title="Estate Map"
+                className="w-full h-[400px] md:h-[600px] rounded-md"
+                allowFullScreen
+              ></iframe>
+            ) : (
+              <p className="text-center text-gray-500">
+                Map not available for this estate.
+              </p>
+            )}
           </div>
         </div>
       </div>
