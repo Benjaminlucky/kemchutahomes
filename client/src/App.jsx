@@ -9,6 +9,7 @@ import Header from "./components/header/Header";
 import Signup from "./pages/signup/Signup";
 import Footer from "./components/footer/Footer";
 import EstateDetails from "./pages/EstateDetails";
+import Login from "./pages/login/Login";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <Route path="/estate/:estateName" element={<EstateDetails />} />
         <Route Path="/contact" element={<Contact />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={<Login />} />
       </Routes>
       <Footer />
     </Router>
