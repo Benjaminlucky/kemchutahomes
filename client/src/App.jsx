@@ -10,6 +10,8 @@ import Signup from "./pages/signup/Signup";
 import Footer from "./components/footer/Footer";
 import EstateDetails from "./pages/EstateDetails";
 import Login from "./pages/login/Login";
+import AdminSignup from "./pages/admin/AdminSignup";
+import AdminLogin from "./pages/admin/AdminLogin";
 
 function App() {
   return (
@@ -23,6 +25,8 @@ function App() {
         <Route Path="/contact" element={<Contact />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/admin/signup" element={<AdminSignup />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
       </Routes>
       <Footer />
     </Router>
