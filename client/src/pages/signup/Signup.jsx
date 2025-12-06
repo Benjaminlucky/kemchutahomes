@@ -5,7 +5,6 @@ import { useInView } from "react-intersection-observer";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-// ✅ JSON objects for Nigerian states and banks
 const states = [
   "Abia",
   "Adamawa",
@@ -84,8 +83,8 @@ export default function Signup() {
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
-  // ✅ Animation controls and in-view logic
   const controls = useAnimation();
   const [ref, inView] = useInView({ triggerOnce: true, threshold: 0.2 });
 
@@ -93,11 +92,9 @@ export default function Signup() {
     if (inView) controls.start("visible");
   }, [inView, controls]);
 
-  // ✅ Input handler
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  // ✅ Validation logic
   const validateForm = () => {
     let newErrors = {};
     const phoneRegex = /^(\+234|0)[789][01]\d{8}$/;
@@ -121,15 +118,13 @@ export default function Signup() {
     if (formData.password !== formData.confirmPassword)
       newErrors.confirmPassword = "Passwords do not match";
     if (!formData.birthDate) newErrors.birthDate = "Date of birth is required";
+    if (!termsAccepted) newErrors.terms = "You must accept the terms";
 
     return newErrors;
   };
 
-  // ✅ Submit handler
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setLoading(true);
-
     const validationErrors = validateForm();
     setErrors(validationErrors);
 
@@ -139,19 +134,7 @@ export default function Signup() {
     }
 
     try {
-      const payload = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
-        state: formData.state,
-        bank: formData.bank,
-        accountName: formData.accountName,
-        accountNumber: formData.accountNumber,
-        password: formData.password,
-        birthDate: formData.birthDate,
-      };
-
+      const payload = { ...formData };
       const urlParams = new URLSearchParams(window.location.search);
       const ref = urlParams.get("ref");
       if (ref) payload.ref = ref;
@@ -163,12 +146,10 @@ export default function Signup() {
       });
 
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.message || "Signup failed");
 
       setSuccess("Account created successfully!");
       console.log("✅ Created Realtor:", data);
-
       setFormData({
         firstName: "",
         lastName: "",
@@ -180,8 +161,9 @@ export default function Signup() {
         phone: "",
         password: "",
         confirmPassword: "",
+        birthDate: "",
       });
-
+      setTermsAccepted(false);
       setTimeout(() => setSuccess(""), 4000);
     } catch (error) {
       console.error("Signup Error:", error);
@@ -194,9 +176,8 @@ export default function Signup() {
   return (
     <motion.div
       ref={ref}
-      className="py-36 px-36 flex items-center justify-center bg-gray-50 relative overflow-hidden"
+      className="py-8 sm:py-16 md:py-24 lg:py-36 px-4 sm:px-6 md:px-12 lg:px-24 xl:px-36 flex items-center justify-center bg-gray-50 relative overflow-hidden min-h-screen"
     >
-      {/* 🔴 Cinematic Red Sweep Overlay */}
       <motion.div
         className="absolute inset-0 bg-gradient-to-r from-[rgba(255,0,0,0.1)] via-transparent to-transparent pointer-events-none z-0"
         initial={{ x: "-100%" }}
@@ -204,7 +185,6 @@ export default function Signup() {
         transition={{ duration: 2, ease: "easeInOut" }}
       />
 
-      {/* 🌫️ Soft Background Zoom/Pan (Breathe Effect) */}
       <motion.div
         className="absolute inset-0 bg-gray-100"
         initial={{ scale: 1 }}
@@ -212,10 +192,9 @@ export default function Signup() {
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      <div className="bg-white rounded-2xl flex flex-col md:flex-row  max-w-8/12 overflow-hidden relative z-10">
-        {/* LEFT SECTION */}
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg flex flex-col md:flex-row w-full max-w-8xl overflow-hidden relative z-10">
         <motion.div
-          className="bg-customPurple-500  text-white md:w-1/2 p-10 lg:p-24 flex flex-col justify-between"
+          className="bg-purple-600 text-white md:w-1/2 p-6 sm:p-8 md:p-10 lg:p-16 xl:p-24 flex flex-col justify-between"
           variants={{
             hidden: { opacity: 0, y: 40, filter: "blur(10px)" },
             visible: {
@@ -229,45 +208,24 @@ export default function Signup() {
           animate={controls}
         >
           <div>
-            <h2 className="text-3xl lg:text-6xl lg:leading-tight font-bold mb-4">
-              Join Kemchuta Realtors and <br /> Unlock Endless Possibilities!
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-3 sm:mb-4 leading-tight">
+              Join Kemchuta Realtors and Unlock Endless Possibilities!
             </h2>
-            <p className="text-sm lg:text-lg leading-relaxed text-gray-200">
-              At Kemchuta Homes, we see real estate as more than property—it’s
+            <p className="text-sm sm:text-base lg:text-lg leading-relaxed text-gray-200 mt-4">
+              At Kemchuta Homes, we see real estate as more than property—it's
               about vision, transformation, and lasting impact. Guided by High
               Chief Dr. Ikem O. Nwabueze, we stand for innovation, integrity,
               and growth.
             </p>
-            <p className="text-sm mt-4 text-gray-200">
+            <p className="text-sm sm:text-base mt-3 sm:mt-4 text-gray-200">
               We empower investors with confidence and realtors with opportunity
-              — together, we’re shaping the future of real estate.
+              — together, we're shaping the future of real estate.
             </p>
           </div>
-
-          {/* <motion.div
-            className="mt-8 flex items-center space-x-3"
-            variants={{
-              hidden: { opacity: 0, y: 20 },
-              visible: { opacity: 1, y: 0, transition: { delay: 0.4 } },
-            }}
-            initial="hidden"
-            animate={controls}
-          >
-            <img
-              src="https://i.pravatar.cc/50"
-              alt="Lucky Benjamin"
-              className="rounded-full w-10 h-10"
-            />
-            <div>
-              <p className="font-semibold text-white text-sm">Lucky Benjamin</p>
-              <p className="text-xs text-gray-300">COO Veritasi Group</p>
-            </div>
-          </motion.div> */}
         </motion.div>
 
-        {/* RIGHT SECTION (Animated Form) */}
         <motion.div
-          className="md:w-1/2 p-10"
+          className="md:w-1/2 p-6 sm:p-8 md:p-10"
           variants={{
             hidden: { opacity: 0, x: 60, filter: "blur(10px)" },
             visible: {
@@ -280,18 +238,16 @@ export default function Signup() {
           initial="hidden"
           animate={controls}
         >
-          <div className="mb-8 flex flex-col justify-between">
-            <h2 className="text-4xl font-bold text-gray-900">
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">
               Sign up to{" "}
-              <span className="text-primary-700 mb-5">
-                Kemchuta Homes Realtors
-              </span>
+              <span className="text-purple-700">Kemchuta Homes Realtors</span>
             </h2>
-            <p className="text-gray-500 flex items-center mt-2 text-md">
-              Already a member?{"  "}
+            <p className="text-gray-500 flex flex-wrap items-center mt-2 text-sm sm:text-base gap-1">
+              Already a member?
               <a
                 href="#"
-                className="text-customPurple-700 font-semibold hover:underline"
+                className="text-purple-700 font-semibold hover:underline ml-1"
               >
                 Log in here
               </a>
@@ -299,24 +255,30 @@ export default function Signup() {
           </div>
 
           {success && (
-            <p className="bg-green-100 text-green-700 p-2 rounded mb-4 text-sm">
+            <p className="bg-green-100 text-green-700 p-2 sm:p-3 rounded mb-4 text-sm">
               {success}
             </p>
           )}
+          {errors.general && (
+            <p className="bg-red-100 text-red-700 p-2 sm:p-3 rounded mb-4 text-sm">
+              {errors.general}
+            </p>
+          )}
 
-          <form onSubmit={handleSubmit} className="space-y-6 py-8">
-            {/* Names */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-4 sm:space-y-5 py-4 sm:py-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <input
                   name="firstName"
                   placeholder="First Name"
                   value={formData.firstName}
                   onChange={handleChange}
-                  className="w-full border border-gray-400 rounded-sm p-3 ring-0 outline-0 focus:ring-3 focus:ring-red-500"
+                  className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base ring-0 outline-0 focus:ring-2 focus:ring-red-500"
                 />
                 {errors.firstName && (
-                  <p className="text-xs text-red-500">{errors.firstName}</p>
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.firstName}
+                  </p>
                 )}
               </div>
               <div>
@@ -325,44 +287,42 @@ export default function Signup() {
                   placeholder="Last Name"
                   value={formData.lastName}
                   onChange={handleChange}
-                  className="w-full border border-gray-400 rounded-sm p-3 ring-0 outline-0 focus:ring-3 focus:ring-red-500"
+                  className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base ring-0 outline-0 focus:ring-2 focus:ring-red-500"
                 />
                 {errors.lastName && (
-                  <p className="text-xs text-red-500">{errors.lastName}</p>
+                  <p className="text-xs text-red-500 mt-1">{errors.lastName}</p>
                 )}
               </div>
             </div>
 
-            {/* Email */}
             <div>
               <input
                 name="email"
                 placeholder="Email Address"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full border border-gray-400 rounded-sm p-3 ring-0 outline-0 focus:ring-3 focus:ring-red-500"
+                className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base ring-0 outline-0 focus:ring-2 focus:ring-red-500"
               />
               {errors.email && (
-                <p className="text-xs text-red-500">{errors.email}</p>
+                <p className="text-xs text-red-500 mt-1">{errors.email}</p>
               )}
             </div>
 
-            {/* Phone */}
             <div>
               <input
                 name="phone"
                 placeholder="Phone Number"
                 value={formData.phone}
                 onChange={handleChange}
-                className="w-full border border-gray-400 rounded-sm p-3 ring-0 outline-0 focus:ring-3 focus:ring-red-500"
+                className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base ring-0 outline-0 focus:ring-2 focus:ring-red-500"
               />
               {errors.phone && (
-                <p className="text-xs text-red-500">{errors.phone}</p>
+                <p className="text-xs text-red-500 mt-1">{errors.phone}</p>
               )}
             </div>
-            {/* Birthday */}
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                 Date of Birth
               </label>
               <input
@@ -370,21 +330,20 @@ export default function Signup() {
                 name="birthDate"
                 value={formData.birthDate}
                 onChange={handleChange}
-                className="w-full border border-gray-400 rounded-sm p-3 ring-0 outline-0 focus:ring-3 focus:ring-red-500"
+                className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base ring-0 outline-0 focus:ring-2 focus:ring-red-500"
               />
               {errors.birthDate && (
-                <p className="text-xs text-red-500">{errors.birthDate}</p>
+                <p className="text-xs text-red-500 mt-1">{errors.birthDate}</p>
               )}
             </div>
 
-            {/* State & Bank */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <select
                   name="state"
                   value={formData.state}
                   onChange={handleChange}
-                  className="w-full border border-gray-400 rounded-sm p-3 ring-0 outline-0 focus:ring-3 focus:ring-red-500"
+                  className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base ring-0 outline-0 focus:ring-2 focus:ring-red-500"
                 >
                   <option value="">Select State</option>
                   {states.map((st) => (
@@ -394,16 +353,15 @@ export default function Signup() {
                   ))}
                 </select>
                 {errors.state && (
-                  <p className="text-xs text-red-500">{errors.state}</p>
+                  <p className="text-xs text-red-500 mt-1">{errors.state}</p>
                 )}
               </div>
-
               <div>
                 <select
                   name="bank"
                   value={formData.bank}
                   onChange={handleChange}
-                  className="w-full border border-gray-400 rounded-sm p-3 ring-0 outline-0 focus:ring-3 focus:ring-red-500"
+                  className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base ring-0 outline-0 focus:ring-2 focus:ring-red-500"
                 >
                   <option value="">Select Bank</option>
                   {banks.map((bk) => (
@@ -413,22 +371,23 @@ export default function Signup() {
                   ))}
                 </select>
                 {errors.bank && (
-                  <p className="text-xs text-red-500">{errors.bank}</p>
+                  <p className="text-xs text-red-500 mt-1">{errors.bank}</p>
                 )}
               </div>
             </div>
 
-            {/* Account Info */}
             <div>
               <input
                 name="accountName"
                 placeholder="Account Name"
                 value={formData.accountName}
                 onChange={handleChange}
-                className="w-full border border-gray-400 rounded-sm p-3 ring-0 outline-0 focus:ring-3 focus:ring-red-500"
+                className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base ring-0 outline-0 focus:ring-2 focus:ring-red-500"
               />
               {errors.accountName && (
-                <p className="text-xs text-red-500">{errors.accountName}</p>
+                <p className="text-xs text-red-500 mt-1">
+                  {errors.accountName}
+                </p>
               )}
             </div>
 
@@ -438,14 +397,15 @@ export default function Signup() {
                 placeholder="Account Number"
                 value={formData.accountNumber}
                 onChange={handleChange}
-                className="w-full border border-gray-400 rounded-sm p-3 ring-0 outline-0 focus:ring-3 focus:ring-red-500"
+                className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base ring-0 outline-0 focus:ring-2 focus:ring-red-500"
               />
               {errors.accountNumber && (
-                <p className="text-xs text-red-500">{errors.accountNumber}</p>
+                <p className="text-xs text-red-500 mt-1">
+                  {errors.accountNumber}
+                </p>
               )}
             </div>
 
-            {/* Passwords */}
             <div>
               <input
                 type="password"
@@ -453,10 +413,10 @@ export default function Signup() {
                 placeholder="Password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full border border-gray-400 rounded-sm p-3 ring-0 outline-0 focus:ring-3 focus:ring-red-500"
+                className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base ring-0 outline-0 focus:ring-2 focus:ring-red-500"
               />
               {errors.password && (
-                <p className="text-xs text-red-500">{errors.password}</p>
+                <p className="text-xs text-red-500 mt-1">{errors.password}</p>
               )}
             </div>
 
@@ -467,45 +427,53 @@ export default function Signup() {
                 placeholder="Confirm Password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="w-full border border-gray-400 rounded-sm p-3 ring-0 outline-0 focus:ring-3 focus:ring-red-500"
+                className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base ring-0 outline-0 focus:ring-2 focus:ring-red-500"
               />
               {errors.confirmPassword && (
-                <p className="text-xs text-red-500">{errors.confirmPassword}</p>
+                <p className="text-xs text-red-500 mt-1">
+                  {errors.confirmPassword}
+                </p>
               )}
             </div>
 
-            {/* Terms */}
-            <div className="flex items-center space-x-2 text-sm">
-              <input type="checkbox" required />
+            <div className="flex items-start space-x-2 text-xs sm:text-sm">
+              <input
+                type="checkbox"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                className="mt-1"
+              />
               <label>
                 By signing up, you agree to our{" "}
-                <a href="#" className="text-customPurple-500 font-semibold">
+                <a href="#" className="text-purple-600 font-semibold">
                   Terms
                 </a>{" "}
                 and{" "}
-                <a href="#" className="text-customPurple-500 font-semibold">
+                <a href="#" className="text-purple-600 font-semibold">
                   Privacy Policy
                 </a>
                 .
               </label>
             </div>
+            {errors.terms && (
+              <p className="text-xs text-red-500">{errors.terms}</p>
+            )}
 
-            {/* Submit Button */}
             <button
-              type="submit"
+              onClick={handleSubmit}
               disabled={loading}
-              className={`w-full flex justify-center items-center gap-2 py-3 rounded-md text-white transition ${
+              className={`w-full flex justify-center items-center gap-2 py-2.5 sm:py-3 rounded-md text-white text-sm sm:text-base font-medium transition ${
                 loading
-                  ? "bg-customPurple-400 cursor-not-allowed"
-                  : "bg-customPurple-500 hover:bg-customPurple-700 hover:shadow-[0_0_20px_rgba(192,132,252,0.6)]"
+                  ? "bg-purple-400 cursor-not-allowed"
+                  : "bg-purple-600 hover:bg-purple-700 hover:shadow-lg"
               }`}
             >
               {loading && (
-                <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                <span className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
               )}
               {loading ? "Creating Account..." : "Create Account"}
             </button>
-          </form>
+          </div>
         </motion.div>
       </div>
     </motion.div>
