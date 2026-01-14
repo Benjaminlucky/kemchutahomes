@@ -2,7 +2,6 @@ import Realtor from "../models/realtor.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import cloudinary from "../utils/cloudinary.config.js";
-import streamifier from "streamifier";
 import { sendWelcomeEmail } from "../utils/email.js";
 
 /* -------------------------------- HELPERS -------------------------------- */
@@ -21,9 +20,6 @@ const generateReferralCode = async () => {
 
 /* -------------------------------- AUTH -------------------------------- */
 
-/**
- * POST /api/realtors/signup
- */
 export const signup = async (req, res) => {
   try {
     const {
@@ -72,7 +68,6 @@ export const signup = async (req, res) => {
       recruitedBy: recruiter?._id || null,
     });
 
-    // 🔔 Non-blocking welcome email
     sendWelcomeEmail({
       email: realtor.email,
       firstName: realtor.firstName,
@@ -93,9 +88,6 @@ export const signup = async (req, res) => {
   }
 };
 
-/**
- * POST /api/realtors/login
- */
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -120,11 +112,13 @@ export const login = async (req, res) => {
     return res.json({
       message: "Login successful",
       token,
-      realtor: {
+      user: {
         id: realtor._id,
         firstName: realtor.firstName,
         lastName: realtor.lastName,
         email: realtor.email,
+        role: realtor.role,
+        avatar: realtor.avatar,
         referralCode: realtor.referralCode,
         referralLink: realtor.referralLink,
       },
@@ -132,6 +126,40 @@ export const login = async (req, res) => {
   } catch (err) {
     console.error("LOGIN ERROR:", err);
     return res.status(500).json({ message: "Login failed" });
+  }
+};
+
+/* ------------------------------ DASHBOARD -------------------------------- */
+
+export const getDashboard = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const realtor = await Realtor.findById(userId)
+      .populate("recruitedBy", "firstName lastName")
+      .exec();
+
+    if (!realtor) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const realtorObj = realtor.toObject({ virtuals: true });
+    const recruitCount = await Realtor.countDocuments({ recruitedBy: userId });
+
+    return res.json({
+      firstName: realtorObj.firstName,
+      lastName: realtorObj.lastName,
+      name: `${realtorObj.firstName} ${realtorObj.lastName}`,
+      avatar: realtorObj.avatar || null,
+      downlines: recruitCount,
+      recruitedBy: realtorObj.recruitedBy
+        ? `${realtorObj.recruitedBy.firstName} ${realtorObj.recruitedBy.lastName}`
+        : "Not Assigned",
+      referralCode: realtorObj.referralCode,
+      referralLink: realtorObj.referralLink,
+    });
+  } catch (error) {
+    console.error("Dashboard Error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -160,10 +188,23 @@ export const updateAvatar = async (req, res) => {
       req.user.id,
       { avatar: result.secure_url },
       { new: true }
-    ).select("firstName lastName avatar referralCode");
+    ).select("firstName lastName avatar referralCode email role");
 
-    return res.json({ message: "Avatar updated", user: updated });
+    return res.json({
+      message: "Avatar updated",
+      avatar: result.secure_url,
+      user: {
+        id: updated._id,
+        firstName: updated.firstName,
+        lastName: updated.lastName,
+        email: updated.email,
+        role: updated.role,
+        avatar: updated.avatar,
+        referralCode: updated.referralCode,
+      },
+    });
   } catch (err) {
+    console.error("AVATAR UPLOAD ERROR:", err);
     return res.status(500).json({ message: "Avatar upload failed" });
   }
 };
@@ -188,12 +229,21 @@ export const getRealtors = async (req, res) => {
       : {};
 
     const total = await Realtor.countDocuments(filter);
-    const docs = await Realtor.find(filter)
+
+    const realtors = await Realtor.find(filter)
       .sort("-createdAt")
       .skip((page - 1) * limit)
       .limit(limit)
       .populate("recruitedBy", "firstName lastName referralCode")
       .lean();
+
+    const docs = realtors.map((r) => ({
+      ...r,
+      name: `${r.firstName} ${r.lastName}`,
+      recruitedByName: r.recruitedBy
+        ? `${r.recruitedBy.firstName} ${r.recruitedBy.lastName}`
+        : null,
+    }));
 
     return res.json({
       docs,
@@ -201,38 +251,56 @@ export const getRealtors = async (req, res) => {
       page,
       pages: Math.ceil(total / limit),
     });
-  } catch {
+  } catch (err) {
+    console.error("GET REALTORS ERROR:", err);
     return res.status(500).json({ message: "Failed to fetch realtors" });
   }
 };
 
 export const getRealtorById = async (req, res) => {
-  const realtor = await Realtor.findById(req.params.id)
-    .populate("recruitedBy", "firstName lastName referralCode")
-    .select("-passwordHash");
+  try {
+    const realtor = await Realtor.findById(req.params.id)
+      .populate("recruitedBy", "firstName lastName referralCode")
+      .select("-passwordHash");
 
-  if (!realtor) return res.status(404).json({ message: "Realtor not found" });
-  res.json(realtor);
+    if (!realtor) return res.status(404).json({ message: "Realtor not found" });
+    res.json(realtor);
+  } catch (err) {
+    console.error("GET REALTOR ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
 };
 
 export const updateRealtor = async (req, res) => {
-  const updated = await Realtor.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  }).select("-passwordHash");
+  try {
+    const updated = await Realtor.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    }).select("-passwordHash");
 
-  if (!updated) return res.status(404).json({ message: "Realtor not found" });
-  res.json({ message: "Updated successfully", realtor: updated });
+    if (!updated) return res.status(404).json({ message: "Realtor not found" });
+    res.json({ message: "Updated successfully", realtor: updated });
+  } catch (err) {
+    console.error("UPDATE REALTOR ERROR:", err);
+    res.status(500).json({ message: "Update failed" });
+  }
 };
 
 export const deleteRealtor = async (req, res) => {
-  const recruits = await Realtor.countDocuments({ recruitedBy: req.params.id });
-  if (recruits > 0) {
-    return res
-      .status(400)
-      .json({ message: "Cannot delete realtor with recruits" });
-  }
+  try {
+    const recruits = await Realtor.countDocuments({
+      recruitedBy: req.params.id,
+    });
+    if (recruits > 0) {
+      return res
+        .status(400)
+        .json({ message: "Cannot delete realtor with recruits" });
+    }
 
-  await Realtor.findByIdAndDelete(req.params.id);
-  res.json({ message: "Deleted successfully" });
+    await Realtor.findByIdAndDelete(req.params.id);
+    res.json({ message: "Deleted successfully" });
+  } catch (err) {
+    console.error("DELETE REALTOR ERROR:", err);
+    res.status(500).json({ message: "Delete failed" });
+  }
 };

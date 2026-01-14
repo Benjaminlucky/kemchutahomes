@@ -27,7 +27,19 @@ export default function Dashboard() {
 }
 
 function RoleBasedDashboard() {
-  const user = JSON.parse(localStorage.getItem("user"));
-  if (!user) return null;
+  if (typeof window === "undefined") return null; // SSR safety
+  const rawUser = localStorage.getItem("user");
+  if (!rawUser) return <p>Loading...</p>; // wait for login redirect
+
+  let user;
+  try {
+    user = JSON.parse(rawUser);
+  } catch {
+    return <p>Invalid user data</p>;
+  }
+
+  // Ensure role exists
+  if (!user.role) return <p>Invalid user role</p>;
+
   return user.role === "admin" ? <AdminDashboard /> : <RealtorDashboard />;
 }

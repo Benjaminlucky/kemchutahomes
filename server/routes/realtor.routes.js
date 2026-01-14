@@ -7,21 +7,26 @@ import {
   getRealtorById,
   updateRealtor,
   deleteRealtor,
+  getDashboard, // ✅ Import from realtor.controller.js
 } from "../controllers/realtor.controller.js";
 
-import { protect } from "../middlewares/authMiddleware.js";
 import { uploadSingleImage } from "../middlewares/upload.middleware.js";
+import { protect, protectAdmin } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
+// ✅ Public routes
 router.post("/signup", signup);
 router.post("/login", login);
 
-router.get("/", protect, getRealtors);
-router.get("/:id", protect, getRealtorById);
-router.put("/:id", protect, updateRealtor);
-router.delete("/:id", protect, deleteRealtor);
-
+// ✅ IMPORTANT: Specific routes BEFORE parameterized routes
+router.get("/dashboard", protect, getDashboard);
 router.put("/avatar", protect, uploadSingleImage, updateAvatar);
+
+// ✅ Admin routes (parameterized routes LAST)
+router.get("/", protectAdmin, getRealtors);
+router.get("/:id", protectAdmin, getRealtorById);
+router.put("/:id", protectAdmin, updateRealtor);
+router.delete("/:id", protectAdmin, deleteRealtor);
 
 export default router;

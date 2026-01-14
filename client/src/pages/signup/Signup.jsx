@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, useAnimation } from "framer-motion";
 import { useInView } from "react-intersection-observer";
+import { Eye, EyeOff } from "lucide-react"; // Standard icons for visibility toggle
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -85,6 +86,10 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
 
+  // Toggle states for password visibility
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const controls = useAnimation();
   const [ref, inView] = useInView({ triggerOnce: true, threshold: 0.2 });
 
@@ -136,8 +141,8 @@ export default function Signup() {
     try {
       const payload = { ...formData };
       const urlParams = new URLSearchParams(window.location.search);
-      const ref = urlParams.get("ref");
-      if (ref) payload.ref = ref;
+      const refCode = urlParams.get("ref");
+      if (refCode) payload.ref = refCode;
 
       const res = await fetch(`${BASE_URL}/api/realtors/signup`, {
         method: "POST",
@@ -149,7 +154,6 @@ export default function Signup() {
       if (!res.ok) throw new Error(data.message || "Signup failed");
 
       setSuccess("Account created successfully!");
-      console.log("✅ Created Realtor:", data);
       setFormData({
         firstName: "",
         lastName: "",
@@ -166,7 +170,6 @@ export default function Signup() {
       setTermsAccepted(false);
       setTimeout(() => setSuccess(""), 4000);
     } catch (error) {
-      console.error("Signup Error:", error);
       setErrors({ general: error.message });
     } finally {
       setLoading(false);
@@ -273,7 +276,7 @@ export default function Signup() {
                   placeholder="First Name"
                   value={formData.firstName}
                   onChange={handleChange}
-                  className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base ring-0 outline-0 focus:ring-2 focus:ring-red-500"
+                  className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base outline-0 focus:ring-2 focus:ring-purple-500"
                 />
                 {errors.firstName && (
                   <p className="text-xs text-red-500 mt-1">
@@ -287,7 +290,7 @@ export default function Signup() {
                   placeholder="Last Name"
                   value={formData.lastName}
                   onChange={handleChange}
-                  className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base ring-0 outline-0 focus:ring-2 focus:ring-red-500"
+                  className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base outline-0 focus:ring-2 focus:ring-purple-500"
                 />
                 {errors.lastName && (
                   <p className="text-xs text-red-500 mt-1">{errors.lastName}</p>
@@ -295,31 +298,27 @@ export default function Signup() {
               </div>
             </div>
 
-            <div>
-              <input
-                name="email"
-                placeholder="Email Address"
-                value={formData.email}
-                onChange={handleChange}
-                className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base ring-0 outline-0 focus:ring-2 focus:ring-red-500"
-              />
-              {errors.email && (
-                <p className="text-xs text-red-500 mt-1">{errors.email}</p>
-              )}
-            </div>
+            <input
+              name="email"
+              placeholder="Email Address"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base outline-0 focus:ring-2 focus:ring-purple-500"
+            />
+            {errors.email && (
+              <p className="text-xs text-red-500 mt-1">{errors.email}</p>
+            )}
 
-            <div>
-              <input
-                name="phone"
-                placeholder="Phone Number"
-                value={formData.phone}
-                onChange={handleChange}
-                className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base ring-0 outline-0 focus:ring-2 focus:ring-red-500"
-              />
-              {errors.phone && (
-                <p className="text-xs text-red-500 mt-1">{errors.phone}</p>
-              )}
-            </div>
+            <input
+              name="phone"
+              placeholder="Phone Number"
+              value={formData.phone}
+              onChange={handleChange}
+              className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base outline-0 focus:ring-2 focus:ring-purple-500"
+            />
+            {errors.phone && (
+              <p className="text-xs text-red-500 mt-1">{errors.phone}</p>
+            )}
 
             <div>
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
@@ -330,7 +329,7 @@ export default function Signup() {
                 name="birthDate"
                 value={formData.birthDate}
                 onChange={handleChange}
-                className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base ring-0 outline-0 focus:ring-2 focus:ring-red-500"
+                className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base outline-0 focus:ring-2 focus:ring-purple-500"
               />
               {errors.birthDate && (
                 <p className="text-xs text-red-500 mt-1">{errors.birthDate}</p>
@@ -338,97 +337,97 @@ export default function Signup() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div>
-                <select
-                  name="state"
-                  value={formData.state}
-                  onChange={handleChange}
-                  className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base ring-0 outline-0 focus:ring-2 focus:ring-red-500"
-                >
-                  <option value="">Select State</option>
-                  {states.map((st) => (
-                    <option key={st} value={st}>
-                      {st}
-                    </option>
-                  ))}
-                </select>
-                {errors.state && (
-                  <p className="text-xs text-red-500 mt-1">{errors.state}</p>
-                )}
-              </div>
-              <div>
-                <select
-                  name="bank"
-                  value={formData.bank}
-                  onChange={handleChange}
-                  className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base ring-0 outline-0 focus:ring-2 focus:ring-red-500"
-                >
-                  <option value="">Select Bank</option>
-                  {banks.map((bk) => (
-                    <option key={bk} value={bk}>
-                      {bk}
-                    </option>
-                  ))}
-                </select>
-                {errors.bank && (
-                  <p className="text-xs text-red-500 mt-1">{errors.bank}</p>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <input
-                name="accountName"
-                placeholder="Account Name"
-                value={formData.accountName}
+              <select
+                name="state"
+                value={formData.state}
                 onChange={handleChange}
-                className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base ring-0 outline-0 focus:ring-2 focus:ring-red-500"
-              />
-              {errors.accountName && (
-                <p className="text-xs text-red-500 mt-1">
-                  {errors.accountName}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <input
-                name="accountNumber"
-                placeholder="Account Number"
-                value={formData.accountNumber}
+                className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base outline-0 focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="">Select State</option>
+                {states.map((st) => (
+                  <option key={st} value={st}>
+                    {st}
+                  </option>
+                ))}
+              </select>
+              <select
+                name="bank"
+                value={formData.bank}
                 onChange={handleChange}
-                className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base ring-0 outline-0 focus:ring-2 focus:ring-red-500"
-              />
-              {errors.accountNumber && (
-                <p className="text-xs text-red-500 mt-1">
-                  {errors.accountNumber}
-                </p>
-              )}
+                className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base outline-0 focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="">Select Bank</option>
+                {banks.map((bk) => (
+                  <option key={bk} value={bk}>
+                    {bk}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            <div>
+            <input
+              name="accountName"
+              placeholder="Account Name"
+              value={formData.accountName}
+              onChange={handleChange}
+              className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base outline-0 focus:ring-2 focus:ring-purple-500"
+            />
+            {errors.accountName && (
+              <p className="text-xs text-red-500 mt-1">{errors.accountName}</p>
+            )}
+
+            <input
+              name="accountNumber"
+              placeholder="Account Number"
+              value={formData.accountNumber}
+              onChange={handleChange}
+              className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base outline-0 focus:ring-2 focus:ring-purple-500"
+            />
+            {errors.accountNumber && (
+              <p className="text-xs text-red-500 mt-1">
+                {errors.accountNumber}
+              </p>
+            )}
+
+            {/* Password Field with Toggle */}
+            <div className="relative">
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 name="password"
                 placeholder="Password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base ring-0 outline-0 focus:ring-2 focus:ring-red-500"
+                className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 pr-10 text-sm sm:text-base outline-0 focus:ring-2 focus:ring-purple-500"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-purple-700"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
               {errors.password && (
                 <p className="text-xs text-red-500 mt-1">{errors.password}</p>
               )}
             </div>
 
-            <div>
+            {/* Confirm Password Field with Toggle */}
+            <div className="relative">
               <input
-                type="password"
+                type={showConfirmPassword ? "text" : "password"}
                 name="confirmPassword"
                 placeholder="Confirm Password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base ring-0 outline-0 focus:ring-2 focus:ring-red-500"
+                className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 pr-10 text-sm sm:text-base outline-0 focus:ring-2 focus:ring-purple-500"
               />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-purple-700"
+              >
+                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
               {errors.confirmPassword && (
                 <p className="text-xs text-red-500 mt-1">
                   {errors.confirmPassword}

@@ -2,12 +2,13 @@ import React, { useState } from "react";
 import { motion, useAnimation } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { ToastContainer, toast } from "react-toastify";
+import { Eye, EyeOff } from "lucide-react";
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  // Animation controls
   const controls = useAnimation();
   const [ref, inView] = useInView({ triggerOnce: true, threshold: 0.3 });
 
@@ -33,17 +34,35 @@ const Login = () => {
       });
       const data = await res.json();
 
+      console.log("Login response:", data); // Debug
+
       if (!res.ok) throw new Error(data.message);
+
+      // ✅ Validate response
+      if (!data.token || !data.user) {
+        throw new Error("Invalid response from server");
+      }
+
+      if (!data.user.role) {
+        throw new Error("User role missing");
+      }
 
       // ✅ Store both token and user info
       localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.realtor));
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      // ✅ Verify storage
+      const savedUser = localStorage.getItem("user");
+      console.log("Saved user:", savedUser);
 
       toast.success("Login successful!");
 
-      // ✅ Redirect both roles to /dashboard
-      window.location.href = "/dashboard";
+      // ✅ Small delay before redirect
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 500);
     } catch (error) {
+      console.error("Login error:", error);
       toast.error(error.message || "Login failed.");
     } finally {
       setLoading(false);
@@ -65,7 +84,6 @@ const Login = () => {
       initial="hidden"
       animate={controls}
     >
-      {/* Soft background zoom/pan breathe effect */}
       <motion.div
         className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,0,0,0.08),_transparent_70%)] pointer-events-none"
         animate={{
@@ -76,7 +94,6 @@ const Login = () => {
         transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* Cinematic red sweep overlay */}
       <motion.div
         className="absolute inset-0 bg-gradient-to-r from-customPurple-500/30 via-transparent to-customPurple-700/30 pointer-events-none"
         initial={{ x: "-100%" }}
@@ -175,7 +192,6 @@ const Login = () => {
             </p>
           </motion.div>
 
-          {/* Staggered Form Animation */}
           <motion.form
             onSubmit={handleSubmit}
             className="space-y-5"
@@ -205,6 +221,7 @@ const Login = () => {
                 type="email"
                 id="email"
                 name="email"
+                required
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="Enter Your Email Address"
@@ -224,15 +241,26 @@ const Login = () => {
               >
                 Enter Your Password
               </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Enter Your Password"
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-customPurple-600 focus:outline-none"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  name="password"
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Enter Your Password"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 pr-10 text-sm focus:ring-2 focus:ring-customPurple-600 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-customPurple-600 transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </motion.div>
 
             <div className="flex justify-end">
@@ -247,7 +275,7 @@ const Login = () => {
             <motion.button
               type="submit"
               disabled={loading}
-              className="w-full bg-customPurple text-white py-3 rounded-lg font-semibold text-base hover:bg-customPurple-700 transition flex items-center justify-center shadow-lg hover:shadow-[0_0_25px_var(--color-primary-500)]"
+              className="w-full bg-customPurple-500 text-white py-3 rounded-lg font-semibold text-base hover:bg-customPurple-700 transition flex items-center justify-center shadow-lg hover:shadow-[0_0_25px_rgba(112,12,235,0.4)]"
               variants={{
                 hidden: { opacity: 0, y: 25 },
                 visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
