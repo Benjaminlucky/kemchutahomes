@@ -1,41 +1,28 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 // Safety check for environment variables
-if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-  console.error("❌ EMAIL ENV VARIABLES MISSING: Check your .env file");
+if (!process.env.RESEND_API_KEY) {
+  console.error("❌ RESEND_API_KEY MISSING: Check your .env file");
+  console.error("Get your API key from: https://resend.com/api-keys");
 }
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // MUST be false for 587
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-  connectionTimeout: 60_000, // 60 seconds
-  greetingTimeout: 30_000,
-  socketTimeout: 60_000,
-});
+// Initialize Resend client
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
  * Send Elevated Welcome Email
  * @param {Object} userData - Contains email and firstName
+ * @returns {Promise<Object>} - Returns success status and message ID
  */
 export const sendWelcomeEmail = async ({ email, firstName }) => {
   console.log(`--- Initiating Email Sequence for: ${email} ---`);
 
   try {
-    // 1. Verify connection
-    await transporter.verify();
-
     const loginUrl = "https://kemchutahomes.netlify.app/login";
 
-    const mailOptions = {
-      from: `"Kemchuta Homes" <${process.env.EMAIL_USER}>`,
+    // Send email using Resend
+    const { data, error } = await resend.emails.send({
+      from: "Kemchuta Homes <onboarding@resend.dev>", // Change to your verified domain
       to: email,
       subject: "Welcome to Kemchuta Homes - Let's Build Your Legacy 🏡",
       html: `
@@ -107,16 +94,29 @@ export const sendWelcomeEmail = async ({ email, firstName }) => {
         </body>
         </html>
       `,
-    };
+    });
 
-    const info = await transporter.sendMail(mailOptions);
+    // Check for errors
+    if (error) {
+      throw new Error(error.message);
+    }
+
     console.log(`✅ SUCCESS: Welcome email sent to ${email}`);
-    console.log(`Message ID: ${info.messageId}`);
-    return true;
+    console.log(`Message ID: ${data.id}`);
+
+    return {
+      success: true,
+      messageId: data.id,
+    };
   } catch (err) {
     console.error("❌ MAILER ERROR:");
     console.error(`Status: Failed to deliver to ${email}`);
     console.error(`Reason: ${err.message}`);
-    return false;
+    console.error(`Full Error:`, err);
+
+    return {
+      success: false,
+      error: err.message,
+    };
   }
 };
