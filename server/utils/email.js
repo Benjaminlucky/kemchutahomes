@@ -2,15 +2,28 @@ import nodemailer from "nodemailer";
 
 // Safety check for environment variables
 if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-  console.error("❌ EMAIL ENV VARIABLES MISSING: Check your .env file");
+  console.error(
+    "❌ EMAIL ENV VARIABLES MISSING: Check your Render environment variables"
+  );
+  console.error("EMAIL_USER:", process.env.EMAIL_USER ? "✓ Set" : "✗ Missing");
+  console.error("EMAIL_PASS:", process.env.EMAIL_PASS ? "✓ Set" : "✗ Missing");
 }
 
+// Create transporter with explicit configuration for better compatibility
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, // Use STARTTLS
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  tls: {
+    rejectUnauthorized: false, // Allow self-signed certificates (helps with some hosting providers)
+  },
+  connectionTimeout: 10000, // 10 seconds
+  greetingTimeout: 10000,
+  socketTimeout: 10000,
 });
 
 /**
@@ -21,8 +34,15 @@ export const sendWelcomeEmail = async ({ email, firstName }) => {
   console.log(`--- Initiating Email Sequence for: ${email} ---`);
 
   try {
-    // 1. Verify connection
-    await transporter.verify();
+    // 1. Verify connection with timeout
+    console.log("Verifying SMTP connection...");
+    const verifyPromise = transporter.verify();
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Verification timeout")), 5000)
+    );
+
+    await Promise.race([verifyPromise, timeoutPromise]);
+    console.log("✓ SMTP connection verified");
 
     const loginUrl = "https://kemchutahomes.netlify.app/login";
 
@@ -91,7 +111,7 @@ export const sendWelcomeEmail = async ({ email, firstName }) => {
                   <a href="#">Support</a>
                 </p>
                 <div class="divider"></div>
-                <p>&copy; 2026 Kemchuta Homes. Empowering Realtors. </p>
+                <p>&copy; 2026 Kemchuta Homes. Empowering Realtors.</p>
                 <p>Lekki, Lagos, Nigeria</p>
               </div>
             </div>
@@ -101,6 +121,7 @@ export const sendWelcomeEmail = async ({ email, firstName }) => {
       `,
     };
 
+    console.log("Sending email...");
     const info = await transporter.sendMail(mailOptions);
     console.log(`✅ SUCCESS: Welcome email sent to ${email}`);
     console.log(`Message ID: ${info.messageId}`);
@@ -109,6 +130,18 @@ export const sendWelcomeEmail = async ({ email, firstName }) => {
     console.error("❌ MAILER ERROR:");
     console.error(`Status: Failed to deliver to ${email}`);
     console.error(`Reason: ${err.message}`);
+    console.error(`Stack: ${err.stack}`);
+
+    // Log environment check on error
+    console.error("Environment check:");
+    console.error("EMAIL_USER:", process.env.EMAIL_USER ? "Set" : "MISSING");
+    console.error(
+      "EMAIL_PASS:",
+      process.env.EMAIL_PASS
+        ? "Set (length: " + process.env.EMAIL_PASS.length + ")"
+        : "MISSING"
+    );
+
     return false;
   }
 };
