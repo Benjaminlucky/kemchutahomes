@@ -27,6 +27,7 @@ import Dashboard from "./pages/dashboard";
 import Header from "./components/header/Header";
 import Footer from "./components/footer/Footer";
 import ProtectedRoute from "./components/ProtectedRoutes";
+import NotFound from "./pages/notfound/NotFound";
 
 // ============================
 // Layout wrapper for dynamic header/footer
@@ -68,6 +69,9 @@ function AppWrapper() {
               </ProtectedRoute>
             }
           />
+
+          {/* 404 Not Found - Must be last */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
 
         {/* Show Footer on public pages */}
