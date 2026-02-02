@@ -10,6 +10,8 @@ export default function RealtorDashboard() {
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [recruits, setRecruits] = useState([]);
+  const [recruitsLoading, setRecruitsLoading] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -26,6 +28,8 @@ export default function RealtorDashboard() {
           headers: { Authorization: `Bearer ${token}` },
         });
 
+        console.log("Dashboard Response:", res.data);
+        console.log("Recruited By:", res.data.recruitedBy);
         setData(res.data);
       } catch (err) {
         console.error("Failed to load dashboard:", err);
@@ -44,6 +48,31 @@ export default function RealtorDashboard() {
 
     fetchDashboard();
   }, []);
+
+  useEffect(() => {
+    const fetchRecruits = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        setRecruitsLoading(true);
+        const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+        const res = await axios.get(`${BASE_URL}/api/realtors/my-recruits`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setRecruits(res.data.recruits || []);
+      } catch (err) {
+        console.error("Failed to load recruits:", err);
+      } finally {
+        setRecruitsLoading(false);
+      }
+    };
+
+    if (data) {
+      fetchRecruits();
+    }
+  }, [data]);
 
   const handleCopy = () => {
     if (!data?.referralLink) return;
@@ -108,6 +137,16 @@ export default function RealtorDashboard() {
 
   const triggerFile = () => {
     fileInputRef.current?.click();
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
   if (loading) {
@@ -199,6 +238,92 @@ export default function RealtorDashboard() {
             </span>
           )}
         </div>
+      </div>
+
+      {/* Recruits Table Section */}
+      <div className="mt-10">
+        <h2 className="text-xl md:text-2xl font-semibold mb-4">
+          My Recruits ({recruits.length})
+        </h2>
+
+        {recruitsLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600"></div>
+          </div>
+        ) : recruits.length === 0 ? (
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <p className="text-gray-500">
+              You haven't recruited anyone yet. Share your referral link to get
+              started!
+            </p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    #
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Name
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Email
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Phone
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Referral Code
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Joined Date
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {recruits.map((recruit, index) => (
+                  <tr key={recruit._id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {index + 1}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10">
+                          <img
+                            className="h-10 w-10 rounded-full object-cover"
+                            src={recruit.avatar || defaultAvatar}
+                            alt={`${recruit.firstName} ${recruit.lastName}`}
+                          />
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">
+                            {recruit.firstName} {recruit.lastName}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {recruit.email}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {recruit.phone}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                        {recruit.referralCode}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatDate(recruit.createdAt)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

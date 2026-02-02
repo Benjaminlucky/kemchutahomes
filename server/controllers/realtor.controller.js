@@ -135,7 +135,7 @@ export const getDashboard = async (req, res) => {
   try {
     const userId = req.user.id;
     const realtor = await Realtor.findById(userId)
-      .populate("recruitedBy", "firstName lastName")
+      .populate("recruitedBy", "firstName lastName role")
       .exec();
 
     if (!realtor) {
@@ -145,21 +145,53 @@ export const getDashboard = async (req, res) => {
     const realtorObj = realtor.toObject({ virtuals: true });
     const recruitCount = await Realtor.countDocuments({ recruitedBy: userId });
 
+    // Determine recruited by label
+    let recruitedByLabel = "Admin"; // Default to Admin if no recruiter
+
+    if (realtorObj.recruitedBy && typeof realtorObj.recruitedBy === "object") {
+      // If recruited by admin, show "Admin"
+      if (realtorObj.recruitedBy.role === "admin") {
+        recruitedByLabel = "Admin";
+      } else {
+        // If recruited by a realtor, show realtor's full name
+        recruitedByLabel = `${realtorObj.recruitedBy.firstName} ${realtorObj.recruitedBy.lastName}`;
+      }
+    }
+
     return res.json({
       firstName: realtorObj.firstName,
       lastName: realtorObj.lastName,
       name: `${realtorObj.firstName} ${realtorObj.lastName}`,
       avatar: realtorObj.avatar || null,
       downlines: recruitCount,
-      recruitedBy: realtorObj.recruitedBy
-        ? `${realtorObj.recruitedBy.firstName} ${realtorObj.recruitedBy.lastName}`
-        : "Not Assigned",
+      recruitedBy: recruitedByLabel,
       referralCode: realtorObj.referralCode,
       referralLink: realtorObj.referralLink,
     });
   } catch (error) {
     console.error("Dashboard Error:", error);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+/* ------------------------------ MY RECRUITS -------------------------------- */
+
+export const getMyRecruits = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const recruits = await Realtor.find({ recruitedBy: userId })
+      .select("firstName lastName email phone avatar referralCode createdAt")
+      .sort("-createdAt")
+      .lean();
+
+    return res.json({
+      recruits,
+      total: recruits.length,
+    });
+  } catch (error) {
+    console.error("Get My Recruits Error:", error);
+    res.status(500).json({ message: "Failed to fetch recruits" });
   }
 };
 
