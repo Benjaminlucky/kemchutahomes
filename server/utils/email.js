@@ -22,7 +22,7 @@ export const sendWelcomeEmail = async ({ email, firstName }) => {
 
     // Send email using Resend
     const { data, error } = await resend.emails.send({
-      from: "Kemchuta Homes <onboarding@resend.dev>", // Change to your verified domain
+      from: "Kemchuta Homes <onboarding@khlrealtorsportal.com>", // Change to your verified domain
       to: email,
       subject: "Welcome to Kemchuta Homes - Let's Build Your Legacy 🏡",
       html: `
