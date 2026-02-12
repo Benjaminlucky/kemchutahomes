@@ -90,7 +90,7 @@ function Header() {
       {/* Mobile Navigation */}
       <div className="mobile__nav md:hidden w-full relative z-[9999] bg-white">
         <div className="mobilenav__content relative w-full mx-auto">
-          <div className="mobile__logo px-4 sm:px-5 py-3 relative flex items-center justify-between">
+          <div className="mobile__logo px-4 sm:px-5 py-3 relative flex items-center justify-between z-[10000]">
             <Link to="/" className="flex-shrink-0">
               <img
                 src="/assets/kemchutaMainLogo.svg"
@@ -101,7 +101,7 @@ function Header() {
 
             <button
               onClick={toggleMenu}
-              className="text-3xl sm:text-4xl text-gray-400 z-[99999] transition-transform duration-200 hover:scale-110 active:scale-95"
+              className="text-3xl sm:text-4xl text-gray-400 relative z-10 transition-transform duration-200 hover:scale-110 active:scale-95"
               aria-label={openMenu ? "Close menu" : "Open menu"}
             >
               {openMenu ? <IoCloseCircle /> : <IoMenu />}
@@ -113,12 +113,12 @@ function Header() {
             <>
               {/* Backdrop */}
               <div
-                className="fixed inset-0 bg-black bg-opacity-50 z-[99997]"
+                className="fixed inset-0 bg-black bg-opacity-50 z-[9998]"
                 onClick={() => setOpenMenu(false)}
               />
 
               {/* Menu Content */}
-              <div className="navwrapper absolute top-full left-0 w-full bg-white pb-5 shadow-lg z-[99998] max-h-[calc(100vh-80px)] overflow-y-auto">
+              <div className="navwrapper absolute top-full left-0 w-full bg-white pb-5 shadow-lg z-[9999] max-h-[calc(100vh-80px)] overflow-y-auto">
                 {mainLink.map((link, index) => (
                   <div
                     key={index}
