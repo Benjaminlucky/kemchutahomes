@@ -9,8 +9,15 @@ function Header() {
   const isActive = (path) => location.pathname === path;
   const [openMenu, setOpenMenu] = useState(false);
 
-  const toggleMenu = () => {
+  const toggleMenu = (e) => {
+    console.log("Toggle menu clicked!", !openMenu); // Debug log
+    e?.stopPropagation(); // Prevent event bubbling
     setOpenMenu(!openMenu);
+  };
+
+  const closeMenu = () => {
+    console.log("Closing menu"); // Debug log
+    setOpenMenu(false);
   };
 
   // Close menu when route changes
@@ -20,6 +27,7 @@ function Header() {
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
+    console.log("Menu state changed:", openMenu); // Debug log
     if (openMenu) {
       document.body.style.overflow = "hidden";
     } else {
@@ -31,9 +39,9 @@ function Header() {
   }, [openMenu]);
 
   return (
-    <div className="mainNavWrapper w-full relative z-[9999]">
+    <div className="mainNavWrapper w-full relative">
       {/* Desktop Navigation */}
-      <div className="mainNavContent w-full py-3 md:py-3 top-0 bg-white z-[500] shadow-md relative">
+      <div className="mainNavContent w-full py-3 md:py-3 top-0 bg-white shadow-md relative">
         <div className="desktop__nav w-11/12 lg:w-10/12 mx-auto flex items-center">
           <div className="desktopNav__wrapper hidden md:flex w-full items-center justify-between">
             {/* Logo on the left */}
@@ -88,9 +96,9 @@ function Header() {
       </div>
 
       {/* Mobile Navigation */}
-      <div className="mobile__nav md:hidden w-full relative z-[9999] bg-white">
-        <div className="mobilenav__content relative w-full mx-auto">
-          <div className="mobile__logo px-4 sm:px-5 py-3 relative flex items-center justify-between z-[10000]">
+      <div className="mobile__nav md:hidden w-full bg-white shadow-md">
+        <div className="mobilenav__content w-full mx-auto">
+          <div className="mobile__logo px-4 sm:px-5 py-3 flex items-center justify-between bg-white relative z-50">
             <Link to="/" className="flex-shrink-0">
               <img
                 src="/assets/kemchutaMainLogo.svg"
@@ -100,9 +108,11 @@ function Header() {
             </Link>
 
             <button
+              type="button"
               onClick={toggleMenu}
-              className="text-3xl sm:text-4xl text-gray-400 relative z-10 transition-transform duration-200 hover:scale-110 active:scale-95"
+              className="text-3xl sm:text-4xl text-gray-400 transition-transform duration-200 hover:scale-110 active:scale-95 cursor-pointer relative z-50"
               aria-label={openMenu ? "Close menu" : "Open menu"}
+              aria-expanded={openMenu}
             >
               {openMenu ? <IoCloseCircle /> : <IoMenu />}
             </button>
@@ -110,15 +120,19 @@ function Header() {
 
           {/* Mobile Menu Overlay */}
           {openMenu && (
-            <>
+            <div className="fixed inset-0 top-0 left-0 w-full h-full z-40">
               {/* Backdrop */}
               <div
-                className="fixed inset-0 bg-black bg-opacity-50 z-[9998]"
-                onClick={() => setOpenMenu(false)}
+                className="absolute inset-0 bg-black bg-opacity-50"
+                onClick={closeMenu}
+                aria-hidden="true"
               />
 
               {/* Menu Content */}
-              <div className="navwrapper absolute top-full left-0 w-full bg-white pb-5 shadow-lg z-[9999] max-h-[calc(100vh-80px)] overflow-y-auto">
+              <div
+                className="navwrapper absolute left-0 w-full bg-white pb-5 shadow-lg max-h-[calc(100vh-80px)] overflow-y-auto z-50"
+                style={{ top: "72px" }}
+              >
                 {mainLink.map((link, index) => (
                   <div
                     key={index}
@@ -130,7 +144,7 @@ function Header() {
                   >
                     <Link
                       to={link.link}
-                      onClick={() => setOpenMenu(false)}
+                      onClick={closeMenu}
                       className="block text-sm sm:text-base"
                     >
                       {link.name}
@@ -142,7 +156,7 @@ function Header() {
                   <div className="bNavContent flex flex-col gap-3 w-full">
                     <Link
                       to="/signup"
-                      onClick={() => setOpenMenu(false)}
+                      onClick={closeMenu}
                       className="bg-customPurple-500 px-4 py-3 rounded-full text-center font-bold text-white border-2 border-transparent hover:border-customPurple-500 hover:bg-transparent hover:text-black transition-all duration-200 text-sm sm:text-base"
                     >
                       Get Started
@@ -150,7 +164,7 @@ function Header() {
 
                     <Link
                       to="/login"
-                      onClick={() => setOpenMenu(false)}
+                      onClick={closeMenu}
                       className="text-center py-3 px-4 rounded-full border-2 border-gray-400 hover:bg-gray-100 transition-all duration-200 text-sm sm:text-base font-semibold"
                     >
                       Sign In
@@ -158,7 +172,7 @@ function Header() {
                   </div>
                 </div>
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>
