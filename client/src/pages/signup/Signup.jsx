@@ -211,7 +211,7 @@ export default function Signup() {
           animate={controls}
         >
           <div>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-3 sm:mb-4 leading-tight">
+            <h2 className="text-2xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-3 sm:mb-4 leading-tight">
               Join Kemchuta Realtors and Unlock Endless Possibilities!
             </h2>
             <p className="text-sm sm:text-base lg:text-lg leading-relaxed text-gray-200 mt-4">

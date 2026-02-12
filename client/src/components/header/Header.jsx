@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { mainLink, userLink } from "../../../data";
 import { IoMenu, IoCloseCircle } from "react-icons/io5";
@@ -13,45 +13,71 @@ function Header() {
     setOpenMenu(!openMenu);
   };
 
+  // Close menu when route changes
+  useEffect(() => {
+    setOpenMenu(false);
+  }, [location]);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (openMenu) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [openMenu]);
+
   return (
     <div className="mainNavWrapper w-full relative z-[9999]">
       {/* Desktop Navigation */}
-      <div className="mainNavContent w-full md:py-5 top-0 bg-white z-[500] shadow-md relative">
-        <div className="desktop__nav w-10/12 mx-auto flex items-center">
-          <div className="desktopNav__wrapper hidden md:flex w-full items-center justify-between">
-            <div className="logo">
+      <div className="mainNavContent w-full py-3 md:py-5 top-0 bg-white z-[500] shadow-md relative">
+        <div className="desktop__nav w-11/12 lg:w-10/12 mx-auto flex items-center">
+          <div className="desktopNav__wrapper hidden md:flex w-full items-center justify-between gap-4">
+            <div className="logo flex-shrink-0">
               <Link to="/">
-                <img src="/assets/kemchutaMainLogo.svg" alt="Logo" />
+                <img
+                  src="/assets/kemchutaMainLogo.svg"
+                  alt="Logo"
+                  className="w-32 lg:w-40 xl:w-48 h-auto"
+                />
               </Link>
             </div>
 
-            <div className="desk__nav flex justify-end w-4/5">
-              <div className="desknav__content flex justify-between items-center gap-36">
-                <div className="mainlink flex gap-10">
+            <div className="desk__nav flex justify-end flex-1">
+              <div className="desknav__content flex justify-between items-center gap-8 lg:gap-12 xl:gap-36 w-full">
+                <div className="mainlink flex gap-4 lg:gap-6 xl:gap-10 flex-wrap">
                   {mainLink.map((link, index) => (
                     <div
-                      className={`mainLink relative ${
+                      className={`mainLink relative whitespace-nowrap ${
                         isActive(link.link) ? "active" : ""
                       }`}
                       key={index}
                     >
-                      <Link to={link.link}>{link.name}</Link>
+                      <Link
+                        to={link.link}
+                        className="text-sm lg:text-base transition-colors duration-200"
+                      >
+                        {link.name}
+                      </Link>
                     </div>
                   ))}
                 </div>
 
-                <div className="userlink flex gap-5 items-center">
-                  <div className="userlinkContent flex gap-3 items-center">
+                <div className="userlink flex gap-2 lg:gap-3 xl:gap-5 items-center flex-shrink-0">
+                  <div className="userlinkContent flex gap-2 lg:gap-3 items-center">
                     <Link
                       to="/signup"
-                      className="uppercase bg-customPurple-500 rounded-full border-2 border-transparent hover:border-customPurple-500 font-bold text-white px-5 py-3 hover:bg-transparent hover:text-customPurple-500"
+                      className="uppercase bg-customPurple-500 rounded-full border-2 border-transparent hover:border-customPurple-500 font-bold text-white px-3 py-2 lg:px-4 lg:py-2.5 xl:px-5 xl:py-3 hover:bg-transparent hover:text-customPurple-500 text-xs lg:text-sm xl:text-base transition-all duration-200 whitespace-nowrap"
                     >
                       Get Started
                     </Link>
 
                     <Link
                       to="/login"
-                      className="uppercase bg-transparent border-2 border-customPurple-300 px-5 py-3 rounded-full hover:bg-black hover:text-white hover:border-transparent font-bold"
+                      className="uppercase bg-transparent border-2 border-customPurple-300 px-3 py-2 lg:px-4 lg:py-2.5 xl:px-5 xl:py-3 rounded-full hover:bg-black hover:text-white hover:border-transparent font-bold text-xs lg:text-sm xl:text-base transition-all duration-200 whitespace-nowrap"
                     >
                       Sign In
                     </Link>
@@ -66,56 +92,75 @@ function Header() {
       {/* Mobile Navigation */}
       <div className="mobile__nav md:hidden w-full relative z-[9999] bg-white">
         <div className="mobilenav__content relative w-full mx-auto">
-          <div className="mobile__logo pl-5 relative">
-            <Link to="/">
+          <div className="mobile__logo px-4 sm:px-5 py-3 relative flex items-center justify-between">
+            <Link to="/" className="flex-shrink-0">
               <img
                 src="/assets/kemchutaMainLogo.svg"
                 alt="Kemchuta Homes Limited Logo"
-                className="w-[200px]"
+                className="w-36 sm:w-44 h-auto"
               />
             </Link>
 
             <button
               onClick={toggleMenu}
-              className="absolute top-0 right-5 text-4xl text-gray-400 z-[99999]"
+              className="text-3xl sm:text-4xl text-gray-400 z-[99999] transition-transform duration-200 hover:scale-110 active:scale-95"
+              aria-label={openMenu ? "Close menu" : "Open menu"}
             >
               {openMenu ? <IoCloseCircle /> : <IoMenu />}
             </button>
           </div>
 
+          {/* Mobile Menu Overlay */}
           {openMenu && (
-            <div className="navwrapper absolute top-12 left-0 w-full bg-white pb-5 shadow-md z-[99998]">
-              {mainLink.map((link, index) => (
-                <div
-                  key={index}
-                  className={`px-5 py-3 border-b hover:bg-customPurple-100 ${
-                    isActive(link.link) ? "bg-customPurple-100" : ""
-                  }`}
-                >
-                  <Link to={link.link} onClick={() => setOpenMenu(false)}>
-                    {link.name}
-                  </Link>
-                </div>
-              ))}
+            <>
+              {/* Backdrop */}
+              <div
+                className="fixed inset-0 bg-black bg-opacity-50 z-[99997]"
+                onClick={() => setOpenMenu(false)}
+              />
 
-              <div className="bottomMobile__nav mt-10">
-                <div className="bNavContent flex flex-col gap-3 w-11/12 mx-auto">
-                  <Link
-                    to="/signup"
-                    className="bg-customPurple-500 px-4 py-2 rounded-full text-center font-bold text-white border border-transparent hover:border-customPurple-500 hover:bg-transparent hover:text-black"
+              {/* Menu Content */}
+              <div className="navwrapper absolute top-full left-0 w-full bg-white pb-5 shadow-lg z-[99998] max-h-[calc(100vh-80px)] overflow-y-auto">
+                {mainLink.map((link, index) => (
+                  <div
+                    key={index}
+                    className={`px-4 sm:px-5 py-3 sm:py-4 border-b hover:bg-customPurple-100 transition-colors duration-200 ${
+                      isActive(link.link)
+                        ? "bg-customPurple-100 font-semibold"
+                        : ""
+                    }`}
                   >
-                    Get Started
-                  </Link>
+                    <Link
+                      to={link.link}
+                      onClick={() => setOpenMenu(false)}
+                      className="block text-sm sm:text-base"
+                    >
+                      {link.name}
+                    </Link>
+                  </div>
+                ))}
 
-                  <Link
-                    to="/login"
-                    className="text-center py-2 px-4 rounded-full border border-gray-400"
-                  >
-                    Sign In
-                  </Link>
+                <div className="bottomMobile__nav mt-6 sm:mt-10 px-4 sm:px-5">
+                  <div className="bNavContent flex flex-col gap-3 w-full">
+                    <Link
+                      to="/signup"
+                      onClick={() => setOpenMenu(false)}
+                      className="bg-customPurple-500 px-4 py-3 rounded-full text-center font-bold text-white border-2 border-transparent hover:border-customPurple-500 hover:bg-transparent hover:text-black transition-all duration-200 text-sm sm:text-base"
+                    >
+                      Get Started
+                    </Link>
+
+                    <Link
+                      to="/login"
+                      onClick={() => setOpenMenu(false)}
+                      className="text-center py-3 px-4 rounded-full border-2 border-gray-400 hover:bg-gray-100 transition-all duration-200 text-sm sm:text-base font-semibold"
+                    >
+                      Sign In
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </div>
+            </>
           )}
         </div>
       </div>

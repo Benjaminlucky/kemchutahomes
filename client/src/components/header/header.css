@@ -1,7 +1,207 @@
+/* Header Base Styles */
+.mainNavWrapper {
+  font-family: inherit;
+}
+
 .mainNavContent {
-  position: fixed !important;
-  top: 0;
-  background: white;
-  z-index: 50;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease-in-out;
+}
+
+/* Desktop Navigation Styles */
+.mainLink a {
+  position: relative;
+  padding-bottom: 2px;
+  transition: color 0.3s ease;
+  color: #262626; /* customBlack-700 */
+}
+
+.mainLink a:hover {
+  color: #700ceb; /* customPurple-500 */
+}
+
+.mainLink.active a {
+  color: #700ceb; /* customPurple-500 */
+  font-weight: 600;
+}
+
+.mainLink.active a::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #700ceb; /* customPurple-500 */
+  border-radius: 2px;
+}
+
+/* Mobile Navigation Styles */
+.mobile__nav {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.navwrapper {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Breakpoints */
+
+/* Small devices (landscape phones, 576px and up) */
+@media (min-width: 576px) {
+  .mobile__logo {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) {
+  .desktopNav__wrapper {
+    min-height: 60px;
+  }
+}
+
+/* Large devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+  .desktopNav__wrapper {
+    min-height: 70px;
+  }
+}
+
+/* Extra large devices (large desktops, 1200px and up) */
+@media (min-width: 1200px) {
+  .desknav__content {
+    gap: 6rem;
+  }
+}
+
+/* Extra extra large devices (1400px and up) */
+@media (min-width: 1400px) {
+  .desknav__content {
+    gap: 9rem;
+  }
+}
+
+/* Mobile Menu Smooth Transitions */
+.mobile__nav a,
+.mobile__nav button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Accessibility Improvements */
+.mainLink a:focus,
+.userlink a:focus,
+.mobile__nav a:focus,
+.mobile__nav button:focus {
+  outline: 2px solid #700ceb; /* customPurple-500 */
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Prevent layout shift */
+.logo img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Mobile menu scrollbar styling */
+.navwrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.navwrapper::-webkit-scrollbar-track {
+  background: #e5e5e5; /* customBlack-100 */
+}
+
+.navwrapper::-webkit-scrollbar-thumb {
+  background: #a3a3a3; /* customBlack-300 */
+  border-radius: 3px;
+}
+
+.navwrapper::-webkit-scrollbar-thumb:hover {
+  background: #700ceb; /* customPurple-500 */
+}
+
+/* Handle very small screens (320px - 375px) */
+@media (max-width: 375px) {
+  .mobile__logo img {
+    width: 140px;
+  }
+
+  .mobile__logo button {
+    font-size: 1.75rem;
+  }
+
+  .bottomMobile__nav {
+    margin-top: 1.5rem;
+  }
+}
+
+/* Prevent horizontal scroll on mobile */
+@media (max-width: 767px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  .mainNavWrapper {
+    overflow-x: hidden;
+  }
+}
+
+/* iPad and tablet landscape optimizations */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .mainlink {
+    gap: 1rem;
+  }
+
+  .userlink {
+    gap: 0.5rem;
+  }
+
+  .mainLink a {
+    font-size: 0.875rem;
+  }
+}
+
+/* Handle notch/safe areas for modern mobile devices */
+@supports (padding: max(0px)) {
+  .mobile__logo {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
+  .navwrapper {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+  /* Add dark mode styles if needed */
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .navwrapper {
+    animation: none;
+  }
+
+  .mainLink a,
+  .userlink a,
+  button {
+    transition: none;
+  }
 }
