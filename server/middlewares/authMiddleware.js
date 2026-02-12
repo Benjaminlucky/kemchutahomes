@@ -20,20 +20,38 @@ export const protect = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // 1️⃣ Try Admin first
-    let user = await Admin.findById(decoded.id).select("_id email role");
+    let user = await Admin.findById(decoded.id).select("_id email");
+
+    if (user) {
+      // ✅ Manually set role for admin since it's not in the schema
+      req.user = {
+        _id: user._id,
+        id: user._id,
+        email: user.email,
+        role: "admin",
+      };
+      return next();
+    }
 
     // 2️⃣ If not admin, try Realtor
-    if (!user) {
-      user = await Realtor.findById(decoded.id).select(
-        "_id email role firstName lastName referralCode"
-      );
-    }
+    user = await Realtor.findById(decoded.id).select(
+      "_id email role firstName lastName referralCode",
+    );
 
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }
 
-    req.user = user;
+    req.user = {
+      _id: user._id,
+      id: user._id,
+      email: user.email,
+      role: user.role,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      referralCode: user.referralCode,
+    };
+
     next();
   } catch (error) {
     console.error("Auth error:", error.message);

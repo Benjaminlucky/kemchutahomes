@@ -3,7 +3,21 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import { X, Eye, Edit2, Trash2, Download, ExternalLink } from "lucide-react";
+import {
+  X,
+  Eye,
+  Edit2,
+  Trash2,
+  Download,
+  ExternalLink,
+  User,
+  Mail,
+  Phone,
+  Building2,
+  CreditCard,
+  Hash,
+  CheckCircle2,
+} from "lucide-react";
 import useSWR from "swr";
 
 const capitalize = (str) =>
@@ -23,6 +37,39 @@ const fetcher = (url, token) =>
     return res.json();
   });
 
+// Toast Component
+const Toast = ({ message, onClose }) => {
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -20, x: "-50%" }}
+      animate={{ opacity: 1, y: 0, x: "-50%" }}
+      exit={{ opacity: 0, y: -20, x: "-50%" }}
+      className="fixed top-6 left-1/2 z-[100] bg-white shadow-2xl rounded-xl px-6 py-4 flex items-center gap-3 border border-green-200"
+    >
+      <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+        <CheckCircle2 className="text-green-600" size={20} />
+      </div>
+      <div>
+        <p className="font-semibold text-gray-800">Success!</p>
+        <p className="text-sm text-gray-600">{message}</p>
+      </div>
+      <button
+        onClick={onClose}
+        className="ml-4 p-1 hover:bg-gray-100 rounded-full transition-colors"
+      >
+        <X size={16} className="text-gray-500" />
+      </button>
+    </motion.div>
+  );
+};
+
 export default function ManageRealtors() {
   const API_URL = import.meta.env.VITE_API_BASE_URL;
   const token =
@@ -38,15 +85,18 @@ export default function ManageRealtors() {
   const [editModal, setEditModal] = useState(null);
   const [deleteModal, setDeleteModal] = useState(null);
 
+  // Toast state
+  const [toast, setToast] = useState(null);
+
   // Edit form state
   const [editForm, setEditForm] = useState({});
 
   const { data, error, mutate } = useSWR(
     `${API_URL}/api/realtors?page=${page}&limit=${limit}&search=${encodeURIComponent(
-      search
+      search,
     )}&sort=${sort}`,
     (url) => fetcher(url, token),
-    { revalidateOnFocus: false }
+    { revalidateOnFocus: false },
   );
 
   const loading = !data && !error;
@@ -111,7 +161,7 @@ export default function ManageRealtors() {
 
       if (!res.ok) throw new Error("Failed to update");
 
-      alert("Realtor updated successfully");
+      setToast("Realtor updated successfully");
       setEditModal(null);
       mutate();
     } catch (err) {
@@ -129,7 +179,7 @@ export default function ManageRealtors() {
 
       if (!res.ok) throw new Error("Failed to delete");
 
-      alert("Realtor deleted successfully");
+      setToast("Realtor deleted successfully");
       setDeleteModal(null);
       mutate();
     } catch (err) {
@@ -141,33 +191,38 @@ export default function ManageRealtors() {
   const handleExportEmails = () => {
     const emails = realtors.map((r) => r.email).join(", ");
     navigator.clipboard.writeText(emails);
-    alert("Emails copied to clipboard!");
+    setToast("Emails copied to clipboard!");
   };
 
   // Export phone numbers
   const handleExportPhones = () => {
     const phones = realtors.map((r) => r.phone).join(", ");
     navigator.clipboard.writeText(phones);
-    alert("Phone numbers copied to clipboard!");
+    setToast("Phone numbers copied to clipboard!");
   };
 
   return (
     <div className="space-y-6 mt-8">
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toast && <Toast message={toast} onClose={() => setToast(null)} />}
+      </AnimatePresence>
+
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold text-customPurple-700">
           Manage Realtors
         </h2>
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <button
             onClick={handleExportEmails}
-            className="px-4 py-2 bg-customPurple-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
+            className="px-5 py-2.5 bg-gradient-to-r from-customPurple-600 to-customPurple-700 text-white rounded-lg hover:from-customPurple-700 hover:to-customPurple-800 flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg"
           >
             <Download size={16} />
             Export Emails
           </button>
           <button
             onClick={handleExportPhones}
-            className="px-4 py-2 bg-customPurple-800 text-white rounded-md hover:bg-green-700 flex items-center gap-2"
+            className="px-5 py-2.5 bg-gradient-to-r from-customBlack-800 to-customBlack-900 text-white rounded-lg hover:from-customBlack-900 hover:to-black flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg"
           >
             <Download size={16} />
             Export Phones
@@ -183,19 +238,19 @@ export default function ManageRealtors() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-          className="px-4 py-2 border rounded-md w-full sm:w-96"
+          className="px-4 py-3 border border-gray-300 rounded-lg w-full sm:w-96 focus:outline-none focus:ring-2 focus:ring-customPurple-400 focus:border-customPurple-400 transition-all shadow-sm"
         />
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <button
             onClick={handleSearch}
-            className="px-4 py-2 bg-customPurple-400 text-white rounded-md hover:bg-[#7a1a1a]"
+            className="px-5 py-3 bg-customPurple-600 text-white rounded-lg hover:bg-customPurple-700 transition-all duration-200 shadow-sm hover:shadow-md font-medium"
           >
             Search
           </button>
           <select
             value={sort.replace("-", "")}
             onChange={(e) => handleSortChange(e.target.value)}
-            className="px-4 py-2 border rounded-md"
+            className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-customPurple-400 focus:border-customPurple-400 transition-all shadow-sm font-medium"
           >
             <option value="createdAt">Created At</option>
             <option value="firstName">First Name</option>
@@ -206,47 +261,71 @@ export default function ManageRealtors() {
       </div>
 
       {/* Realtors table */}
-      <div className="bg-white rounded-2xl shadow border border-gray-100 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-semibold text-gray-700">All Realtors</h3>
-          <div className="text-sm text-gray-500">
-            {loading ? "Loading..." : `${total} total`}
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+        <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-semibold text-gray-800">
+              All Realtors
+            </h3>
+            <div className="text-sm font-medium text-gray-600 bg-gray-100 px-4 py-2 rounded-full">
+              {loading ? "Loading..." : `${total} total`}
+            </div>
           </div>
         </div>
 
         {error && (
-          <div className="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded">
+          <div className="mx-6 mt-4 text-sm text-red-600 bg-red-50 p-4 rounded-lg border border-red-200">
             {error.message}
           </div>
         )}
 
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  ID
+                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <div className="flex items-center gap-2">
+                    <Hash size={14} className="text-customPurple-600" />
+                    ID
+                  </div>
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  First Name
+                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <div className="flex items-center gap-2">
+                    <User size={14} className="text-customPurple-600" />
+                    First Name
+                  </div>
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Last Name
+                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <div className="flex items-center gap-2">
+                    <User size={14} className="text-customPurple-600" />
+                    Last Name
+                  </div>
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Email
+                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <div className="flex items-center gap-2">
+                    <Mail size={14} className="text-customPurple-600" />
+                    Email
+                  </div>
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Phone
+                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <div className="flex items-center gap-2">
+                    <Phone size={14} className="text-customPurple-600" />
+                    Phone
+                  </div>
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Bank
+                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <div className="flex items-center gap-2">
+                    <Building2 size={14} className="text-customPurple-600" />
+                    Bank
+                  </div>
                 </th>
-
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Account No.
+                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <div className="flex items-center gap-2">
+                    <CreditCard size={14} className="text-customPurple-600" />
+                    Account No.
+                  </div>
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -256,29 +335,38 @@ export default function ManageRealtors() {
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i}>
-                    <td colSpan="7" className="px-4 py-4">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse w-full"></div>
+                    <td colSpan="8" className="px-4 py-4">
+                      <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded animate-pulse w-full"></div>
                     </td>
                   </tr>
                 ))
               ) : realtors.length === 0 ? (
                 <tr>
                   <td
-                    colSpan="7"
-                    className="px-4 py-8 text-center text-gray-500"
+                    colSpan="8"
+                    className="px-4 py-12 text-center text-gray-500"
                   >
-                    No realtors found.
+                    <div className="flex flex-col items-center gap-2">
+                      <User size={48} className="text-gray-300" />
+                      <p className="font-medium">No realtors found.</p>
+                    </div>
                   </td>
                 </tr>
               ) : (
                 realtors.map((r) => (
-                  <tr key={r._id} className="hover:bg-gray-50">
-                    <td className="px-4 py-4 text-sm font-medium text-gray-700">
+                  <tr
+                    key={r._id}
+                    className="hover:bg-gradient-to-r hover:from-customPurple-50 hover:to-purple-50 transition-all duration-200 cursor-pointer"
+                  >
+                    <td className="px-4 py-4 text-sm font-semibold text-gray-800">
                       {r.referralCode || "-"}
                     </td>
-                    <td>{r.name?.split(" ")[0] || "-"}</td>
-                    <td>{r.name?.split(" ")[1] || "-"}</td>
-
+                    <td className="px-4 py-4 text-sm text-gray-700 font-medium">
+                      {r.name?.split(" ")[0] || "-"}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-gray-700 font-medium">
+                      {r.name?.split(" ")[1] || "-"}
+                    </td>
                     <td className="px-4 py-4 text-sm text-gray-700">
                       {r.email || "-"}
                     </td>
@@ -288,7 +376,6 @@ export default function ManageRealtors() {
                     <td className="px-4 py-4 text-sm text-gray-700">
                       {r.bank || "-"}
                     </td>
-
                     <td className="px-4 py-4 text-sm text-gray-700">
                       {r.accountNumber || "-"}
                     </td>
@@ -296,24 +383,27 @@ export default function ManageRealtors() {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleView(r._id)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-md"
+                          className="flex items-center gap-1.5 px-3 py-2 text-customPurple-600 bg-customPurple-50 hover:bg-customPurple-100 hover:shadow-md rounded-lg transition-all duration-200 font-medium"
                           title="View Details"
                         >
-                          <Eye size={16} />
+                          <Eye size={14} />
+                          <span className="text-xs">View</span>
                         </button>
                         <button
                           onClick={() => handleEditOpen(r._id)}
-                          className="p-2 text-green-600 hover:bg-green-50 rounded-md"
+                          className="flex items-center gap-1.5 px-3 py-2 text-customBlack-700 bg-customBlack-100 hover:bg-customBlack-200 hover:shadow-md rounded-lg transition-all duration-200 font-medium"
                           title="Edit"
                         >
-                          <Edit2 size={16} />
+                          <Edit2 size={14} />
+                          <span className="text-xs">Edit</span>
                         </button>
                         <button
                           onClick={() => setDeleteModal(r)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-md"
+                          className="flex items-center gap-1.5 px-3 py-2 text-red-600 bg-red-50 hover:bg-red-100 hover:shadow-md rounded-lg transition-all duration-200 font-medium"
                           title="Delete"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={14} />
+                          <span className="text-xs">Delete</span>
                         </button>
                       </div>
                     </td>
@@ -325,25 +415,27 @@ export default function ManageRealtors() {
         </div>
 
         {/* Pagination */}
-        <div className="mt-4 flex items-center justify-between">
-          <div className="text-sm text-gray-600">
-            Page {page} of {pages} — {total} total
-          </div>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => goTo(page - 1)}
-              disabled={page <= 1 || loading}
-              className="px-3 py-1 rounded-md border hover:bg-gray-100 disabled:opacity-50"
-            >
-              Prev
-            </button>
-            <button
-              onClick={() => goTo(page + 1)}
-              disabled={page >= pages || loading}
-              className="px-3 py-1 rounded-md border hover:bg-gray-100 disabled:opacity-50"
-            >
-              Next
-            </button>
+        <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-t border-gray-200">
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-medium text-gray-600">
+              Page {page} of {pages} — {total} total
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => goTo(page - 1)}
+                disabled={page <= 1 || loading}
+                className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-customPurple-50 hover:border-customPurple-300 hover:text-customPurple-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition-all duration-200 font-medium shadow-sm"
+              >
+                Prev
+              </button>
+              <button
+                onClick={() => goTo(page + 1)}
+                disabled={page >= pages || loading}
+                className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-customPurple-50 hover:border-customPurple-300 hover:text-customPurple-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition-all duration-200 font-medium shadow-sm"
+              >
+                Next
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -355,43 +447,47 @@ export default function ManageRealtors() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             onClick={() => setViewModal(null)}
           >
             <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
-              className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", duration: 0.5 }}
+              className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-                <h3 className="text-xl font-bold text-gray-800">
+              <div className="sticky top-0 bg-gradient-to-r from-customPurple-600 to-customPurple-700 px-6 py-5 flex items-center justify-between shadow-md z-10">
+                <h3 className="text-xl font-bold text-white">
                   Realtor Details
                 </h3>
                 <button
                   onClick={() => setViewModal(null)}
-                  className="p-2 hover:bg-gray-100 rounded-full"
+                  className="p-2 hover:bg-white/20 rounded-full transition-colors"
                 >
-                  <X size={20} />
+                  <X size={20} className="text-white" />
                 </button>
               </div>
 
               <div className="p-6 space-y-6">
                 {/* Avatar */}
                 <div className="flex justify-center">
-                  <img
-                    src={
-                      viewModal.avatar ||
-                      "https://ui-avatars.com/api/?name=User"
-                    }
-                    alt="Avatar"
-                    className="w-32 h-32 rounded-full object-cover border-4 border-gray-200"
-                  />
+                  <div className="relative">
+                    <img
+                      src={
+                        viewModal.avatar ||
+                        "https://ui-avatars.com/api/?name=User"
+                      }
+                      alt="Avatar"
+                      className="w-32 h-32 rounded-full object-cover border-4 border-customPurple-200 shadow-lg"
+                    />
+                    <div className="absolute bottom-0 right-0 w-8 h-8 bg-green-500 border-4 border-white rounded-full"></div>
+                  </div>
                 </div>
 
                 {/* Details Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <DetailItem label="First Name" value={viewModal.firstName} />
                   <DetailItem label="Last Name" value={viewModal.lastName} />
                   <DetailItem label="Email" value={viewModal.email} />
@@ -433,22 +529,23 @@ export default function ManageRealtors() {
                 </div>
 
                 {/* Referral Link */}
-                <div className="border-t pt-4">
-                  <label className="text-sm font-medium text-gray-600">
+                <div className="border-t pt-6">
+                  <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <ExternalLink size={16} className="text-customPurple-600" />
                     Referral Link
                   </label>
-                  <div className="flex items-center gap-2 mt-2">
+                  <div className="flex items-center gap-2 mt-3">
                     <input
                       type="text"
                       value={`https://pcrg.netlify.app/sign-up?ref=${viewModal.referralCode}`}
                       readOnly
-                      className="flex-1 px-3 py-2 border rounded-md bg-gray-50 text-sm"
+                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-sm font-mono"
                     />
                     <a
                       href={`https://pcrg.netlify.app/sign-up?ref=${viewModal.referralCode}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-md"
+                      className="p-3 text-white bg-customPurple-600 hover:bg-customPurple-700 rounded-lg transition-colors shadow-md"
                     >
                       <ExternalLink size={20} />
                     </a>
@@ -467,25 +564,24 @@ export default function ManageRealtors() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             onClick={() => setEditModal(null)}
           >
             <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
-              className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", duration: 0.5 }}
+              className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-                <h3 className="text-xl font-bold text-gray-800">
-                  Edit Realtor
-                </h3>
+              <div className="sticky top-0 bg-gradient-to-r from-customPurple-600 to-customPurple-700 px-6 py-5 flex items-center justify-between shadow-md z-10">
+                <h3 className="text-xl font-bold text-white">Edit Realtor</h3>
                 <button
                   onClick={() => setEditModal(null)}
-                  className="p-2 hover:bg-gray-100 rounded-full"
+                  className="p-2 hover:bg-white/20 rounded-full transition-colors"
                 >
-                  <X size={20} />
+                  <X size={20} className="text-white" />
                 </button>
               </div>
 
@@ -553,16 +649,16 @@ export default function ManageRealtors() {
                   />
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t">
+                <div className="flex justify-end gap-3 pt-6 border-t">
                   <button
                     onClick={() => setEditModal(null)}
-                    className="px-4 py-2 border rounded-md hover:bg-gray-50"
+                    className="px-6 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleEditSave}
-                    className="px-4 py-2 bg-[#561010] text-white rounded-md hover:bg-[#7a1a1a]"
+                    className="px-6 py-2.5 bg-gradient-to-r from-customPurple-600 to-customPurple-700 text-white rounded-lg hover:from-customPurple-700 hover:to-customPurple-800 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
                   >
                     Save Changes
                   </button>
@@ -580,27 +676,28 @@ export default function ManageRealtors() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             onClick={() => setDeleteModal(null)}
           >
             <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
-              className="bg-white rounded-2xl shadow-xl max-w-md w-full"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", duration: 0.5 }}
+              className="bg-white rounded-2xl shadow-2xl max-w-md w-full"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-6">
-                <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full">
-                  <Trash2 className="text-red-600" size={24} />
+                <div className="flex items-center justify-center w-16 h-16 mx-auto bg-red-100 rounded-full">
+                  <Trash2 className="text-red-600" size={28} />
                 </div>
 
-                <h3 className="text-xl font-bold text-gray-800 text-center mt-4">
+                <h3 className="text-2xl font-bold text-gray-800 text-center mt-4">
                   Delete Realtor?
                 </h3>
-                <p className="text-gray-600 text-center mt-2">
+                <p className="text-gray-600 text-center mt-3 leading-relaxed">
                   Are you sure you want to delete{" "}
-                  <span className="font-semibold">
+                  <span className="font-semibold text-gray-800">
                     {deleteModal.firstName} {deleteModal.lastName}
                   </span>
                   ? This action cannot be undone.
@@ -609,13 +706,13 @@ export default function ManageRealtors() {
                 <div className="flex gap-3 mt-6">
                   <button
                     onClick={() => setDeleteModal(null)}
-                    className="flex-1 px-4 py-2 border rounded-md hover:bg-gray-50"
+                    className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleDelete}
-                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                    className="flex-1 px-4 py-2.5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
                   >
                     Delete
                   </button>
@@ -631,20 +728,22 @@ export default function ManageRealtors() {
 
 // Helper Components
 const DetailItem = ({ label, value }) => (
-  <div>
-    <label className="text-sm font-medium text-gray-600">{label}</label>
-    <p className="text-gray-800 mt-1">{value || "-"}</p>
+  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
+      {label}
+    </label>
+    <p className="text-gray-900 mt-2 font-medium">{value || "-"}</p>
   </div>
 );
 
 const FormField = ({ label, value, onChange, type = "text" }) => (
   <div>
-    <label className="text-sm font-medium text-gray-600">{label}</label>
+    <label className="text-sm font-semibold text-gray-700">{label}</label>
     <input
       type={type}
       value={value}
       onChange={onChange}
-      className="w-full px-3 py-2 border rounded-md mt-1 focus:outline-none focus:ring-2 focus:ring-[#561010]"
+      className="w-full px-4 py-3 border border-gray-300 rounded-lg mt-2 focus:outline-none focus:ring-2 focus:ring-customPurple-500 focus:border-customPurple-500 transition-all shadow-sm"
     />
   </div>
 );
