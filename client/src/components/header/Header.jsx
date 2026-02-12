@@ -33,9 +33,10 @@ function Header() {
   return (
     <div className="mainNavWrapper w-full relative z-[9999]">
       {/* Desktop Navigation */}
-      <div className="mainNavContent w-full py-3 md:py-5 top-0 bg-white z-[500] shadow-md relative">
+      <div className="mainNavContent w-full py-3 md:py-3 top-0 bg-white z-[500] shadow-md relative">
         <div className="desktop__nav w-11/12 lg:w-10/12 mx-auto flex items-center">
-          <div className="desktopNav__wrapper hidden md:flex w-full items-center justify-between gap-4">
+          <div className="desktopNav__wrapper hidden md:flex w-full items-center justify-between">
+            {/* Logo on the left */}
             <div className="logo flex-shrink-0">
               <Link to="/">
                 <img
@@ -46,43 +47,40 @@ function Header() {
               </Link>
             </div>
 
-            <div className="desk__nav flex justify-end flex-1">
-              <div className="desknav__content flex justify-between items-center gap-8 lg:gap-12 xl:gap-36 w-full">
-                <div className="mainlink flex gap-4 lg:gap-6 xl:gap-10 flex-wrap">
-                  {mainLink.map((link, index) => (
-                    <div
-                      className={`mainLink relative whitespace-nowrap ${
-                        isActive(link.link) ? "active" : ""
-                      }`}
-                      key={index}
-                    >
-                      <Link
-                        to={link.link}
-                        className="text-sm lg:text-base transition-colors duration-200"
-                      >
-                        {link.name}
-                      </Link>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="userlink flex gap-2 lg:gap-3 xl:gap-5 items-center flex-shrink-0">
-                  <div className="userlinkContent flex gap-2 lg:gap-3 items-center">
+            {/* Navigation items and buttons on the right */}
+            <div className="desk__nav flex items-center gap-6 lg:gap-8 xl:gap-12">
+              <div className="mainlink flex gap-6 lg:gap-8 xl:gap-10">
+                {mainLink.map((link, index) => (
+                  <div
+                    className={`mainLink relative whitespace-nowrap ${
+                      isActive(link.link) ? "active" : ""
+                    }`}
+                    key={index}
+                  >
                     <Link
-                      to="/signup"
-                      className="uppercase bg-customPurple-500 rounded-full border-2 border-transparent hover:border-customPurple-500 font-bold text-white px-3 py-2 lg:px-4 lg:py-2.5 xl:px-5 xl:py-3 hover:bg-transparent hover:text-customPurple-500 text-xs lg:text-sm xl:text-base transition-all duration-200 whitespace-nowrap"
+                      to={link.link}
+                      className="text-sm lg:text-base transition-colors duration-200"
                     >
-                      Get Started
-                    </Link>
-
-                    <Link
-                      to="/login"
-                      className="uppercase bg-transparent border-2 border-customPurple-300 px-3 py-2 lg:px-4 lg:py-2.5 xl:px-5 xl:py-3 rounded-full hover:bg-black hover:text-white hover:border-transparent font-bold text-xs lg:text-sm xl:text-base transition-all duration-200 whitespace-nowrap"
-                    >
-                      Sign In
+                      {link.name}
                     </Link>
                   </div>
-                </div>
+                ))}
+              </div>
+
+              <div className="userlink flex gap-3 items-center flex-shrink-0">
+                <Link
+                  to="/signup"
+                  className="uppercase bg-customPurple-500 rounded-full border-2 border-transparent hover:border-customPurple-500 font-semibold text-white px-4 py-2 lg:px-5 lg:py-2 hover:bg-transparent hover:text-customPurple-500 text-xs lg:text-sm transition-all duration-200 whitespace-nowrap"
+                >
+                  Get Started
+                </Link>
+
+                <Link
+                  to="/login"
+                  className="uppercase bg-transparent border-2 border-customPurple-300 px-4 py-2 lg:px-5 lg:py-2 rounded-full hover:bg-black hover:text-white hover:border-transparent font-semibold text-xs lg:text-sm transition-all duration-200 whitespace-nowrap"
+                >
+                  Sign In
+                </Link>
               </div>
             </div>
           </div>
