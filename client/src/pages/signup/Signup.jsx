@@ -86,7 +86,6 @@ export default function Signup() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
 
   // Toggle states for password visibility
   const [showPassword, setShowPassword] = useState(false);
@@ -275,7 +274,7 @@ export default function Signup() {
             <p className="text-gray-500 flex flex-wrap items-center mt-2 text-xs sm:text-sm md:text-base gap-1">
               Already a member?
               <a
-                href="#"
+                href="/login"
                 className="text-purple-700 font-semibold hover:underline ml-1"
               >
                 Log in here
