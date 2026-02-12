@@ -83,8 +83,10 @@ export default function Signup() {
 
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Toggle states for password visibility
   const [showPassword, setShowPassword] = useState(false);
@@ -135,6 +137,8 @@ export default function Signup() {
 
     if (Object.keys(validationErrors).length > 0) {
       setLoading(false);
+      // Scroll to top to show validation errors
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
@@ -153,7 +157,10 @@ export default function Signup() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Signup failed");
 
-      setSuccess("Account created successfully!");
+      setSuccess(
+        "Account created successfully! Check your email for verification.",
+      );
+      setShowSuccess(true);
       setFormData({
         firstName: "",
         lastName: "",
@@ -168,9 +175,28 @@ export default function Signup() {
         birthDate: "",
       });
       setTermsAccepted(false);
-      setTimeout(() => setSuccess(""), 4000);
+      setErrors({}); // Clear any previous errors
+
+      // After 2 seconds, change to redirecting message
+      setTimeout(() => {
+        setSuccess("Redirecting to login page...");
+      }, 2000);
+
+      // After 3 seconds, animate out the message
+      setTimeout(() => {
+        setShowSuccess(false);
+      }, 3000);
+
+      // Redirect to login page after 3.5 seconds (allowing animation to complete)
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 3500);
     } catch (error) {
-      setErrors({ general: error.message });
+      setErrors({
+        general: error.message || "An error occurred. Please try again.",
+      });
+      // Scroll to top to show error message
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setLoading(false);
     }
@@ -256,17 +282,6 @@ export default function Signup() {
               </a>
             </p>
           </div>
-
-          {success && (
-            <p className="bg-green-100 text-green-700 p-2 sm:p-2.5 rounded mb-3 sm:mb-4 text-xs sm:text-sm">
-              {success}
-            </p>
-          )}
-          {errors.general && (
-            <p className="bg-red-100 text-red-700 p-2 sm:p-2.5 rounded mb-3 sm:mb-4 text-xs sm:text-sm">
-              {errors.general}
-            </p>
-          )}
 
           <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -475,6 +490,26 @@ export default function Signup() {
             </div>
             {errors.terms && (
               <p className="text-xs text-red-500">{errors.terms}</p>
+            )}
+
+            {/* Error Message */}
+            {errors.general && (
+              <div className="bg-red-100 border border-red-400 text-red-700 p-2 sm:p-2.5 rounded text-xs sm:text-sm">
+                {errors.general}
+              </div>
+            )}
+
+            {/* Success Message */}
+            {success && (
+              <div
+                className={`bg-green-100 border border-green-400 text-green-700 p-2 sm:p-2.5 rounded text-xs sm:text-sm transition-all duration-500 ${
+                  showSuccess
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 -translate-y-2"
+                }`}
+              >
+                {success}
+              </div>
             )}
 
             <button
