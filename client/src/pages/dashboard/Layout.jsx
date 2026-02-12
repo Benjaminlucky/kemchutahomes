@@ -118,7 +118,7 @@ export default function DashboardLayout({ children }) {
         </motion.aside>
       ) : (
         // Static Sidebar for Desktop
-        <aside className="h-[100vh] w-64 bg-customPurple-500 text-white flex flex-col justify-between py-6 px-4 sticky top-0">
+        <aside className="h-auto w-64 bg-customPurple-500 text-white flex flex-col justify-between py-6 px-4 sticky top-0">
           <div>
             <h1 className="text-2xl font-bold mb-8 pl-4">Kemchuta Dashboard</h1>
             <nav className="space-y-2">
