@@ -179,7 +179,7 @@ export default function Signup() {
   return (
     <motion.div
       ref={ref}
-      className="py-8 sm:py-16 md:py-24 lg:py-36 px-4 sm:px-6 md:px-12 lg:px-24 xl:px-36 flex items-center justify-center bg-gray-50 relative overflow-hidden min-h-screen"
+      className="py-6 sm:py-10 md:py-16 lg:py-20 xl:py-24 px-3 sm:px-4 md:px-6 lg:px-12 xl:px-16 flex items-center justify-center bg-gray-50 relative overflow-hidden min-h-screen"
     >
       <motion.div
         className="absolute inset-0 bg-gradient-to-r from-[rgba(255,0,0,0.1)] via-transparent to-transparent pointer-events-none z-0"
@@ -195,9 +195,9 @@ export default function Signup() {
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg flex flex-col md:flex-row w-full max-w-8xl overflow-hidden relative z-10">
+      <div className="bg-white rounded-lg sm:rounded-xl md:rounded-2xl shadow-lg flex flex-col md:flex-row w-full max-w-6xl overflow-hidden relative z-10">
         <motion.div
-          className="bg-purple-600 text-white md:w-1/2 p-6 sm:p-8 md:p-10 lg:p-16 xl:p-24 flex flex-col justify-between"
+          className="bg-purple-600 text-white md:w-1/2 p-5 sm:p-6 md:p-8 lg:p-12 xl:p-16 flex flex-col justify-between"
           variants={{
             hidden: { opacity: 0, y: 40, filter: "blur(10px)" },
             visible: {
@@ -211,16 +211,16 @@ export default function Signup() {
           animate={controls}
         >
           <div>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-3 sm:mb-4 leading-tight">
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2 sm:mb-3 md:mb-4 leading-tight">
               Join Kemchuta Realtors and Unlock Endless Possibilities!
             </h2>
-            <p className="text-sm sm:text-base lg:text-lg leading-relaxed text-gray-200 mt-4">
+            <p className="text-xs sm:text-sm md:text-base leading-relaxed text-gray-200 mt-2 sm:mt-3 md:mt-4">
               At Kemchuta Homes, we see real estate as more than property—it's
               about vision, transformation, and lasting impact. Guided by High
               Chief Dr. Ikem O. Nwabueze, we stand for innovation, integrity,
               and growth.
             </p>
-            <p className="text-sm sm:text-base mt-3 sm:mt-4 text-gray-200">
+            <p className="text-xs sm:text-sm md:text-base mt-2 sm:mt-3 text-gray-200">
               We empower investors with confidence and realtors with opportunity
               — together, we're shaping the future of real estate.
             </p>
@@ -228,7 +228,7 @@ export default function Signup() {
         </motion.div>
 
         <motion.div
-          className="md:w-1/2 p-6 sm:p-8 md:p-10"
+          className="md:w-1/2 p-5 sm:p-6 md:p-8 lg:p-10"
           variants={{
             hidden: { opacity: 0, x: 60, filter: "blur(10px)" },
             visible: {
@@ -241,12 +241,12 @@ export default function Signup() {
           initial="hidden"
           animate={controls}
         >
-          <div className="mb-6 sm:mb-8">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">
+          <div className="mb-4 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
               Sign up to{" "}
               <span className="text-purple-700">Kemchuta Homes Realtors</span>
             </h2>
-            <p className="text-gray-500 flex flex-wrap items-center mt-2 text-sm sm:text-base gap-1">
+            <p className="text-gray-500 flex flex-wrap items-center mt-2 text-xs sm:text-sm md:text-base gap-1">
               Already a member?
               <a
                 href="#"
@@ -258,25 +258,25 @@ export default function Signup() {
           </div>
 
           {success && (
-            <p className="bg-green-100 text-green-700 p-2 sm:p-3 rounded mb-4 text-sm">
+            <p className="bg-green-100 text-green-700 p-2 sm:p-2.5 rounded mb-3 sm:mb-4 text-xs sm:text-sm">
               {success}
             </p>
           )}
           {errors.general && (
-            <p className="bg-red-100 text-red-700 p-2 sm:p-3 rounded mb-4 text-sm">
+            <p className="bg-red-100 text-red-700 p-2 sm:p-2.5 rounded mb-3 sm:mb-4 text-xs sm:text-sm">
               {errors.general}
             </p>
           )}
 
-          <div className="space-y-4 sm:space-y-5 py-4 sm:py-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <input
                   name="firstName"
                   placeholder="First Name"
                   value={formData.firstName}
                   onChange={handleChange}
-                  className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base outline-0 focus:ring-2 focus:ring-purple-500"
+                  className="w-full border border-gray-400 rounded-sm p-2 sm:p-2.5 text-xs sm:text-sm md:text-base outline-0 focus:ring-2 focus:ring-purple-500"
                 />
                 {errors.firstName && (
                   <p className="text-xs text-red-500 mt-1">
@@ -290,7 +290,7 @@ export default function Signup() {
                   placeholder="Last Name"
                   value={formData.lastName}
                   onChange={handleChange}
-                  className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base outline-0 focus:ring-2 focus:ring-purple-500"
+                  className="w-full border border-gray-400 rounded-sm p-2 sm:p-2.5 text-xs sm:text-sm md:text-base outline-0 focus:ring-2 focus:ring-purple-500"
                 />
                 {errors.lastName && (
                   <p className="text-xs text-red-500 mt-1">{errors.lastName}</p>
@@ -303,7 +303,7 @@ export default function Signup() {
               placeholder="Email Address"
               value={formData.email}
               onChange={handleChange}
-              className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base outline-0 focus:ring-2 focus:ring-purple-500"
+              className="w-full border border-gray-400 rounded-sm p-2 sm:p-2.5 text-xs sm:text-sm md:text-base outline-0 focus:ring-2 focus:ring-purple-500"
             />
             {errors.email && (
               <p className="text-xs text-red-500 mt-1">{errors.email}</p>
@@ -314,7 +314,7 @@ export default function Signup() {
               placeholder="Phone Number"
               value={formData.phone}
               onChange={handleChange}
-              className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base outline-0 focus:ring-2 focus:ring-purple-500"
+              className="w-full border border-gray-400 rounded-sm p-2 sm:p-2.5 text-xs sm:text-sm md:text-base outline-0 focus:ring-2 focus:ring-purple-500"
             />
             {errors.phone && (
               <p className="text-xs text-red-500 mt-1">{errors.phone}</p>
@@ -329,40 +329,51 @@ export default function Signup() {
                 name="birthDate"
                 value={formData.birthDate}
                 onChange={handleChange}
-                className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base outline-0 focus:ring-2 focus:ring-purple-500"
+                max="2026-12-31"
+                className="w-full border border-gray-400 rounded-sm p-2 sm:p-2.5 text-xs sm:text-sm md:text-base outline-0 focus:ring-2 focus:ring-purple-500"
               />
               {errors.birthDate && (
                 <p className="text-xs text-red-500 mt-1">{errors.birthDate}</p>
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <select
-                name="state"
-                value={formData.state}
-                onChange={handleChange}
-                className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base outline-0 focus:ring-2 focus:ring-purple-500"
-              >
-                <option value="">Select State</option>
-                {states.map((st) => (
-                  <option key={st} value={st}>
-                    {st}
-                  </option>
-                ))}
-              </select>
-              <select
-                name="bank"
-                value={formData.bank}
-                onChange={handleChange}
-                className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base outline-0 focus:ring-2 focus:ring-purple-500"
-              >
-                <option value="">Select Bank</option>
-                {banks.map((bk) => (
-                  <option key={bk} value={bk}>
-                    {bk}
-                  </option>
-                ))}
-              </select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <select
+                  name="state"
+                  value={formData.state}
+                  onChange={handleChange}
+                  className="w-full border border-gray-400 rounded-sm p-2 sm:p-2.5 text-xs sm:text-sm md:text-base outline-0 focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="">Select State</option>
+                  {states.map((st) => (
+                    <option key={st} value={st}>
+                      {st}
+                    </option>
+                  ))}
+                </select>
+                {errors.state && (
+                  <p className="text-xs text-red-500 mt-1">{errors.state}</p>
+                )}
+              </div>
+              <div>
+                <select
+                  name="bank"
+                  value={formData.bank}
+                  onChange={handleChange}
+                  className="w-full border border-gray-400 rounded-sm p-2 sm:p-2.5 text-xs sm:text-sm md:text-base outline-0 focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="">Select Bank</option>
+                  {banks.map((bk) => (
+                    <option key={bk} value={bk}>
+                      {bk}
+                    </option>
+                  ))}
+                </select>
+                {errors.bank && (
+                  <p className="text-xs text-red-500 mt-1">{errors.bank}</p>
+                )}
+              </div>
             </div>
 
             <input
@@ -370,7 +381,7 @@ export default function Signup() {
               placeholder="Account Name"
               value={formData.accountName}
               onChange={handleChange}
-              className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base outline-0 focus:ring-2 focus:ring-purple-500"
+              className="w-full border border-gray-400 rounded-sm p-2 sm:p-2.5 text-xs sm:text-sm md:text-base outline-0 focus:ring-2 focus:ring-purple-500"
             />
             {errors.accountName && (
               <p className="text-xs text-red-500 mt-1">{errors.accountName}</p>
@@ -381,7 +392,7 @@ export default function Signup() {
               placeholder="Account Number"
               value={formData.accountNumber}
               onChange={handleChange}
-              className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 text-sm sm:text-base outline-0 focus:ring-2 focus:ring-purple-500"
+              className="w-full border border-gray-400 rounded-sm p-2 sm:p-2.5 text-xs sm:text-sm md:text-base outline-0 focus:ring-2 focus:ring-purple-500"
             />
             {errors.accountNumber && (
               <p className="text-xs text-red-500 mt-1">
@@ -397,14 +408,18 @@ export default function Signup() {
                 placeholder="Password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 pr-10 text-sm sm:text-base outline-0 focus:ring-2 focus:ring-purple-500"
+                className="w-full border border-gray-400 rounded-sm p-2 sm:p-2.5 pr-10 text-xs sm:text-sm md:text-base outline-0 focus:ring-2 focus:ring-purple-500"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-purple-700"
+                className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-purple-700"
               >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                {showPassword ? (
+                  <EyeOff size={18} className="sm:w-5 sm:h-5" />
+                ) : (
+                  <Eye size={18} className="sm:w-5 sm:h-5" />
+                )}
               </button>
               {errors.password && (
                 <p className="text-xs text-red-500 mt-1">{errors.password}</p>
@@ -419,14 +434,18 @@ export default function Signup() {
                 placeholder="Confirm Password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="w-full border border-gray-400 rounded-sm p-2.5 sm:p-3 pr-10 text-sm sm:text-base outline-0 focus:ring-2 focus:ring-purple-500"
+                className="w-full border border-gray-400 rounded-sm p-2 sm:p-2.5 pr-10 text-xs sm:text-sm md:text-base outline-0 focus:ring-2 focus:ring-purple-500"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-purple-700"
+                className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-purple-700"
               >
-                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                {showConfirmPassword ? (
+                  <EyeOff size={18} className="sm:w-5 sm:h-5" />
+                ) : (
+                  <Eye size={18} className="sm:w-5 sm:h-5" />
+                )}
               </button>
               {errors.confirmPassword && (
                 <p className="text-xs text-red-500 mt-1">
@@ -440,9 +459,9 @@ export default function Signup() {
                 type="checkbox"
                 checked={termsAccepted}
                 onChange={(e) => setTermsAccepted(e.target.checked)}
-                className="mt-1"
+                className="mt-0.5 sm:mt-1 w-3.5 h-3.5 sm:w-4 sm:h-4"
               />
-              <label>
+              <label className="leading-relaxed">
                 By signing up, you agree to our{" "}
                 <a href="#" className="text-purple-600 font-semibold">
                   Terms
@@ -461,14 +480,14 @@ export default function Signup() {
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className={`w-full flex justify-center items-center gap-2 py-2.5 sm:py-3 rounded-md text-white text-sm sm:text-base font-medium transition ${
+              className={`w-full flex justify-center items-center gap-2 py-2 sm:py-2.5 md:py-3 rounded-md text-white text-xs sm:text-sm md:text-base font-medium transition ${
                 loading
                   ? "bg-purple-400 cursor-not-allowed"
                   : "bg-purple-600 hover:bg-purple-700 hover:shadow-lg"
               }`}
             >
               {loading && (
-                <span className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                <span className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
               )}
               {loading ? "Creating Account..." : "Create Account"}
             </button>

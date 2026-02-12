@@ -45,7 +45,7 @@ function AppWrapper() {
 
       <main
         className={`${
-          hideLayout ? "" : "pt-16"
+          hideLayout ? "" : "pt-0"
         } relative overflow-x-hidden bg-white min-h-screen`}
       >
         <Routes>
