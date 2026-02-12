@@ -56,6 +56,8 @@ const banks = [
   "GTBank",
   "Heritage Bank",
   "Keystone Bank",
+  "MoniePoint",
+  "Opay Digital",
   "Polaris Bank",
   "Stanbic IBTC",
   "Sterling Bank",
