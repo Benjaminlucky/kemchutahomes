@@ -1,4 +1,3 @@
-// models/realtor.model.js
 import mongoose from "mongoose";
 
 const RealtorSchema = new mongoose.Schema({
@@ -19,7 +18,6 @@ const RealtorSchema = new mongoose.Schema({
   accountNumber: { type: String },
   passwordHash: { type: String, required: true },
 
-  // ✅ Better default avatar placeholder
   avatar: {
     type: String,
     default: "https://ui-avatars.com/api/?name=Realtor",
@@ -27,7 +25,6 @@ const RealtorSchema = new mongoose.Schema({
 
   referralCode: { type: String, required: true, unique: true },
 
-  // ✅ Correct model reference
   recruitedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Realtor",
@@ -36,10 +33,13 @@ const RealtorSchema = new mongoose.Schema({
 
   role: { type: String, enum: ["admin", "realtor"], default: "realtor" },
 
+  // ✅ Password reset
+  resetPasswordToken: { type: String },
+  resetPasswordExpiry: { type: Date },
+
   createdAt: { type: Date, default: Date.now },
 });
 
-// ✅ Fix populate + referral counting
 RealtorSchema.index({ recruitedBy: 1 });
 
 RealtorSchema.virtual("referralLink").get(function () {
