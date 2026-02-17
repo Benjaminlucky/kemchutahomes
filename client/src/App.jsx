@@ -30,6 +30,8 @@ import ProtectedRoute from "./components/ProtectedRoutes";
 import NotFound from "./pages/notfound/NotFound";
 import ForgotPassword from "./pages/forgot-password/ForgotPassword";
 import ResetPassword from "./pages/reset-password/resetPassword";
+import AdminForgotPassword from "./pages/admin-forgot-password/AdminForgotPassword";
+import AdminResetPassword from "./pages/admin-reset-password/AdminResetPassword";
 
 // ============================
 // Layout wrapper for dynamic header/footer
@@ -63,6 +65,14 @@ function AppWrapper() {
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route
+            path="/admin/forgot-password"
+            element={<AdminForgotPassword />}
+          />
+          <Route
+            path="/admin/reset-password"
+            element={<AdminResetPassword />}
+          />
 
           {/* Protected Dashboard */}
           <Route

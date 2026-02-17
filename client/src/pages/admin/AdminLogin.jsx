@@ -157,6 +157,15 @@ export default function AdminLogin() {
           >
             {loading ? "Signing in..." : "Login"}
           </button>
+          {/* ✅ Forgot password link */}
+          <div className="text-center">
+            <a
+              href="/admin/forgot-password"
+              className="text-sm text-customPurple-600 hover:text-customPurple-800 hover:underline transition-colors"
+            >
+              Forgot password?
+            </a>
+          </div>
         </form>
       </motion.div>
     </motion.div>

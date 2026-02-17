@@ -1,9 +1,15 @@
 import express from "express";
-import { loginAdmin, signupAdmin } from "../controllers/adminController.js";
+import {
+  forgotAdminPassword,
+  loginAdmin,
+  resetAdminPassword,
+  signupAdmin,
+} from "../controllers/adminController.js";
 
 const router = express.Router();
 
 router.post("/signup", signupAdmin);
 router.post("/login", loginAdmin);
-
+router.post("/forgot-password", forgotAdminPassword);
+router.post("/reset-password", resetAdminPassword);
 export default router;
