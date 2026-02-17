@@ -120,3 +120,107 @@ export const sendWelcomeEmail = async ({ email, firstName }) => {
     };
   }
 };
+
+/**
+ * Send Password Reset Email
+ * @param {Object} params - Contains email, firstName, and resetUrl
+ * @returns {Promise<Object>} - Returns success status and message ID
+ */
+export const sendPasswordResetEmail = async ({
+  email,
+  firstName,
+  resetUrl,
+}) => {
+  console.log(`--- Initiating Password Reset Email for: ${email} ---`);
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: "Kemchuta Homes <onboarding@khlrealtorsportal.com>",
+      to: email,
+      subject: "Reset Your Kemchuta Homes Password 🔐",
+      html: `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body { font-family: 'Inter', Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+            .wrapper { width: 100%; table-layout: fixed; background-color: #f5f5f5; padding-bottom: 40px; }
+            .main { background-color: #ffffff; width: 100%; max-width: 600px; margin: 0 auto; border-radius: 12px; overflow: hidden; margin-top: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+            .header { background-color: #700CEB; padding: 50px 20px; text-align: center; }
+            .header h1 { color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px; text-transform: uppercase; }
+            .content { padding: 40px 35px; color: #262626; line-height: 1.7; }
+            .content h2 { color: #000000; font-size: 22px; margin-top: 0; font-weight: 700; }
+            .content p { font-size: 16px; color: #525252; }
+            .btn-wrapper { text-align: center; margin: 35px 0; }
+            .btn { background-color: #700CEB; color: #ffffff !important; padding: 16px 36px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 16px; display: inline-block; box-shadow: 0 4px 12px rgba(112, 12, 235, 0.25); }
+            .warning-box { background-color: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 6px; padding: 14px 18px; margin: 24px 0; }
+            .warning-box p { font-size: 14px; color: #92400e; margin: 0; }
+            .footer { background-color: #171717; padding: 30px; text-align: center; color: #a3a3a3; font-size: 13px; }
+            .footer a { color: #bd80f8; text-decoration: none; font-weight: 600; }
+            .footer p { margin: 8px 0; }
+            .divider { height: 1px; background-color: #404040; margin: 20px auto; width: 80%; }
+          </style>
+        </head>
+        <body>
+          <div class="wrapper">
+            <div class="main">
+              <div class="header">
+                <h1>Kemchuta Homes</h1>
+              </div>
+
+              <div class="content">
+                <h2>Password Reset Request 🔐</h2>
+                <p>Hi ${firstName},</p>
+                <p>We received a request to reset the password for your Kemchuta Homes account. Click the button below to choose a new password.</p>
+
+                <div class="btn-wrapper">
+                  <a href="${resetUrl}" class="btn">Reset My Password</a>
+                </div>
+
+                <div class="warning-box">
+                  <p>⏰ <strong>This link expires in 1 hour.</strong> If you didn't request a password reset, you can safely ignore this email — your password will remain unchanged.</p>
+                </div>
+
+                <p>For security, never share this link with anyone. Our team will never ask for it.</p>
+
+                <p style="margin-bottom: 0;">Best Regards,</p>
+                <p style="margin-top: 0; color: #700CEB; font-weight: 700;">The Kemchuta Homes Team</p>
+              </div>
+
+              <div class="footer">
+                <p>Connect with us</p>
+                <p>
+                  <a href="https://kemchutahomes.netlify.app">Website</a> &nbsp;|&nbsp;
+                  <a href="#">Instagram</a> &nbsp;|&nbsp;
+                  <a href="#">Support</a>
+                </p>
+                <div class="divider"></div>
+                <p>&copy; 2026 Kemchuta Homes. Empowering Realtors.</p>
+                <p>Lekki, Lagos, Nigeria</p>
+              </div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    console.log(`✅ SUCCESS: Password reset email sent to ${email}`);
+    console.log(`Message ID: ${data.id}`);
+
+    return { success: true, messageId: data.id };
+  } catch (err) {
+    console.error("❌ RESET EMAIL ERROR:");
+    console.error(`Status: Failed to deliver to ${email}`);
+    console.error(`Reason: ${err.message}`);
+    console.error(`Full Error:`, err);
+
+    return { success: false, error: err.message };
+  }
+};

@@ -8,7 +8,9 @@ import {
   updateRealtor,
   deleteRealtor,
   getDashboard,
-  getMyRecruits, // ✅ Import the new controller
+  getMyRecruits,
+  forgotPassword,
+  resetPassword, // ✅ Import the new controller
 } from "../controllers/realtor.controller.js";
 
 import { uploadSingleImage } from "../middlewares/upload.middleware.js";
@@ -24,6 +26,8 @@ router.post("/login", login);
 router.get("/dashboard", protect, getDashboard);
 router.get("/my-recruits", protect, getMyRecruits); // ✅ New route for getting recruits
 router.put("/avatar", protect, uploadSingleImage, updateAvatar);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
 
 // ✅ Admin routes (parameterized routes LAST)
 router.get("/", protectAdmin, getRealtors);

@@ -2,7 +2,8 @@ import Realtor from "../models/realtor.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import cloudinary from "../utils/cloudinary.config.js";
-import { sendWelcomeEmail } from "../utils/email.js";
+import { sendWelcomeEmail, sendPasswordResetEmail } from "../utils/email.js";
+import crypto from "crypto";
 
 /* -------------------------------- HELPERS -------------------------------- */
 
@@ -106,7 +107,7 @@ export const login = async (req, res) => {
     const token = jwt.sign(
       { id: realtor._id, role: realtor.role },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: "7d" },
     );
 
     return res.json({
@@ -209,7 +210,7 @@ export const updateAvatar = async (req, res) => {
               folder: "kemchuta/avatars",
               transformation: { width: 400, height: 400, crop: "fill" },
             },
-            (err, result) => (err ? reject(err) : resolve(result))
+            (err, result) => (err ? reject(err) : resolve(result)),
           )
           .end(buffer);
       });
@@ -219,7 +220,7 @@ export const updateAvatar = async (req, res) => {
     const updated = await Realtor.findByIdAndUpdate(
       req.user.id,
       { avatar: result.secure_url },
-      { new: true }
+      { new: true },
     ).select("firstName lastName avatar referralCode email role");
 
     return res.json({
@@ -334,5 +335,108 @@ export const deleteRealtor = async (req, res) => {
   } catch (err) {
     console.error("DELETE REALTOR ERROR:", err);
     res.status(500).json({ message: "Delete failed" });
+  }
+};
+
+/* ─────────────────────────── FORGOT PASSWORD ─────────────────────────────── */
+
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const realtor = await Realtor.findOne({
+      email: email.toLowerCase().trim(),
+    });
+
+    // Always return 200 — prevents email enumeration
+    if (!realtor) {
+      return res.status(200).json({
+        message: "If that email exists, a reset link has been sent.",
+      });
+    }
+
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
+
+    realtor.resetPasswordToken = hashedToken;
+    realtor.resetPasswordExpiry = Date.now() + 60 * 60 * 1000; // 1 hour
+    await realtor.save({ validateBeforeSave: false });
+
+    const FRONTEND_URL =
+      process.env.FRONTEND_URL || "https://kemchutahomes.netlify.app";
+    const resetUrl = `${FRONTEND_URL}/reset-password?token=${rawToken}`;
+
+    sendPasswordResetEmail({
+      email: realtor.email,
+      firstName: realtor.firstName,
+      resetUrl,
+    }).catch(async () => {
+      realtor.resetPasswordToken = undefined;
+      realtor.resetPasswordExpiry = undefined;
+      await realtor.save({ validateBeforeSave: false }).catch(() => null);
+    });
+
+    return res.status(200).json({
+      message: "If that email exists, a reset link has been sent.",
+    });
+  } catch (err) {
+    console.error("FORGOT PASSWORD ERROR:", err);
+    return res
+      .status(500)
+      .json({ message: "Something went wrong. Please try again." });
+  }
+};
+
+/* ─────────────────────────── RESET PASSWORD ──────────────────────────────── */
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      return res
+        .status(400)
+        .json({ message: "Token and new password are required" });
+    }
+
+    if (password.length < 8) {
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 8 characters" });
+    }
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    const realtor = await Realtor.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpiry: { $gt: Date.now() },
+    });
+
+    if (!realtor) {
+      return res
+        .status(400)
+        .json({ message: "Reset link is invalid or has expired." });
+    }
+
+    realtor.passwordHash = await bcrypt.hash(password, 12);
+    realtor.resetPasswordToken = undefined;
+    realtor.resetPasswordExpiry = undefined;
+    await realtor.save({ validateBeforeSave: false });
+
+    return res
+      .status(200)
+      .json({ message: "Password reset successful. You can now log in." });
+  } catch (err) {
+    console.error("RESET PASSWORD ERROR:", err);
+    return res
+      .status(500)
+      .json({ message: "Something went wrong. Please try again." });
   }
 };
