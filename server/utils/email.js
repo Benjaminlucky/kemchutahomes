@@ -18,7 +18,7 @@ export const sendWelcomeEmail = async ({ email, firstName }) => {
   console.log(`--- Initiating Email Sequence for: ${email} ---`);
 
   try {
-    const loginUrl = "https://kemchutahomes.netlify.app/login";
+    const loginUrl = "https://kemchutahomesltd.com/login";
 
     // Send email using Resend
     const { data, error } = await resend.emails.send({
@@ -81,7 +81,7 @@ export const sendWelcomeEmail = async ({ email, firstName }) => {
               <div class="footer">
                 <p>Connect with us</p>
                 <p>
-                  <a href="https://kemchutahomes.netlify.app">Website</a> &nbsp;|&nbsp; 
+                  <a href="https://kemchutahomesltd.com/">Website</a> &nbsp;|&nbsp; 
                   <a href="#">Instagram</a> &nbsp;|&nbsp; 
                   <a href="#">Support</a>
                 </p>
@@ -192,7 +192,7 @@ export const sendPasswordResetEmail = async ({
               <div class="footer">
                 <p>Connect with us</p>
                 <p>
-                  <a href="https://kemchutahomes.netlify.app">Website</a> &nbsp;|&nbsp;
+                  <a href="https://kemchutahomesltd.com/">Website</a> &nbsp;|&nbsp;
                   <a href="#">Instagram</a> &nbsp;|&nbsp;
                   <a href="#">Support</a>
                 </p>
@@ -286,7 +286,7 @@ export const sendAdminPasswordResetEmail = async ({ email, resetUrl }) => {
               </div>
               <div class="footer">
                 <p>
-                  <a href="https://kemchutahomes.netlify.app">Website</a> &nbsp;|&nbsp;
+                  <a href="https://kemchutahomesltd.com/">Website</a> &nbsp;|&nbsp;
                   <a href="#">Support</a>
                 </p>
                 <div class="divider"></div>
