@@ -98,7 +98,7 @@ export const forgotAdminPassword = async (req, res) => {
     await admin.save({ validateBeforeSave: false });
 
     const FRONTEND_URL =
-      process.env.FRONTEND_URL || "https://kemchutahomes.netlify.app";
+      process.env.FRONTEND_URL || "https://kemchutahomesltd.com";
     const resetUrl = `${FRONTEND_URL}/admin/reset-password?token=${rawToken}`;
 
     sendAdminPasswordResetEmail({ email: admin.email, resetUrl }).catch(

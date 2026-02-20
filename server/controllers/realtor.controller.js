@@ -370,7 +370,7 @@ export const forgotPassword = async (req, res) => {
     await realtor.save({ validateBeforeSave: false });
 
     const FRONTEND_URL =
-      process.env.FRONTEND_URL || "https://kemchutahomes.netlify.app";
+      process.env.FRONTEND_URL || "https://kemchutahomesltd.com/";
     const resetUrl = `${FRONTEND_URL}/reset-password?token=${rawToken}`;
 
     sendPasswordResetEmail({

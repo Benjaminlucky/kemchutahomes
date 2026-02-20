@@ -537,12 +537,12 @@ export default function ManageRealtors() {
                   <div className="flex items-center gap-2 mt-3">
                     <input
                       type="text"
-                      value={`https://pcrg.netlify.app/sign-up?ref=${viewModal.referralCode}`}
+                      value={`https://kemchutahomesltd.com/sign-up?ref=${viewModal.referralCode}`}
                       readOnly
                       className="flex-1 px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-sm font-mono"
                     />
                     <a
-                      href={`https://pcrg.netlify.app/sign-up?ref=${viewModal.referralCode}`}
+                      href={`https://kemchutahomesltd.com/sign-up?ref=${viewModal.referralCode}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="p-3 text-white bg-customPurple-600 hover:bg-customPurple-700 rounded-lg transition-colors shadow-md"
