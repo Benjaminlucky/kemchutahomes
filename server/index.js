@@ -1,4 +1,4 @@
-import "./config/env.js"; // 🚨 ENV LOADS FIRST
+import "./config/env.js";
 
 import express from "express";
 import mongoose from "mongoose";
@@ -10,7 +10,27 @@ import cloudinary from "./utils/cloudinary.config.js";
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://kemchutahomes.netlify.app",
+  "https://kemchutahomesltd.com",
+  "https://www.kemchutahomesltd.com",
+];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS blocked: ${origin}`));
+      }
+    },
+    credentials: true,
+  }),
+);
+
 app.use(express.json());
 
 mongoose
