@@ -1,13 +1,22 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import Development from "../../components/developments/Development";
+import SearchHero from "../../components/searchbar/SearchBar";
 
 function Developments() {
+  const [filters, setFilters] = useState({
+    query: "",
+    location: "Choose Location",
+    purpose: "Any Purpose",
+  });
+
   return (
     <main className="main__container w-full">
+      <SearchHero onSearch={(f) => setFilters(f)} />
+
       <div className="main__wrapper mt-8 md:mt-16 w-10/12 mx-auto">
-        <div className="main__content py-4 md:py-32">
-          {/* Title Animation */}
+        <div className="main__content py-4 md:py-16">
+          {/* Title */}
           <motion.div
             className="title w-full md:w-3/5 mx-auto text-center"
             initial={{ opacity: 0, y: 30 }}
@@ -23,7 +32,7 @@ function Developments() {
             </h3>
           </motion.div>
 
-          {/* Subtitle Animation */}
+          {/* Subtitle */}
           <motion.div
             className="subtitle text-sm md:text-lg w-full md:w-3/5 mx-auto mt-4 md:mt-8 text-center"
             initial={{ opacity: 0, y: 20 }}
@@ -35,12 +44,11 @@ function Developments() {
               Discover a range of premium estate developments tailored to meet
               your investment and homeownership dreams. From strategically
               located properties to flexible pricing options, our projects are
-              designed for value, growth, and sustainability. Find the perfect
-              property that fits your vision today!
+              designed for value, growth, and sustainability.
             </p>
           </motion.div>
 
-          {/* Estate Section Animation */}
+          {/* Estates */}
           <motion.section
             className="estates__container"
             initial={{ opacity: 0, y: 50 }}
@@ -48,7 +56,7 @@ function Developments() {
             transition={{ delay: 0.5, duration: 0.8 }}
             viewport={{ once: true }}
           >
-            <Development />
+            <Development filters={filters} />
           </motion.section>
         </div>
       </div>
