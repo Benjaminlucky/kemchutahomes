@@ -6,6 +6,7 @@ import cors from "cors";
 
 import realtorRoutes from "./routes/realtor.routes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import estateRoutes from "./routes/estate.routes.js";
 import cloudinary from "./utils/cloudinary.config.js";
 
 const app = express();
@@ -40,6 +41,7 @@ mongoose
 
 app.use("/api/realtors", realtorRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/estates", estateRoutes);
 
 const result = await cloudinary.api.ping();
 console.log("Cloudinary:", result.status);

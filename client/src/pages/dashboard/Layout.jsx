@@ -42,6 +42,11 @@ export default function DashboardLayout({ children }) {
             path: "/dashboard/realtors",
             icon: <FaUsers />,
           },
+          {
+            name: "Manage Estates",
+            path: "/dashboard/estates",
+            icon: <FaBuilding />,
+          },
           { name: "Reports", path: "/admin/reports", icon: <FaChartLine /> },
         ]
       : [
