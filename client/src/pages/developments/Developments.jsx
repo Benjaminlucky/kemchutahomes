@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Development from "../../components/developments/Development";
 import SearchHero from "../../components/searchbar/SearchBar";
+import { fetchEstates } from "../../services/estateServices.js";
 
 function Developments() {
   const [filters, setFilters] = useState({
@@ -9,6 +10,38 @@ function Developments() {
     location: "Choose Location",
     purpose: "Any Purpose",
   });
+  const [estates, setEstates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const params = {
+          limit: 50,
+          ...(filters.query &&
+            filters.query.trim() && { search: filters.query.trim() }),
+          ...(filters.location !== "Choose Location" && {
+            location: filters.location,
+          }),
+          ...(filters.purpose !== "Any Purpose" && {
+            purpose: filters.purpose,
+          }),
+        };
+        const data = await fetchEstates(params);
+        setEstates(data.estates || []);
+      } catch (err) {
+        console.error("Failed to load estates:", err);
+        setError("Failed to load properties. Please try again.");
+        setEstates([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [filters]);
 
   return (
     <main className="main__container w-full">
@@ -56,7 +89,7 @@ function Developments() {
             transition={{ delay: 0.5, duration: 0.8 }}
             viewport={{ once: true }}
           >
-            <Development filters={filters} />
+            <Development estates={estates} loading={loading} error={error} />
           </motion.section>
         </div>
       </div>

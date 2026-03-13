@@ -6,7 +6,7 @@ if (!process.env.RESEND_API_KEY) {
   console.error("Get your API key from: https://resend.com/api-keys");
 }
 
-// Initialize Resend client
+// Initialize Resend client (shared across all functions)
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
@@ -20,9 +20,8 @@ export const sendWelcomeEmail = async ({ email, firstName }) => {
   try {
     const loginUrl = "https://kemchutahomesltd.com/login";
 
-    // Send email using Resend
     const { data, error } = await resend.emails.send({
-      from: "Kemchuta Homes <onboarding@khlrealtorsportal.com>", // Change to your verified domain
+      from: "Kemchuta Homes <onboarding@khlrealtorsportal.com>",
       to: email,
       subject: "Welcome to Kemchuta Homes - Let's Build Your Legacy 🏡",
       html: `
@@ -35,21 +34,13 @@ export const sendWelcomeEmail = async ({ email, firstName }) => {
             body { font-family: 'Inter', Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
             .wrapper { width: 100%; table-layout: fixed; background-color: #f5f5f5; padding-bottom: 40px; }
             .main { background-color: #ffffff; width: 100%; max-width: 600px; margin: 0 auto; border-radius: 12px; overflow: hidden; margin-top: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-            
-            /* Brand Header */
             .header { background-color: #700CEB; padding: 50px 20px; text-align: center; }
             .header h1 { color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px; text-transform: uppercase; }
-            
-            /* Content Area */
             .content { padding: 40px 35px; color: #262626; line-height: 1.7; }
             .content h2 { color: #000000; font-size: 22px; margin-top: 0; font-weight: 700; }
             .content p { font-size: 16px; color: #525252; }
-            
-            /* CTA Button */
             .btn-wrapper { text-align: center; margin: 35px 0; }
             .btn { background-color: #700CEB; color: #ffffff !important; padding: 16px 36px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 16px; display: inline-block; box-shadow: 0 4px 12px rgba(112, 12, 235, 0.25); }
-            
-            /* Footer */
             .footer { background-color: #171717; padding: 30px; text-align: center; color: #a3a3a3; font-size: 13px; }
             .footer a { color: #bd80f8; text-decoration: none; font-weight: 600; }
             .footer p { margin: 8px 0; }
@@ -62,31 +53,26 @@ export const sendWelcomeEmail = async ({ email, firstName }) => {
               <div class="header">
                 <h1>Kemchuta Homes</h1>
               </div>
-              
               <div class="content">
                 <h2>Welcome aboard, ${firstName}! 👋</h2>
                 <p>We're thrilled to have you join our network of professional realtors. At Kemchuta Homes, we provide you with the tools and platform to scale your real estate career to new heights.</p>
-                
                 <p>Your account is now fully active. You can log in to your personalized dashboard to access property listings, track your earnings, and manage your referrals.</p>
-                
                 <div class="btn-wrapper">
                   <a href="${loginUrl}" class="btn">Launch Your Dashboard</a>
                 </div>
-                
                 <p>Stay tuned for updates on new properties and exclusive realtor training sessions.</p>
                 <p style="margin-bottom: 0;">Best Regards,</p>
                 <p style="margin-top: 0; color: #700CEB; font-weight: 700;">The Kemchuta Homes Team</p>
               </div>
-              
               <div class="footer">
                 <p>Connect with us</p>
                 <p>
-                  <a href="https://kemchutahomesltd.com/">Website</a> &nbsp;|&nbsp; 
-                  <a href="#">Instagram</a> &nbsp;|&nbsp; 
+                  <a href="https://kemchutahomesltd.com/">Website</a> &nbsp;|&nbsp;
+                  <a href="#">Instagram</a> &nbsp;|&nbsp;
                   <a href="#">Support</a>
                 </p>
                 <div class="divider"></div>
-                <p>&copy; 2026 Kemchuta Homes. Empowering Realtors. </p>
+                <p>&copy; 2026 Kemchuta Homes. Empowering Realtors.</p>
                 <p>Lekki, Lagos, Nigeria</p>
               </div>
             </div>
@@ -96,7 +82,6 @@ export const sendWelcomeEmail = async ({ email, firstName }) => {
       `,
     });
 
-    // Check for errors
     if (error) {
       throw new Error(error.message);
     }
@@ -104,20 +89,14 @@ export const sendWelcomeEmail = async ({ email, firstName }) => {
     console.log(`✅ SUCCESS: Welcome email sent to ${email}`);
     console.log(`Message ID: ${data.id}`);
 
-    return {
-      success: true,
-      messageId: data.id,
-    };
+    return { success: true, messageId: data.id };
   } catch (err) {
     console.error("❌ MAILER ERROR:");
     console.error(`Status: Failed to deliver to ${email}`);
     console.error(`Reason: ${err.message}`);
     console.error(`Full Error:`, err);
 
-    return {
-      success: false,
-      error: err.message,
-    };
+    return { success: false, error: err.message };
   }
 };
 
@@ -169,26 +148,20 @@ export const sendPasswordResetEmail = async ({
               <div class="header">
                 <h1>Kemchuta Homes</h1>
               </div>
-
               <div class="content">
                 <h2>Password Reset Request 🔐</h2>
                 <p>Hi ${firstName},</p>
                 <p>We received a request to reset the password for your Kemchuta Homes account. Click the button below to choose a new password.</p>
-
                 <div class="btn-wrapper">
                   <a href="${resetUrl}" class="btn">Reset My Password</a>
                 </div>
-
                 <div class="warning-box">
                   <p>⏰ <strong>This link expires in 1 hour.</strong> If you didn't request a password reset, you can safely ignore this email — your password will remain unchanged.</p>
                 </div>
-
                 <p>For security, never share this link with anyone. Our team will never ask for it.</p>
-
                 <p style="margin-bottom: 0;">Best Regards,</p>
                 <p style="margin-top: 0; color: #700CEB; font-weight: 700;">The Kemchuta Homes Team</p>
               </div>
-
               <div class="footer">
                 <p>Connect with us</p>
                 <p>
@@ -228,6 +201,7 @@ export const sendPasswordResetEmail = async ({
 /**
  * Send Admin Password Reset Email
  * @param {Object} params - Contains email and resetUrl
+ * @returns {Promise<Object>} - Returns success status and message ID
  */
 export const sendAdminPasswordResetEmail = async ({ email, resetUrl }) => {
   console.log(`--- Initiating Admin Password Reset Email for: ${email} ---`);
@@ -281,8 +255,8 @@ export const sendAdminPasswordResetEmail = async ({ email, resetUrl }) => {
                   <p>⏰ <strong>This link expires in 1 hour.</strong> If you didn't request this reset, please secure your account immediately and ignore this email.</p>
                 </div>
                 <p>For security, never share this link with anyone.</p>
-                <p style="margin-bottom:0">Best Regards,</p>
-                <p style="margin-top:0;color:#700CEB;font-weight:700">The Kemchuta Homes System</p>
+                <p style="margin-bottom: 0;">Best Regards,</p>
+                <p style="margin-top: 0; color: #700CEB; font-weight: 700;">The Kemchuta Homes System</p>
               </div>
               <div class="footer">
                 <p>
@@ -304,9 +278,97 @@ export const sendAdminPasswordResetEmail = async ({ email, resetUrl }) => {
 
     console.log(`✅ SUCCESS: Admin reset email sent to ${email}`);
     console.log(`Message ID: ${data.id}`);
+
     return { success: true, messageId: data.id };
   } catch (err) {
     console.error("❌ ADMIN RESET EMAIL ERROR:", err.message);
+    return { success: false, error: err.message };
+  }
+};
+
+/**
+ * Send Inspection Notification Email to Admin
+ * @param {Object} inspection - Contains estateName, firstName, lastName, email, phone, inspectionDate, persons
+ * @returns {Promise<Object>} - Returns success status and message ID
+ */
+export const sendInspectionNotification = async (inspection) => {
+  const {
+    estateName,
+    firstName,
+    lastName,
+    email,
+    phone,
+    inspectionDate,
+    persons,
+  } = inspection;
+
+  const dateStr = new Date(inspectionDate).toLocaleDateString("en-NG", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  console.log(
+    `--- Initiating Inspection Notification for: ${estateName} on ${dateStr} ---`,
+  );
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: "Kemchuta Homes <onboarding@khlrealtorsportal.com>",
+      to: [process.env.ADMIN_EMAIL || process.env.EMAIL_USER],
+      subject: `New Inspection: ${estateName} — ${dateStr}`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 32px; background: #f9f9fb; border-radius: 12px;">
+          <div style="background: linear-gradient(135deg, #3F0C91, #700CEB); padding: 28px 32px; border-radius: 10px; margin-bottom: 28px;">
+            <h1 style="color: #fff; margin: 0; font-size: 22px; font-weight: 900; letter-spacing: -0.03em;">New Inspection Booking</h1>
+            <p style="color: rgba(255,255,255,0.7); margin: 6px 0 0; font-size: 14px;">${estateName}</p>
+          </div>
+          <table style="width: 100%; border-collapse: collapse;">
+            ${[
+              ["Client Name", `${firstName} ${lastName}`],
+              ["Email", email],
+              ["Phone", phone],
+              ["Inspection Date", dateStr],
+              [
+                "Number of Persons",
+                `${persons} person${persons > 1 ? "s" : ""}`,
+              ],
+              ["Estate", estateName],
+            ]
+              .map(
+                ([label, value]) => `
+              <tr>
+                <td style="padding: 12px 0; border-bottom: 1px solid #eee; font-size: 13px; color: #6b7280; font-weight: 600; width: 40%;">${label}</td>
+                <td style="padding: 12px 0; border-bottom: 1px solid #eee; font-size: 14px; color: #0f0a1e; font-weight: 700;">${value}</td>
+              </tr>
+            `,
+              )
+              .join("")}
+          </table>
+          <div style="margin-top: 28px; padding: 16px; background: rgba(112,12,235,0.06); border-radius: 8px; border-left: 3px solid #700CEB;">
+            <p style="margin: 0; font-size: 13px; color: #700CEB; font-weight: 600;">
+              Please confirm this inspection booking with the client at your earliest convenience.
+            </p>
+          </div>
+          <p style="margin-top: 24px; font-size: 12px; color: #9ca3af; text-align: center;">
+            Kemchuta Homes Ltd · Automated Notification
+          </p>
+        </div>
+      `,
+    });
+
+    if (error) throw new Error(error.message);
+
+    console.log(`✅ SUCCESS: Inspection notification sent for ${estateName}`);
+    console.log(`Message ID: ${data.id}`);
+
+    return { success: true, messageId: data.id };
+  } catch (err) {
+    console.error("❌ INSPECTION NOTIFICATION ERROR:");
+    console.error(`Reason: ${err.message}`);
+    console.error(`Full Error:`, err);
+
     return { success: false, error: err.message };
   }
 };

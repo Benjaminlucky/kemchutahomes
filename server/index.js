@@ -7,6 +7,8 @@ import cors from "cors";
 import realtorRoutes from "./routes/realtor.routes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import estateRoutes from "./routes/estate.routes.js";
+import subscriptionRoutes from "./routes/subscription.routes.js";
+import inspectionRoutes from "./routes/inspection.routes.js";
 import cloudinary from "./utils/cloudinary.config.js";
 
 const app = express();
@@ -22,11 +24,8 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error(`CORS blocked: ${origin}`));
-      }
+      if (!origin || allowedOrigins.includes(origin)) callback(null, true);
+      else callback(new Error(`CORS blocked: ${origin}`));
     },
     credentials: true,
   }),
@@ -36,14 +35,18 @@ app.use(express.json());
 
 mongoose
   .connect(process.env.MONGODB_URI)
-  .then(() => console.log("Connected to MongoDb"))
+  .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
 app.use("/api/realtors", realtorRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/estates", estateRoutes);
+app.use("/api/inspections", inspectionRoutes);
+app.use("/api/subscriptions", subscriptionRoutes);
 
 const result = await cloudinary.api.ping();
 console.log("Cloudinary:", result.status);
 
-app.listen(process.env.PORT || 3000, () => console.log("Server is running"));
+app.listen(process.env.PORT || 3000, () =>
+  console.log("Server is running on port", process.env.PORT || 3000),
+);

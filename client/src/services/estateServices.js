@@ -78,3 +78,15 @@ export const deleteGalleryImage = async (estateId, publicId) => {
   if (!res.ok) throw new Error(data.message);
   return data;
 };
+
+// ── Inspection ──────────────────────────────────────────────────────────────
+export const bookInspection = async (payload) => {
+  const res = await fetch(`${BASE}/api/inspections`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to book inspection.");
+  return data;
+};
