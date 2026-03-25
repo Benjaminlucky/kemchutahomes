@@ -3,16 +3,15 @@ import {
   bookInspection,
   getAllInspections,
   updateInspectionStatus,
+  updateInspectionNotes,
 } from "../controllers/inspection.controller.js";
 import { protect, isAdmin } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-// Public — anyone can book
-router.post("/", bookInspection);
-
-// Admin only
-router.get("/", protect, isAdmin, getAllInspections);
-router.patch("/:id/status", protect, isAdmin, updateInspectionStatus);
+router.post("/", bookInspection); // Public
+router.get("/", protect, isAdmin, getAllInspections); // Admin
+router.patch("/:id/status", protect, isAdmin, updateInspectionStatus); // Admin
+router.patch("/:id/notes", protect, isAdmin, updateInspectionNotes); // Admin
 
 export default router;

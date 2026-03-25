@@ -132,3 +132,20 @@ export const updateInspectionStatus = async (req, res) => {
     res.status(500).json({ message: "Failed to update status." });
   }
 };
+
+// ── PATCH /api/inspections/:id/notes — Admin: update notes ───────────────────
+export const updateInspectionNotes = async (req, res) => {
+  try {
+    const { notes } = req.body;
+    const inspection = await Inspection.findByIdAndUpdate(
+      req.params.id,
+      { notes: notes || "" },
+      { new: true },
+    );
+    if (!inspection)
+      return res.status(404).json({ message: "Inspection not found." });
+    res.json({ message: "Notes updated.", inspection });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to update notes." });
+  }
+};
