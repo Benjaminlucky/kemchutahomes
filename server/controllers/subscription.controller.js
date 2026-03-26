@@ -32,9 +32,10 @@ export const createSubscription = async (req, res) => {
 // ── GET /api/subscriptions — Admin ───────────────────────────────────────────
 export const getAllSubscriptions = async (req, res) => {
   try {
-    const { page = 1, limit = 20, status, search } = req.query;
+    const { page = 1, limit = 20, status, search, plotType } = req.query;
     const filter = {};
     if (status) filter.status = status;
+    if (plotType) filter.plotType = plotType;
     if (search) {
       filter.$or = [
         { estateName: { $regex: search, $options: "i" } },
@@ -62,7 +63,6 @@ export const getAllSubscriptions = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch subscriptions." });
   }
 };
-
 // ── PATCH /api/subscriptions/:id/status ─────────────────────────────────────
 export const updateSubscriptionStatus = async (req, res) => {
   try {

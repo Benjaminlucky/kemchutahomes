@@ -9,7 +9,8 @@ import RealtorDashboard from "./RealtorDashboard";
 import AdminDashboard from "./AdminDashboard";
 import ManageRealtors from "./ManageRealtors";
 import ManageEstates from "./ManageEstates";
-import ManageInspections from "./ManageInspections"; // ← NEW
+import ManageInspections from "./ManageInspections";
+import ManageSubscriptions from "./ManageSubscriptions"; // ← NEW
 
 export default function Dashboard() {
   return (
@@ -19,7 +20,8 @@ export default function Dashboard() {
         {/* Admin routes */}
         <Route path="realtors" element={<ManageRealtors />} />
         <Route path="estates" element={<ManageEstates />} />
-        <Route path="inspections" element={<ManageInspections />} />{" "}
+        <Route path="inspections" element={<ManageInspections />} />
+        <Route path="subscriptions" element={<ManageSubscriptions />} />{" "}
         {/* ← NEW */}
         <Route path="reports" element={<Reports />} />
         {/* Realtor routes */}
