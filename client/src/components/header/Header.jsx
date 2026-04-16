@@ -1,180 +1,667 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { mainLink, userLink } from "../../../data";
+import { mainLink } from "../../../data";
+import { motion, AnimatePresence } from "framer-motion";
 import { IoMenu, IoCloseCircle } from "react-icons/io5";
+import {
+  ChevronDown,
+  User,
+  LayoutDashboard,
+  KeyRound,
+  UserPlus,
+  FileText,
+  CalendarCheck,
+} from "lucide-react";
 import "./header.css";
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Single source of truth for all client links.
+// Used by desktop dropdown AND mobile accordion — no duplication.
+// ─────────────────────────────────────────────────────────────────────────────
+const clientMenuSections = [
+  {
+    label: "My Portal",
+    items: [
+      {
+        name: "Client Portal",
+        desc: "Access your dashboard",
+        link: "/client/portal",
+        icon: LayoutDashboard,
+      },
+      {
+        name: "My Subscriptions",
+        desc: "Track your land orders",
+        link: "/client/portal/subscriptions",
+        icon: FileText,
+      },
+      {
+        name: "My Inspections",
+        desc: "View booked site visits",
+        link: "/client/portal/inspections",
+        icon: CalendarCheck,
+      },
+    ],
+  },
+  {
+    label: "Account",
+    items: [
+      {
+        name: "Client Login",
+        desc: "Sign in to your portal",
+        link: "/client/login",
+        icon: KeyRound,
+      },
+      {
+        name: "Client Sign Up",
+        desc: "Register as a new client",
+        link: "/client/register",
+        icon: UserPlus,
+      },
+    ],
+  },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Desktop dropdown
+// ─────────────────────────────────────────────────────────────────────────────
+function ClientDropdown() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const location = useLocation();
+  const isClientActive = location.pathname.startsWith("/client");
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [location]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        onMouseEnter={() => setOpen(true)}
+        className={`relative flex items-center gap-1.5 text-sm lg:text-base font-medium transition-colors duration-200 whitespace-nowrap ${
+          isClientActive
+            ? "text-customPurple-500 font-semibold"
+            : "text-customBlack-700 hover:text-customPurple-500"
+        }`}
+        aria-expanded={open}
+        aria-haspopup="true"
+      >
+        <User size={14} className="opacity-70" />
+        Client Portal
+        <motion.span
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+          className="inline-flex"
+        >
+          <ChevronDown size={14} className="opacity-70" />
+        </motion.span>
+        {isClientActive && (
+          <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-customPurple-500 rounded-full" />
+        )}
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.97 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            onMouseLeave={() => setOpen(false)}
+            className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-72 rounded-2xl overflow-hidden"
+            style={{
+              zIndex: 9999,
+              boxShadow:
+                "0 24px 60px rgba(112,12,235,0.15), 0 4px 16px rgba(0,0,0,0.08)",
+              border: "1px solid rgba(112,12,235,0.1)",
+              background: "#fff",
+            }}
+          >
+            {clientMenuSections.map((section, si) => (
+              <div key={section.label}>
+                {si > 0 && (
+                  <div
+                    style={{
+                      height: 1,
+                      background:
+                        "linear-gradient(to right, transparent, rgba(112,12,235,0.12), transparent)",
+                      margin: "0 12px",
+                    }}
+                  />
+                )}
+                <div className="p-2">
+                  <p
+                    className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest"
+                    style={{ color: "#9ca3af" }}
+                  >
+                    {section.label}
+                  </p>
+                  {section.items.map((item) => {
+                    const Icon = item.icon;
+                    const active = location.pathname === item.link;
+                    return (
+                      <Link
+                        key={item.link}
+                        to={item.link}
+                        onClick={() => setOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150"
+                        style={{
+                          background: active
+                            ? "rgba(112,12,235,0.07)"
+                            : "transparent",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!active)
+                            e.currentTarget.style.background =
+                              "rgba(112,12,235,0.05)";
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!active)
+                            e.currentTarget.style.background = "transparent";
+                        }}
+                      >
+                        <div
+                          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                          style={{
+                            background: active
+                              ? "rgba(112,12,235,0.12)"
+                              : "rgba(112,12,235,0.07)",
+                          }}
+                        >
+                          <Icon
+                            size={15}
+                            style={{
+                              color: "#700CEB",
+                              opacity: active ? 1 : 0.7,
+                            }}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p
+                            className="text-sm font-semibold truncate"
+                            style={{ color: active ? "#700CEB" : "#111" }}
+                          >
+                            {item.name}
+                          </p>
+                          <p
+                            className="text-xs truncate"
+                            style={{ color: "#9ca3af" }}
+                          >
+                            {item.desc}
+                          </p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN HEADER
+// ─────────────────────────────────────────────────────────────────────────────
 function Header() {
   const location = useLocation();
   const isActive = (path) => location.pathname === path;
+  const isClientActive = location.pathname.startsWith("/client");
+
   const [openMenu, setOpenMenu] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [mobileClientOpen, setMobileClientOpen] = useState(false);
 
-  const toggleMenu = (e) => {
-    console.log("Toggle menu clicked!", !openMenu); // Debug log
-    e?.stopPropagation(); // Prevent event bubbling
-    setOpenMenu(!openMenu);
-  };
+  // Scroll → glass effect
+  useEffect(() => {
+    const onScroll = () => setIsScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
-  const closeMenu = () => {
-    console.log("Closing menu"); // Debug log
-    setOpenMenu(false);
-  };
-
-  // Close menu when route changes
+  // Close everything on route change
   useEffect(() => {
     setOpenMenu(false);
+    setMobileClientOpen(false);
   }, [location]);
 
-  // Prevent body scroll when mobile menu is open
+  // Lock body scroll when mobile menu open
   useEffect(() => {
-    console.log("Menu state changed:", openMenu); // Debug log
-    if (openMenu) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
+    document.body.style.overflow = openMenu ? "hidden" : "unset";
     return () => {
       document.body.style.overflow = "unset";
     };
   }, [openMenu]);
 
+  const toggleMenu = (e) => {
+    e?.stopPropagation();
+    setOpenMenu((v) => !v);
+  };
+  const closeMenu = () => setOpenMenu(false);
+
+  // Shared sticky + glass nav bar style
+  // z-index 9995 keeps the nav bar above all page content (heroes, sliders,
+  // Swiper, map overlays etc.) while still leaving room for the mobile panel
+  // (9998) and desktop dropdown (9999) to sit on top of it.
+  const navBarStyle = {
+    position: "sticky",
+    top: 0,
+    zIndex: 9995,
+    background: isScrolled ? "rgba(255,255,255,0.88)" : "#fff",
+    backdropFilter: isScrolled ? "blur(16px) saturate(180%)" : "none",
+    WebkitBackdropFilter: isScrolled ? "blur(16px) saturate(180%)" : "none",
+    borderBottom: isScrolled
+      ? "1px solid rgba(112,12,235,0.1)"
+      : "1px solid rgba(0,0,0,0.06)",
+    boxShadow: isScrolled
+      ? "0 4px 24px rgba(112,12,235,0.08)"
+      : "0 1px 3px rgba(0,0,0,0.04)",
+    transition: "all 0.3s ease",
+  };
+
   return (
-    <div className="mainNavWrapper w-full relative">
-      {/* Desktop Navigation */}
-      <div className="mainNavContent w-full py-3 md:py-3 top-0 bg-white shadow-md relative">
-        <div className="desktop__nav w-11/12 lg:w-10/12 mx-auto flex items-center">
-          <div className="desktopNav__wrapper hidden md:flex w-full items-center justify-between">
-            {/* Logo on the left */}
-            <div className="logo flex-shrink-0">
-              <Link to="/">
-                <img
-                  src="/assets/kemchutaMainLogo.svg"
-                  alt="Logo"
-                  className="w-32 lg:w-40 xl:w-48 h-auto"
-                />
-              </Link>
-            </div>
+    <div className="mainNavWrapper w-full">
+      {/* ══════════════════════════════════════════════════════════════════
+          DESKTOP  (md +)
+      ══════════════════════════════════════════════════════════════════ */}
+      <div className="hidden md:block" style={navBarStyle}>
+        <div
+          className="w-11/12 lg:w-10/12 mx-auto flex items-center justify-between"
+          style={{
+            padding: isScrolled ? "10px 0" : "14px 0",
+            transition: "padding 0.3s ease",
+          }}
+        >
+          {/* Logo */}
+          <Link to="/" className="flex-shrink-0">
+            <img
+              src="/assets/kemchutaMainLogo.svg"
+              alt="Kemchuta Homes Limited"
+              className="h-auto transition-all duration-300"
+              style={{ width: isScrolled ? "120px" : "140px" }}
+            />
+          </Link>
 
-            {/* Navigation items and buttons on the right */}
-            <div className="desk__nav flex items-center gap-6 lg:gap-8 xl:gap-12">
-              <div className="mainlink flex gap-6 lg:gap-8 xl:gap-10">
-                {mainLink.map((link, index) => (
-                  <div
-                    className={`mainLink relative whitespace-nowrap ${
-                      isActive(link.link) ? "active" : ""
-                    }`}
-                    key={index}
-                  >
-                    <Link
-                      to={link.link}
-                      className="text-sm lg:text-base transition-colors duration-200"
-                    >
-                      {link.name}
-                    </Link>
-                  </div>
-                ))}
-              </div>
-
-              <div className="userlink flex gap-3 items-center flex-shrink-0">
+          {/* Centre: page links + Client Portal dropdown */}
+          <nav className="flex items-center gap-6 lg:gap-8 xl:gap-10">
+            {mainLink.map((link, index) => (
+              <div
+                key={index}
+                className={`mainLink relative whitespace-nowrap ${isActive(link.link) ? "active" : ""}`}
+              >
                 <Link
-                  to="/signup"
-                  className="uppercase bg-customPurple-500 rounded-full border-2 border-transparent hover:border-customPurple-500 font-semibold text-white px-4 py-2 lg:px-5 lg:py-2 hover:bg-transparent hover:text-customPurple-500 text-xs lg:text-sm transition-all duration-200 whitespace-nowrap"
+                  to={link.link}
+                  className="text-sm lg:text-base transition-colors duration-200"
                 >
-                  Get Started
-                </Link>
-
-                <Link
-                  to="/login"
-                  className="uppercase bg-transparent border-2 border-customPurple-300 px-4 py-2 lg:px-5 lg:py-2 rounded-full hover:bg-black hover:text-white hover:border-transparent font-semibold text-xs lg:text-sm transition-all duration-200 whitespace-nowrap"
-                >
-                  Sign In
+                  {link.name}
                 </Link>
               </div>
-            </div>
+            ))}
+            {/* Client Portal dropdown — login & signup are INSIDE this */}
+            <ClientDropdown />
+          </nav>
+
+          {/* Right: Realtor CTAs only */}
+          <div className="flex items-center gap-2.5 flex-shrink-0">
+            <Link
+              to="/login"
+              className="text-xs lg:text-sm font-semibold uppercase px-4 lg:px-5 py-2 rounded-full border-2 transition-all duration-200 whitespace-nowrap"
+              style={{ borderColor: "rgba(112,12,235,0.35)", color: "#700CEB" }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#700CEB";
+                e.currentTarget.style.borderColor = "#700CEB";
+                e.currentTarget.style.color = "#fff";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.borderColor = "rgba(112,12,235,0.35)";
+                e.currentTarget.style.color = "#700CEB";
+              }}
+            >
+              Realtor Login
+            </Link>
+
+            <Link
+              to="/signup"
+              className="text-xs lg:text-sm font-bold uppercase px-4 lg:px-5 py-2 rounded-full text-white whitespace-nowrap transition-all duration-200"
+              style={{
+                background: "linear-gradient(135deg, #700CEB, #8A2FF0)",
+                boxShadow: "0 4px 14px rgba(112,12,235,0.35)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow =
+                  "0 6px 20px rgba(112,12,235,0.5)";
+                e.currentTarget.style.transform = "translateY(-1px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow =
+                  "0 4px 14px rgba(112,12,235,0.35)";
+                e.currentTarget.style.transform = "translateY(0)";
+              }}
+            >
+              Join as Realtor
+            </Link>
           </div>
         </div>
       </div>
 
-      {/* Mobile Navigation */}
-      <div className="mobile__nav md:hidden w-full bg-white shadow-md">
-        <div className="mobilenav__content w-full mx-auto">
-          <div className="mobile__logo px-4 sm:px-5 py-3 flex items-center justify-between bg-white relative z-50">
-            <Link to="/" className="flex-shrink-0">
-              <img
-                src="/assets/kemchutaMainLogo.svg"
-                alt="Kemchuta Homes Limited Logo"
-                className="w-36 sm:w-44 h-auto"
-              />
-            </Link>
+      {/* ══════════════════════════════════════════════════════════════════
+          MOBILE  (below md)
+      ══════════════════════════════════════════════════════════════════ */}
+      <div className="md:hidden" style={navBarStyle}>
+        {/* Top bar */}
+        <div className="px-4 sm:px-5 py-3.5 flex items-center justify-between">
+          <Link to="/" onClick={closeMenu} className="flex-shrink-0">
+            <img
+              src="/assets/kemchutaMainLogo.svg"
+              alt="Kemchuta Homes Limited"
+              className="w-32 sm:w-36 h-auto"
+            />
+          </Link>
 
-            <button
-              type="button"
-              onClick={toggleMenu}
-              className="text-3xl sm:text-4xl text-gray-400 transition-transform duration-200 hover:scale-110 active:scale-95 cursor-pointer relative z-50"
-              aria-label={openMenu ? "Close menu" : "Open menu"}
-              aria-expanded={openMenu}
-            >
-              {openMenu ? <IoCloseCircle /> : <IoMenu />}
-            </button>
-          </div>
+          {/* Hamburger only — no extra pills */}
+          <button
+            type="button"
+            onClick={toggleMenu}
+            className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 active:scale-95"
+            style={{
+              background: openMenu
+                ? "rgba(112,12,235,0.1)"
+                : "rgba(0,0,0,0.04)",
+              color: openMenu ? "#700CEB" : "#374151",
+            }}
+            aria-label={openMenu ? "Close menu" : "Open menu"}
+            aria-expanded={openMenu}
+          >
+            <AnimatePresence mode="wait" initial={false}>
+              {openMenu ? (
+                <motion.span
+                  key="close"
+                  initial={{ rotate: -90, opacity: 0 }}
+                  animate={{ rotate: 0, opacity: 1 }}
+                  exit={{ rotate: 90, opacity: 0 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  <IoCloseCircle size={22} />
+                </motion.span>
+              ) : (
+                <motion.span
+                  key="open"
+                  initial={{ rotate: 90, opacity: 0 }}
+                  animate={{ rotate: 0, opacity: 1 }}
+                  exit={{ rotate: -90, opacity: 0 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  <IoMenu size={22} />
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </button>
+        </div>
 
-          {/* Mobile Menu Overlay */}
+        {/* Slide-down overlay */}
+        <AnimatePresence>
           {openMenu && (
-            <div className="fixed inset-0 top-0 left-0 w-full h-full z-40">
-              {/* Backdrop */}
-              <div
-                className="absolute inset-0 bg-black bg-opacity-50"
+            <>
+              {/* Backdrop — covers entire viewport above ALL page content */}
+              <motion.div
+                key="backdrop"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+                style={{ top: 0, zIndex: 9996 }}
                 onClick={closeMenu}
                 aria-hidden="true"
               />
 
-              {/* Menu Content */}
-              <div
-                className="navwrapper absolute left-0 w-full bg-white pb-5 shadow-lg max-h-[calc(100vh-80px)] overflow-y-auto z-50"
-                style={{ top: "72px" }}
+              {/* Panel — sits above backdrop and nav bar */}
+              <motion.div
+                key="panel"
+                initial={{ opacity: 0, y: -12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.22, ease: "easeOut" }}
+                className="fixed left-0 w-full bg-white overflow-y-auto"
+                style={{
+                  top: "64px",
+                  zIndex: 9998,
+                  maxHeight: "calc(100dvh - 64px)",
+                  boxShadow: "0 16px 48px rgba(112,12,235,0.12)",
+                  borderBottom: "1px solid rgba(112,12,235,0.08)",
+                }}
               >
-                {mainLink.map((link, index) => (
-                  <div
-                    key={index}
-                    className={`px-4 sm:px-5 py-3 sm:py-4 border-b hover:bg-customPurple-100 transition-colors duration-200 ${
-                      isActive(link.link)
-                        ? "bg-customPurple-100 font-semibold"
-                        : ""
-                    }`}
-                  >
-                    <Link
-                      to={link.link}
-                      onClick={closeMenu}
-                      className="block text-sm sm:text-base"
-                    >
-                      {link.name}
-                    </Link>
-                  </div>
-                ))}
-
-                <div className="bottomMobile__nav mt-6 sm:mt-10 px-4 sm:px-5">
-                  <div className="bNavContent flex flex-col gap-3 w-full">
-                    <Link
-                      to="/signup"
-                      onClick={closeMenu}
-                      className="bg-customPurple-500 px-4 py-3 rounded-full text-center font-bold text-white border-2 border-transparent hover:border-customPurple-500 hover:bg-transparent hover:text-black transition-all duration-200 text-sm sm:text-base"
-                    >
-                      Get Started
-                    </Link>
-
-                    <Link
-                      to="/login"
-                      onClick={closeMenu}
-                      className="text-center py-3 px-4 rounded-full border-2 border-gray-400 hover:bg-gray-100 transition-all duration-200 text-sm sm:text-base font-semibold"
-                    >
-                      Sign In
-                    </Link>
-                  </div>
+                {/* Page nav links */}
+                <div className="px-4 sm:px-5 pt-4 pb-2">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 px-2">
+                    Navigate
+                  </p>
+                  {mainLink.map((link, index) => {
+                    const active = isActive(link.link);
+                    return (
+                      <Link
+                        key={index}
+                        to={link.link}
+                        onClick={closeMenu}
+                        className="flex items-center justify-between px-3 py-3 rounded-xl transition-colors duration-150 mb-0.5"
+                        style={{
+                          background: active
+                            ? "rgba(112,12,235,0.07)"
+                            : "transparent",
+                        }}
+                      >
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: active ? "#700CEB" : "#111" }}
+                        >
+                          {link.name}
+                        </span>
+                        {active && (
+                          <span
+                            className="w-1.5 h-1.5 rounded-full"
+                            style={{ background: "#700CEB" }}
+                          />
+                        )}
+                      </Link>
+                    );
+                  })}
                 </div>
-              </div>
-            </div>
+
+                {/* Divider */}
+                <div
+                  style={{
+                    height: 1,
+                    background:
+                      "linear-gradient(to right, transparent, rgba(112,12,235,0.12), transparent)",
+                    margin: "4px 20px 8px",
+                  }}
+                />
+
+                {/* Client Portal accordion */}
+                <div className="px-4 sm:px-5 pb-2">
+                  {/* Accordion toggle */}
+                  <button
+                    onClick={() => setMobileClientOpen((v) => !v)}
+                    className="w-full flex items-center justify-between px-3 py-3 rounded-xl transition-colors duration-150"
+                    style={{
+                      background: isClientActive
+                        ? "rgba(112,12,235,0.07)"
+                        : "transparent",
+                    }}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className="w-7 h-7 rounded-lg flex items-center justify-center"
+                        style={{ background: "rgba(112,12,235,0.1)" }}
+                      >
+                        <User size={13} style={{ color: "#700CEB" }} />
+                      </div>
+                      <span
+                        className="text-sm font-semibold"
+                        style={{ color: isClientActive ? "#700CEB" : "#111" }}
+                      >
+                        Client Portal
+                      </span>
+                    </div>
+                    <motion.span
+                      animate={{ rotate: mobileClientOpen ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="inline-flex text-gray-400"
+                    >
+                      <ChevronDown size={16} />
+                    </motion.span>
+                  </button>
+
+                  {/* Accordion body — all client links including login & signup */}
+                  <AnimatePresence initial={false}>
+                    {mobileClientOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.22, ease: "easeInOut" }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pl-3 pr-1 pb-2 mt-1">
+                          {clientMenuSections.map((section, si) => (
+                            <div key={section.label}>
+                              {si > 0 && (
+                                <div
+                                  style={{
+                                    height: 1,
+                                    background:
+                                      "linear-gradient(to right, transparent, rgba(112,12,235,0.1), transparent)",
+                                    margin: "6px 12px",
+                                  }}
+                                />
+                              )}
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 px-3 py-1.5">
+                                {section.label}
+                              </p>
+                              {section.items.map((item) => {
+                                const Icon = item.icon;
+                                const active = location.pathname === item.link;
+                                return (
+                                  <Link
+                                    key={item.link}
+                                    to={item.link}
+                                    onClick={closeMenu}
+                                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors duration-150 mb-0.5"
+                                    style={{
+                                      background: active
+                                        ? "rgba(112,12,235,0.07)"
+                                        : "transparent",
+                                    }}
+                                    onTouchStart={(e) => {
+                                      if (!active)
+                                        e.currentTarget.style.background =
+                                          "rgba(112,12,235,0.04)";
+                                    }}
+                                    onTouchEnd={(e) => {
+                                      if (!active)
+                                        e.currentTarget.style.background =
+                                          "transparent";
+                                    }}
+                                  >
+                                    <div
+                                      className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                      style={{
+                                        background: active
+                                          ? "rgba(112,12,235,0.12)"
+                                          : "rgba(112,12,235,0.06)",
+                                      }}
+                                    >
+                                      <Icon
+                                        size={13}
+                                        style={{
+                                          color: "#700CEB",
+                                          opacity: active ? 1 : 0.7,
+                                        }}
+                                      />
+                                    </div>
+                                    <div>
+                                      <p
+                                        className="text-sm font-semibold leading-tight"
+                                        style={{
+                                          color: active ? "#700CEB" : "#111",
+                                        }}
+                                      >
+                                        {item.name}
+                                      </p>
+                                      <p className="text-xs text-gray-400">
+                                        {item.desc}
+                                      </p>
+                                    </div>
+                                  </Link>
+                                );
+                              })}
+                            </div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Divider */}
+                <div
+                  style={{
+                    height: 1,
+                    background:
+                      "linear-gradient(to right, transparent, rgba(112,12,235,0.12), transparent)",
+                    margin: "4px 20px 8px",
+                  }}
+                />
+
+                {/* Realtor CTA buttons only */}
+                <div className="px-4 sm:px-5 py-4 space-y-2.5">
+                  <Link
+                    to="/signup"
+                    onClick={closeMenu}
+                    className="flex items-center justify-center w-full py-3 rounded-2xl text-white text-sm font-bold active:scale-[0.98]"
+                    style={{
+                      background: "linear-gradient(135deg, #700CEB, #8A2FF0)",
+                      boxShadow: "0 4px 16px rgba(112,12,235,0.35)",
+                    }}
+                  >
+                    Join as Realtor
+                  </Link>
+                  <Link
+                    to="/login"
+                    onClick={closeMenu}
+                    className="flex items-center justify-center w-full py-3 rounded-2xl text-sm font-bold"
+                    style={{
+                      border: "2px solid rgba(112,12,235,0.25)",
+                      color: "#700CEB",
+                    }}
+                    onTouchStart={(e) => {
+                      e.currentTarget.style.background =
+                        "rgba(112,12,235,0.06)";
+                    }}
+                    onTouchEnd={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                    }}
+                  >
+                    Realtor Login
+                  </Link>
+                </div>
+              </motion.div>
+            </>
           )}
-        </div>
+        </AnimatePresence>
       </div>
     </div>
   );

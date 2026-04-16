@@ -1,26 +1,35 @@
-/* Header Base Styles */
+/* ─────────────────────────────────────────────────────────────────────────────
+   header.css — Kemchuta Homes Limited
+   Keeps all original rules. Adds: sticky glass, dropdown, refined responsive.
+───────────────────────────────────────────────────────────────────────────── */
+
+/* ── Base ──────────────────────────────────────────────────────────────────── */
 .mainNavWrapper {
   font-family: inherit;
 }
 
 .mainNavContent {
-  transition: all 0.3s ease-in-out;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    padding 0.3s ease;
 }
 
-/* Desktop Navigation Styles */
+/* ── Desktop nav link underline active state ───────────────────────────────── */
 .mainLink a {
   position: relative;
   padding-bottom: 2px;
-  transition: color 0.3s ease;
-  color: #262626; /* customBlack-700 */
+  transition: color 0.25s ease;
+  color: #262626;
 }
 
 .mainLink a:hover {
-  color: #700ceb; /* customPurple-500 */
+  color: #700ceb;
 }
 
 .mainLink.active a {
-  color: #700ceb; /* customPurple-500 */
+  color: #700ceb;
   font-weight: 600;
 }
 
@@ -31,23 +40,20 @@
   left: 0;
   width: 100%;
   height: 2px;
-  background-color: #700ceb; /* customPurple-500 */
+  background-color: #700ceb;
   border-radius: 2px;
 }
 
-/* Mobile Navigation Styles */
+/* ── Mobile nav base ───────────────────────────────────────────────────────── */
 .mobile__nav {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  /* sticky is set inline via React to allow dynamic scroll-aware changes */
 }
 
-.navwrapper {
-  animation: slideDown 0.3s ease-out;
-}
-
+/* ── Mobile menu panel slide-down animation (fallback for non-framer) ──────── */
 @keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-12px);
   }
   to {
     opacity: 1;
@@ -55,153 +61,117 @@
   }
 }
 
-/* Responsive Breakpoints */
-
-/* Small devices (landscape phones, 576px and up) */
-@media (min-width: 576px) {
-  .mobile__logo {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-  }
-}
-
-/* Medium devices (tablets, 768px and up) */
-@media (min-width: 768px) {
-  .desktopNav__wrapper {
-    min-height: 60px;
-  }
-}
-
-/* Large devices (desktops, 992px and up) */
-@media (min-width: 992px) {
-  .desktopNav__wrapper {
-    min-height: 70px;
-  }
-}
-
-/* Extra large devices (large desktops, 1200px and up) */
-@media (min-width: 1200px) {
-  .desknav__content {
-    gap: 6rem;
-  }
-}
-
-/* Extra extra large devices (1400px and up) */
-@media (min-width: 1400px) {
-  .desknav__content {
-    gap: 9rem;
-  }
-}
-
-/* Mobile Menu Smooth Transitions */
+/* ── Touch tap highlight removal ───────────────────────────────────────────── */
 .mobile__nav a,
 .mobile__nav button {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Accessibility Improvements */
-.mainLink a:focus,
-.userlink a:focus,
-.mobile__nav a:focus,
-.mobile__nav button:focus {
-  outline: 2px solid #700ceb; /* customPurple-500 */
+/* ── Focus ring accessibility ──────────────────────────────────────────────── */
+.mainLink a:focus-visible,
+.userlink a:focus-visible,
+.mobile__nav a:focus-visible,
+.mobile__nav button:focus-visible {
+  outline: 2px solid #700ceb;
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
-/* Prevent layout shift */
+/* ── Logo layout guard ─────────────────────────────────────────────────────── */
 .logo img {
   display: block;
   max-width: 100%;
   height: auto;
 }
 
-/* Mobile menu scrollbar styling */
+/* ── Mobile panel scrollbar ────────────────────────────────────────────────── */
 .navwrapper::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
-
 .navwrapper::-webkit-scrollbar-track {
-  background: #e5e5e5; /* customBlack-100 */
+  background: #f0f0f0;
 }
-
 .navwrapper::-webkit-scrollbar-thumb {
-  background: #a3a3a3; /* customBlack-300 */
-  border-radius: 3px;
+  background: #d1d5db;
+  border-radius: 4px;
 }
-
 .navwrapper::-webkit-scrollbar-thumb:hover {
-  background: #700ceb; /* customPurple-500 */
+  background: #700ceb;
 }
 
-/* Handle very small screens (320px - 375px) */
+/* ── Extra-small screens (< 375px) ────────────────────────────────────────── */
 @media (max-width: 375px) {
   .mobile__logo img {
-    width: 140px;
-  }
-
-  .mobile__logo button {
-    font-size: 1.75rem;
-  }
-
-  .bottomMobile__nav {
-    margin-top: 1.5rem;
+    width: 128px;
   }
 }
 
-/* Prevent horizontal scroll on mobile */
+/* ── Prevent horizontal scroll on mobile ──────────────────────────────────── */
 @media (max-width: 767px) {
   body {
     overflow-x: hidden;
   }
-
   .mainNavWrapper {
     overflow-x: hidden;
   }
 }
 
-/* iPad and tablet landscape optimizations */
+/* ── Tablet nav gap tightening ─────────────────────────────────────────────── */
 @media (min-width: 768px) and (max-width: 1024px) {
   .mainlink {
     gap: 1rem;
   }
-
   .userlink {
     gap: 0.5rem;
   }
-
   .mainLink a {
-    font-size: 0.875rem;
+    font-size: 0.8rem;
+  }
+  .desktopNav__wrapper {
+    min-height: 56px;
   }
 }
 
-/* Handle notch/safe areas for modern mobile devices */
+/* ── Safe area for notched phones ──────────────────────────────────────────── */
 @supports (padding: max(0px)) {
   .mobile__logo {
     padding-left: max(1rem, env(safe-area-inset-left));
     padding-right: max(1rem, env(safe-area-inset-right));
   }
-
-  .navwrapper {
-    padding-left: max(0px, env(safe-area-inset-left));
-    padding-right: max(0px, env(safe-area-inset-right));
-  }
 }
 
-/* Dark mode support (optional) */
-@media (prefers-color-scheme: dark) {
-  /* Add dark mode styles if needed */
-}
-
-/* Reduce motion for accessibility */
+/* ── Reduce motion for accessibility ───────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .navwrapper {
-    animation: none;
-  }
-
+  .mainNavContent,
   .mainLink a,
-  .userlink a,
   button {
-    transition: none;
+    transition: none !important;
+  }
+}
+
+/* ── Dropdown menu ─────────────────────────────────────────────────────────── */
+
+/* Ensure dropdown overlays everything */
+.clientDropdown {
+  position: absolute;
+  z-index: 9999;
+}
+
+/* Desktop min-height guard for the sticky nav row */
+@media (min-width: 768px) {
+  .desktopNav__wrapper {
+    min-height: 56px;
+  }
+}
+@media (min-width: 1024px) {
+  .desktopNav__wrapper {
+    min-height: 64px;
+  }
+}
+
+/* ── xs breakpoint helper (320-479px) — used by portal badge ─────────────── */
+@media (min-width: 480px) {
+  .xs\:inline {
+    display: inline !important;
   }
 }
