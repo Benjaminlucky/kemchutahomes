@@ -9,6 +9,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import estateRoutes from "./routes/estate.routes.js";
 import subscriptionRoutes from "./routes/subscription.routes.js";
 import inspectionRoutes from "./routes/inspection.routes.js";
+import clientRoutes from "./routes/client.routes.js";
 import cloudinary from "./utils/cloudinary.config.js";
 
 const app = express();
@@ -43,6 +44,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/estates", estateRoutes);
 app.use("/api/inspections", inspectionRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
+app.use("/api/clients", clientRoutes);
 
 const result = await cloudinary.api.ping();
 console.log("Cloudinary:", result.status);

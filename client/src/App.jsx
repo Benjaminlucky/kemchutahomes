@@ -5,13 +5,12 @@ import {
   Route,
   useLocation,
 } from "react-router-dom";
-
 import "./App.css";
 
 // Context
 import { AuthProvider } from "./context/AuthContext";
 
-// Pages
+// Existing pages (UNCHANGED)
 import Home from "./pages/home/Home";
 import Company from "./pages/company/Company";
 import Developments from "./pages/developments/Developments";
@@ -23,7 +22,7 @@ import AdminSignup from "./pages/admin/AdminSignup";
 import AdminLogin from "./pages/admin/AdminLogin";
 import Dashboard from "./pages/dashboard";
 
-// Layout
+// Existing layout (UNCHANGED)
 import Header from "./components/header/Header";
 import Footer from "./components/footer/Footer";
 import ProtectedRoute from "./components/ProtectedRoutes";
@@ -33,27 +32,30 @@ import ResetPassword from "./pages/reset-password/resetPassword";
 import AdminForgotPassword from "./pages/admin-forgot-password/AdminForgotPassword";
 import AdminResetPassword from "./pages/admin-reset-password/AdminResetPassword";
 
-// ============================
-// Layout wrapper for dynamic header/footer
-// ============================
+// ── NEW CLIENT IMPORTS ───────────────────────────────────────────────────────
+import ClientLogin from "./pages/client-login/ClientLogin";
+import ClientSignup from "./pages/client-signup/ClientSignup";
+import ClientForgotPassword from "./pages/client-forgot-password/ClientForgotPassword";
+import ClientResetPassword from "./pages/client-reset-password/ClientResetPassword";
+import ClientPortal from "./pages/client-portal/ClientPortal";
+import ClientProtectedRoute from "./components/client-portal/ClientProtectedRoute";
+
 function AppWrapper() {
   const location = useLocation();
 
-  // Hide header + footer on dashboard routes
-  const hideLayout = location.pathname.startsWith("/dashboard");
+  // ── UPDATED: also hide layout for client portal ──────────────────────────
+  const hideLayout =
+    location.pathname.startsWith("/dashboard") ||
+    location.pathname.startsWith("/client/portal");
 
   return (
     <>
-      {/* Show Header on public pages */}
       {!hideLayout && <Header />}
-
       <main
-        className={`${
-          hideLayout ? "" : "pt-0"
-        } relative overflow-x-hidden bg-white min-h-screen`}
+        className={`${hideLayout ? "" : "pt-0"} relative overflow-x-hidden bg-white min-h-screen`}
       >
         <Routes>
-          {/* Public Routes */}
+          // ── All existing routes UNCHANGED ──────────────────────────────────
           <Route path="/" element={<Home />} />
           <Route path="/company" element={<Company />} />
           <Route path="/developments" element={<Developments />} />
@@ -73,8 +75,6 @@ function AppWrapper() {
             path="/admin/reset-password"
             element={<AdminResetPassword />}
           />
-
-          {/* Protected Dashboard */}
           <Route
             path="/dashboard/*"
             element={
@@ -83,21 +83,34 @@ function AppWrapper() {
               </ProtectedRoute>
             }
           />
-
-          {/* 404 Not Found - Must be last */}
+          // ── NEW CLIENT ROUTES ─────────────────────────────────────────────
+          <Route path="/client/login" element={<ClientLogin />} />
+          <Route path="/client/register" element={<ClientSignup />} />
+          <Route
+            path="/client/forgot-password"
+            element={<ClientForgotPassword />}
+          />
+          <Route
+            path="/client/reset-password"
+            element={<ClientResetPassword />}
+          />
+          <Route
+            path="/client/portal/*"
+            element={
+              <ClientProtectedRoute>
+                <ClientPortal />
+              </ClientProtectedRoute>
+            }
+          />
+          // ── 404 — ALWAYS LAST ─────────────────────────────────────────────
           <Route path="*" element={<NotFound />} />
         </Routes>
-
-        {/* Show Footer on public pages */}
         {!hideLayout && <Footer />}
       </main>
     </>
   );
 }
 
-// ============================
-// Root App - WRAP WITH AuthProvider
-// ============================
 export default function App() {
   return (
     <Router>
