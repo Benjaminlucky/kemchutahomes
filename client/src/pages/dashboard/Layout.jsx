@@ -10,6 +10,7 @@ import {
   FaTimes,
   FaCalendarCheck,
   FaClipboardList,
+  FaLandmark,
 } from "react-icons/fa";
 import { useLocation, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -52,6 +53,11 @@ export default function DashboardLayout({ children }) {
             path: "/dashboard/subscriptions",
             icon: <FaClipboardList />,
           },
+          {
+            name: "Buy2Sell Scheme",
+            path: "/dashboard/buy2sell",
+            icon: <FaLandmark />,
+          }, // ← NEW
           { name: "Reports", path: "/admin/reports", icon: <FaChartLine /> },
         ]
       : [
@@ -71,8 +77,8 @@ export default function DashboardLayout({ children }) {
   const SidebarNav = () => (
     <>
       <div>
-        <h1 className="text-2xl font-bold mb-8 pl-3 ">Kemchuta Dashboard</h1>
-        <nav className="space-y-2 ">
+        <h1 className="text-2xl font-bold mb-8 pl-3">Kemchuta Dashboard</h1>
+        <nav className="space-y-2">
           {sidebarItems.map((item) => {
             const isActive = pathname === item.path;
             return (

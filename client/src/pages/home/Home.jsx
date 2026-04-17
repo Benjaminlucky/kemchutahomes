@@ -11,7 +11,7 @@ import Reviews from "../../components/reviews/Reviews";
 
 function Home() {
   return (
-    <main className="section w-full">
+    <main className="section w-full overflow-x-hidden">
       <Hero />
       <Homeintro />
       <Youtubeintro />

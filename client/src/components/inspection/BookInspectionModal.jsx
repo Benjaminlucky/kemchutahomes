@@ -11,23 +11,24 @@ import {
   CheckCircle,
   AlertTriangle,
   Loader2,
+  Plus,
+  Minus,
 } from "lucide-react";
 import { bookInspection } from "../../services/estateServices.js";
 
-const PERSONS_OPTIONS = [
-  { value: 1, label: "1 Person", desc: "Just me" },
-  { value: 2, label: "2 Persons", desc: "Me + 1 guest" },
-  { value: 5, label: "5 Persons", desc: "Group visit" },
+// ── Preset quick-picks (kept for convenience) — custom input handles everything else
+const QUICK_PICKS = [
+  { value: 1, emoji: "👤", label: "Just me" },
+  { value: 2, emoji: "👥", label: "2 people" },
+  { value: 5, emoji: "👨‍👩‍👧‍👦", label: "Small group" },
 ];
 
-// ── Minimum date: tomorrow ────────────────────────────────────────────────────
 const getMinDate = () => {
   const d = new Date();
   d.setDate(d.getDate() + 1);
   return d.toISOString().split("T")[0];
 };
 
-// ── Input component ───────────────────────────────────────────────────────────
 function Field({ label, icon: Icon, error, children }) {
   return (
     <div>
@@ -68,7 +69,6 @@ function Field({ label, icon: Icon, error, children }) {
   );
 }
 
-// ── Success screen ────────────────────────────────────────────────────────────
 function SuccessScreen({ booking, onClose }) {
   const dateStr = new Date(booking.inspectionDate).toLocaleDateString("en-NG", {
     weekday: "long",
@@ -88,13 +88,12 @@ function SuccessScreen({ booking, onClose }) {
         transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.1 }}
         className="w-20 h-20 rounded-full flex items-center justify-center mb-6"
         style={{
-          background: "linear-gradient(135deg, #059669, #047857)",
+          background: "linear-gradient(135deg,#059669,#047857)",
           boxShadow: "0 12px 40px rgba(5,150,105,0.35)",
         }}
       >
         <CheckCircle size={36} color="#fff" strokeWidth={2.5} />
       </motion.div>
-
       <h3
         style={{
           fontSize: 22,
@@ -118,8 +117,6 @@ function SuccessScreen({ booking, onClose }) {
         Your inspection has been booked. We'll contact you shortly to confirm
         the details.
       </p>
-
-      {/* Summary */}
       <div
         className="w-full rounded-2xl p-5 mb-6 text-left"
         style={{
@@ -151,7 +148,6 @@ function SuccessScreen({ booking, onClose }) {
           </div>
         ))}
       </div>
-
       <button
         onClick={onClose}
         className="w-full py-3.5 rounded-xl font-bold text-sm"
@@ -167,7 +163,6 @@ function SuccessScreen({ booking, onClose }) {
   );
 }
 
-// ── Main Modal ────────────────────────────────────────────────────────────────
 export default function BookInspectionModal({
   isOpen,
   onClose,
@@ -182,12 +177,13 @@ export default function BookInspectionModal({
     inspectionDate: "",
     persons: 1,
   });
+  const [customPersons, setCustomPersons] = useState(""); // for the custom input
+  const [useCustom, setUseCustom] = useState(false);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
-  const [booking, setBooking] = useState(null); // success state
+  const [booking, setBooking] = useState(null);
 
-  // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
       setForm({
@@ -198,13 +194,14 @@ export default function BookInspectionModal({
         inspectionDate: "",
         persons: 1,
       });
+      setCustomPersons("");
+      setUseCustom(false);
       setErrors({});
       setApiError("");
       setBooking(null);
     }
   }, [isOpen]);
 
-  // Lock scroll when open
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
     return () => {
@@ -217,6 +214,28 @@ export default function BookInspectionModal({
     setErrors((e) => ({ ...e, [field]: "" }));
   };
 
+  // ── Persons helpers ────────────────────────────────────────────────────────
+  const selectQuickPick = (val) => {
+    setUseCustom(false);
+    setCustomPersons("");
+    set("persons", val);
+  };
+
+  const handleCustomChange = (val) => {
+    const n = parseInt(val, 10);
+    setCustomPersons(val);
+    if (!isNaN(n) && n >= 1) {
+      setForm((f) => ({ ...f, persons: n }));
+      setErrors((e) => ({ ...e, persons: "" }));
+    }
+  };
+
+  const stepPersons = (delta) => {
+    const next = Math.max(1, (form.persons || 1) + delta);
+    setForm((f) => ({ ...f, persons: next }));
+    if (useCustom) setCustomPersons(String(next));
+  };
+
   const validate = () => {
     const e = {};
     if (!form.firstName.trim()) e.firstName = "First name is required";
@@ -226,25 +245,23 @@ export default function BookInspectionModal({
     if (!form.phone.trim() || form.phone.trim().length < 7)
       e.phone = "Valid phone number is required";
     if (!form.inspectionDate) e.inspectionDate = "Please select a date";
+    if (!form.persons || form.persons < 1)
+      e.persons = "Enter number of persons";
     return e;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const errs = validate();
-    if (Object.keys(errs).length > 0) {
+    if (Object.keys(errs).length) {
       setErrors(errs);
       return;
     }
-
     setLoading(true);
     setApiError("");
     try {
-      const result = await bookInspection({
-        estateName,
-        estateId,
-        ...form,
-      });
+      // Send persons as the actual number — backend accepts any integer ≥ 1
+      const result = await bookInspection({ estateName, estateId, ...form });
       setBooking(result.inspection);
     } catch (err) {
       setApiError(err.message || "Something went wrong. Please try again.");
@@ -253,23 +270,27 @@ export default function BookInspectionModal({
     }
   };
 
-  const inputStyle = (hasError) => ({
+  const inputStyle = (hasErr) => ({
     width: "100%",
     padding: "11px 14px 11px 40px",
     borderRadius: 12,
     fontSize: 14,
-    border: `1.5px solid ${hasError ? "#dc2626" : "rgba(112,12,235,0.15)"}`,
-    background: hasError ? "rgba(220,38,38,0.03)" : "#fafafa",
+    border: `1.5px solid ${hasErr ? "#dc2626" : "rgba(112,12,235,0.15)"}`,
+    background: hasErr ? "rgba(220,38,38,0.03)" : "#fafafa",
     outline: "none",
     color: "#0f0a1e",
     fontWeight: 500,
     transition: "border-color 0.2s",
   });
 
-  const noIconInputStyle = (hasError) => ({
-    ...inputStyle(hasError),
-    paddingLeft: 14,
-  });
+  const noIconInput = (hasErr) => ({ ...inputStyle(hasErr), paddingLeft: 14 });
+
+  const focusOn = (e, err) => {
+    if (!err) e.target.style.borderColor = "rgba(112,12,235,0.45)";
+  };
+  const focusOff = (e, err) => {
+    if (!err) e.target.style.borderColor = "rgba(112,12,235,0.15)";
+  };
 
   return (
     <AnimatePresence>
@@ -295,17 +316,14 @@ export default function BookInspectionModal({
               background: "#fff",
               maxHeight: "90vh",
               overflowY: "auto",
-              boxShadow:
-                "0 40px 100px rgba(112,12,235,0.2), 0 0 0 1px rgba(112,12,235,0.08)",
+              boxShadow: "0 40px 100px rgba(112,12,235,0.2)",
             }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <div
               className="relative px-8 py-7 overflow-hidden"
-              style={{
-                background: "linear-gradient(135deg, #3F0C91, #700CEB)",
-              }}
+              style={{ background: "linear-gradient(135deg,#3F0C91,#700CEB)" }}
             >
               <div
                 style={{
@@ -380,7 +398,6 @@ export default function BookInspectionModal({
               <SuccessScreen booking={booking} onClose={onClose} />
             ) : (
               <form onSubmit={handleSubmit} className="p-8 space-y-5">
-                {/* API Error */}
                 {apiError && (
                   <motion.div
                     initial={{ opacity: 0, y: -8 }}
@@ -407,7 +424,7 @@ export default function BookInspectionModal({
                   </motion.div>
                 )}
 
-                {/* Estate name — read-only display */}
+                {/* Estate display */}
                 <div
                   className="flex items-center gap-3 px-4 py-3 rounded-xl"
                   style={{
@@ -456,14 +473,8 @@ export default function BookInspectionModal({
                       onChange={(e) => set("firstName", e.target.value)}
                       placeholder="John"
                       style={inputStyle(errors.firstName)}
-                      onFocus={(e) => {
-                        if (!errors.firstName)
-                          e.target.style.borderColor = "rgba(112,12,235,0.45)";
-                      }}
-                      onBlur={(e) => {
-                        if (!errors.firstName)
-                          e.target.style.borderColor = "rgba(112,12,235,0.15)";
-                      }}
+                      onFocus={(e) => focusOn(e, errors.firstName)}
+                      onBlur={(e) => focusOff(e, errors.firstName)}
                     />
                   </Field>
                   <Field label="Last Name" icon={User} error={errors.lastName}>
@@ -472,14 +483,8 @@ export default function BookInspectionModal({
                       onChange={(e) => set("lastName", e.target.value)}
                       placeholder="Doe"
                       style={inputStyle(errors.lastName)}
-                      onFocus={(e) => {
-                        if (!errors.lastName)
-                          e.target.style.borderColor = "rgba(112,12,235,0.45)";
-                      }}
-                      onBlur={(e) => {
-                        if (!errors.lastName)
-                          e.target.style.borderColor = "rgba(112,12,235,0.15)";
-                      }}
+                      onFocus={(e) => focusOn(e, errors.lastName)}
+                      onBlur={(e) => focusOff(e, errors.lastName)}
                     />
                   </Field>
                 </div>
@@ -492,14 +497,8 @@ export default function BookInspectionModal({
                     onChange={(e) => set("email", e.target.value)}
                     placeholder="john@example.com"
                     style={inputStyle(errors.email)}
-                    onFocus={(e) => {
-                      if (!errors.email)
-                        e.target.style.borderColor = "rgba(112,12,235,0.45)";
-                    }}
-                    onBlur={(e) => {
-                      if (!errors.email)
-                        e.target.style.borderColor = "rgba(112,12,235,0.15)";
-                    }}
+                    onFocus={(e) => focusOn(e, errors.email)}
+                    onBlur={(e) => focusOff(e, errors.email)}
                   />
                 </Field>
 
@@ -511,14 +510,8 @@ export default function BookInspectionModal({
                     onChange={(e) => set("phone", e.target.value)}
                     placeholder="+234 800 000 0000"
                     style={inputStyle(errors.phone)}
-                    onFocus={(e) => {
-                      if (!errors.phone)
-                        e.target.style.borderColor = "rgba(112,12,235,0.45)";
-                    }}
-                    onBlur={(e) => {
-                      if (!errors.phone)
-                        e.target.style.borderColor = "rgba(112,12,235,0.15)";
-                    }}
+                    onFocus={(e) => focusOn(e, errors.phone)}
+                    onBlur={(e) => focusOff(e, errors.phone)}
                   />
                 </Field>
 
@@ -534,18 +527,12 @@ export default function BookInspectionModal({
                     onChange={(e) => set("inspectionDate", e.target.value)}
                     min={getMinDate()}
                     style={inputStyle(errors.inspectionDate)}
-                    onFocus={(e) => {
-                      if (!errors.inspectionDate)
-                        e.target.style.borderColor = "rgba(112,12,235,0.45)";
-                    }}
-                    onBlur={(e) => {
-                      if (!errors.inspectionDate)
-                        e.target.style.borderColor = "rgba(112,12,235,0.15)";
-                    }}
+                    onFocus={(e) => focusOn(e, errors.inspectionDate)}
+                    onBlur={(e) => focusOff(e, errors.inspectionDate)}
                   />
                 </Field>
 
-                {/* Persons */}
+                {/* ── Persons — quick picks + custom number ─────────────── */}
                 <div>
                   <label
                     style={{
@@ -563,61 +550,158 @@ export default function BookInspectionModal({
                     <Users size={13} style={{ color: "#700CEB" }} />
                     Number of Persons
                   </label>
-                  <div className="grid grid-cols-3 gap-3">
-                    {PERSONS_OPTIONS.map((opt) => (
-                      <motion.button
-                        key={opt.value}
-                        type="button"
-                        whileTap={{ scale: 0.96 }}
-                        onClick={() => set("persons", opt.value)}
-                        className="flex flex-col items-center py-3.5 px-2 rounded-2xl text-center transition-all"
-                        style={{
-                          border:
-                            form.persons === opt.value
+
+                  {/* Quick picks */}
+                  <div className="grid grid-cols-3 gap-3 mb-3">
+                    {QUICK_PICKS.map((opt) => {
+                      const active = !useCustom && form.persons === opt.value;
+                      return (
+                        <motion.button
+                          key={opt.value}
+                          type="button"
+                          whileTap={{ scale: 0.96 }}
+                          onClick={() => selectQuickPick(opt.value)}
+                          className="flex flex-col items-center py-3 px-2 rounded-2xl text-center transition-all"
+                          style={{
+                            border: active
                               ? "2px solid #700CEB"
                               : "1.5px solid rgba(112,12,235,0.12)",
-                          background:
-                            form.persons === opt.value
+                            background: active
                               ? "rgba(112,12,235,0.06)"
                               : "#fafafa",
-                          boxShadow:
-                            form.persons === opt.value
+                            boxShadow: active
                               ? "0 4px 16px rgba(112,12,235,0.15)"
                               : "none",
+                          }}
+                        >
+                          <span style={{ fontSize: 20, marginBottom: 2 }}>
+                            {opt.emoji}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 800,
+                              color: active ? "#700CEB" : "#0f0a1e",
+                            }}
+                          >
+                            {opt.value === 1
+                              ? "1 Person"
+                              : `${opt.value} People`}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: 10,
+                              color: "#9ca3af",
+                              fontWeight: 500,
+                              marginTop: 1,
+                            }}
+                          >
+                            {opt.label}
+                          </span>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Custom group size */}
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUseCustom(true);
+                        setCustomPersons(String(form.persons));
+                      }}
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: "#700CEB",
+                        background: "none",
+                        border: "none",
+                        padding: 0,
+                        cursor: "pointer",
+                        marginBottom: 8,
+                        textDecoration: "underline",
+                      }}
+                    >
+                      Enter custom group size
+                    </button>
+
+                    {useCustom && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex items-center gap-3 p-3 rounded-xl"
+                        style={{
+                          background: "rgba(112,12,235,0.04)",
+                          border: "1.5px solid rgba(112,12,235,0.18)",
                         }}
                       >
-                        <span style={{ fontSize: 22, marginBottom: 3 }}>
-                          {opt.value === 1
-                            ? "👤"
-                            : opt.value === 2
-                              ? "👥"
-                              : "👨‍👩‍👧‍👦"}
-                        </span>
-                        <span
+                        <button
+                          type="button"
+                          onClick={() => stepPersons(-1)}
+                          className="w-8 h-8 rounded-full flex items-center justify-center transition-all"
                           style={{
-                            fontSize: 13,
+                            background: "rgba(112,12,235,0.1)",
+                            color: "#700CEB",
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Minus size={14} />
+                        </button>
+                        <input
+                          type="number"
+                          min="1"
+                          max="999"
+                          value={customPersons}
+                          onChange={(e) => handleCustomChange(e.target.value)}
+                          placeholder="e.g. 12"
+                          style={{
+                            flex: 1,
+                            textAlign: "center",
+                            fontSize: 18,
                             fontWeight: 800,
-                            color:
-                              form.persons === opt.value
-                                ? "#700CEB"
-                                : "#0f0a1e",
-                            letterSpacing: "-0.02em",
+                            color: "#700CEB",
+                            background: "transparent",
+                            border: "none",
+                            outline: "none",
+                            fontFamily: "inherit",
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => stepPersons(1)}
+                          className="w-8 h-8 rounded-full flex items-center justify-center transition-all"
+                          style={{
+                            background: "rgba(112,12,235,0.1)",
+                            color: "#700CEB",
+                            flexShrink: 0,
                           }}
                         >
-                          {opt.label}
-                        </span>
+                          <Plus size={14} />
+                        </button>
                         <span
                           style={{
-                            fontSize: 10,
+                            fontSize: 12,
                             color: "#9ca3af",
-                            marginTop: 1,
-                            fontWeight: 500,
+                            flexShrink: 0,
                           }}
                         >
-                          {opt.desc}
+                          {form.persons === 1 ? "person" : "people"}
                         </span>
-                      </motion.button>
-                    ))}
+                      </motion.div>
+                    )}
+                    {errors.persons && (
+                      <p
+                        style={{
+                          fontSize: 11,
+                          color: "#dc2626",
+                          marginTop: 4,
+                          fontWeight: 500,
+                        }}
+                      >
+                        {errors.persons}
+                      </p>
+                    )}
                   </div>
                 </div>
 

@@ -11,6 +11,7 @@ import subscriptionRoutes from "./routes/subscription.routes.js";
 import inspectionRoutes from "./routes/inspection.routes.js";
 import clientRoutes from "./routes/client.routes.js";
 import analyticsRoutes from "./routes/analytics.routes.js";
+import buy2sellRoutes from "./routes/buy2sell.routes.js";
 import cloudinary from "./utils/cloudinary.config.js";
 
 const app = express();
@@ -47,6 +48,7 @@ app.use("/api/inspections", inspectionRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/clients", clientRoutes);
 app.use("/api/admin", analyticsRoutes);
+app.use("/api/buy2sell", buy2sellRoutes);
 
 const result = await cloudinary.api.ping();
 console.log("Cloudinary:", result.status);

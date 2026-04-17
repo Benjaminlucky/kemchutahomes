@@ -90,3 +90,22 @@ export const bookInspection = async (payload) => {
   if (!res.ok) throw new Error(data.message || "Failed to book inspection.");
   return data;
 };
+
+// ── Buy2Sell ──────────────────────────────────────────────────────────────────
+
+export const fetchROISettings = async () => {
+  const res = await fetch(`${BASE}/api/buy2sell/roi`);
+  if (!res.ok) throw new Error("Failed to fetch ROI settings");
+  return res.json();
+};
+
+export const submitBuy2SellLead = async (payload) => {
+  const res = await fetch(`${BASE}/api/buy2sell/leads`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to submit enquiry");
+  return data;
+};

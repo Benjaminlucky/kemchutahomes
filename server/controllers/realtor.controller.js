@@ -3,9 +3,10 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import cloudinary from "../utils/cloudinary.config.js";
 import { sendWelcomeEmail, sendPasswordResetEmail } from "../utils/email.js";
+import { notifyRealtorWelcome } from "../utils/notifications.js";
 import crypto from "crypto";
 
-/* -------------------------------- HELPERS -------------------------------- */
+/* ──────────────────────────── HELPERS ──────────────────────────────────── */
 
 const generateReferralCode = async () => {
   let code,
@@ -19,7 +20,7 @@ const generateReferralCode = async () => {
   return code;
 };
 
-/* -------------------------------- AUTH -------------------------------- */
+/* ──────────────────────────── AUTH ─────────────────────────────────────── */
 
 export const signup = async (req, res) => {
   try {
@@ -69,9 +70,18 @@ export const signup = async (req, res) => {
       recruitedBy: recruiter?._id || null,
     });
 
+    // Email welcome — existing function, unchanged
     sendWelcomeEmail({
       email: realtor.email,
       firstName: realtor.firstName,
+    }).catch(() => null);
+
+    // WhatsApp + SMS welcome — new multi-channel addition
+    notifyRealtorWelcome({
+      firstName: realtor.firstName,
+      phone: realtor.phone,
+      referralCode: realtor.referralCode,
+      referralLink: realtor.referralLink,
     }).catch(() => null);
 
     return res.status(201).json({
@@ -130,7 +140,7 @@ export const login = async (req, res) => {
   }
 };
 
-/* ------------------------------ DASHBOARD -------------------------------- */
+/* ──────────────────────────── DASHBOARD ────────────────────────────────── */
 
 export const getDashboard = async (req, res) => {
   try {
@@ -146,17 +156,12 @@ export const getDashboard = async (req, res) => {
     const realtorObj = realtor.toObject({ virtuals: true });
     const recruitCount = await Realtor.countDocuments({ recruitedBy: userId });
 
-    // Determine recruited by label
-    let recruitedByLabel = "Admin"; // Default to Admin if no recruiter
-
+    let recruitedByLabel = "Admin";
     if (realtorObj.recruitedBy && typeof realtorObj.recruitedBy === "object") {
-      // If recruited by admin, show "Admin"
-      if (realtorObj.recruitedBy.role === "admin") {
-        recruitedByLabel = "Admin";
-      } else {
-        // If recruited by a realtor, show realtor's full name
-        recruitedByLabel = `${realtorObj.recruitedBy.firstName} ${realtorObj.recruitedBy.lastName}`;
-      }
+      recruitedByLabel =
+        realtorObj.recruitedBy.role === "admin"
+          ? "Admin"
+          : `${realtorObj.recruitedBy.firstName} ${realtorObj.recruitedBy.lastName}`;
     }
 
     return res.json({
@@ -175,28 +180,22 @@ export const getDashboard = async (req, res) => {
   }
 };
 
-/* ------------------------------ MY RECRUITS -------------------------------- */
+/* ──────────────────────────── MY RECRUITS ──────────────────────────────── */
 
 export const getMyRecruits = async (req, res) => {
   try {
-    const userId = req.user.id;
-
-    const recruits = await Realtor.find({ recruitedBy: userId })
+    const recruits = await Realtor.find({ recruitedBy: req.user.id })
       .select("firstName lastName email phone avatar referralCode createdAt")
       .sort("-createdAt")
       .lean();
-
-    return res.json({
-      recruits,
-      total: recruits.length,
-    });
+    return res.json({ recruits, total: recruits.length });
   } catch (error) {
     console.error("Get My Recruits Error:", error);
     res.status(500).json({ message: "Failed to fetch recruits" });
   }
 };
 
-/* ------------------------------ PROFILE -------------------------------- */
+/* ──────────────────────────── PROFILE ──────────────────────────────────── */
 
 export const updateAvatar = async (req, res) => {
   try {
@@ -216,7 +215,6 @@ export const updateAvatar = async (req, res) => {
       });
 
     const result = await uploadFromBuffer(req.file.buffer);
-
     const updated = await Realtor.findByIdAndUpdate(
       req.user.id,
       { avatar: result.secure_url },
@@ -242,7 +240,7 @@ export const updateAvatar = async (req, res) => {
   }
 };
 
-/* ------------------------------ ADMIN -------------------------------- */
+/* ──────────────────────────── ADMIN ────────────────────────────────────── */
 
 export const getRealtors = async (req, res) => {
   try {
@@ -262,7 +260,6 @@ export const getRealtors = async (req, res) => {
       : {};
 
     const total = await Realtor.countDocuments(filter);
-
     const realtors = await Realtor.find(filter)
       .sort("-createdAt")
       .skip((page - 1) * limit)
@@ -278,12 +275,7 @@ export const getRealtors = async (req, res) => {
         : null,
     }));
 
-    return res.json({
-      docs,
-      total,
-      page,
-      pages: Math.ceil(total / limit),
-    });
+    return res.json({ docs, total, page, pages: Math.ceil(total / limit) });
   } catch (err) {
     console.error("GET REALTORS ERROR:", err);
     return res.status(500).json({ message: "Failed to fetch realtors" });
@@ -295,7 +287,6 @@ export const getRealtorById = async (req, res) => {
     const realtor = await Realtor.findById(req.params.id)
       .populate("recruitedBy", "firstName lastName referralCode")
       .select("-passwordHash");
-
     if (!realtor) return res.status(404).json({ message: "Realtor not found" });
     res.json(realtor);
   } catch (err) {
@@ -310,7 +301,6 @@ export const updateRealtor = async (req, res) => {
       new: true,
       runValidators: true,
     }).select("-passwordHash");
-
     if (!updated) return res.status(404).json({ message: "Realtor not found" });
     res.json({ message: "Updated successfully", realtor: updated });
   } catch (err) {
@@ -329,7 +319,6 @@ export const deleteRealtor = async (req, res) => {
         .status(400)
         .json({ message: "Cannot delete realtor with recruits" });
     }
-
     await Realtor.findByIdAndDelete(req.params.id);
     res.json({ message: "Deleted successfully" });
   } catch (err) {
@@ -338,25 +327,20 @@ export const deleteRealtor = async (req, res) => {
   }
 };
 
-/* ─────────────────────────── FORGOT PASSWORD ─────────────────────────────── */
+/* ──────────────────────────── FORGOT PASSWORD ──────────────────────────── */
 
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({ message: "Email is required" });
-    }
+    if (!email) return res.status(400).json({ message: "Email is required" });
 
     const realtor = await Realtor.findOne({
       email: email.toLowerCase().trim(),
     });
-
-    // Always return 200 — prevents email enumeration
     if (!realtor) {
-      return res.status(200).json({
-        message: "If that email exists, a reset link has been sent.",
-      });
+      return res
+        .status(200)
+        .json({ message: "If that email exists, a reset link has been sent." });
     }
 
     const rawToken = crypto.randomBytes(32).toString("hex");
@@ -366,11 +350,11 @@ export const forgotPassword = async (req, res) => {
       .digest("hex");
 
     realtor.resetPasswordToken = hashedToken;
-    realtor.resetPasswordExpiry = Date.now() + 60 * 60 * 1000; // 1 hour
+    realtor.resetPasswordExpiry = Date.now() + 60 * 60 * 1000;
     await realtor.save({ validateBeforeSave: false });
 
     const FRONTEND_URL =
-      process.env.FRONTEND_URL || "https://kemchutahomesltd.com";
+      process.env.FRONTEND_URL || "https://kemchutahomesltd.com/";
     const resetUrl = `${FRONTEND_URL}/reset-password?token=${rawToken}`;
 
     sendPasswordResetEmail({
@@ -383,9 +367,9 @@ export const forgotPassword = async (req, res) => {
       await realtor.save({ validateBeforeSave: false }).catch(() => null);
     });
 
-    return res.status(200).json({
-      message: "If that email exists, a reset link has been sent.",
-    });
+    return res
+      .status(200)
+      .json({ message: "If that email exists, a reset link has been sent." });
   } catch (err) {
     console.error("FORGOT PASSWORD ERROR:", err);
     return res
@@ -394,18 +378,16 @@ export const forgotPassword = async (req, res) => {
   }
 };
 
-/* ─────────────────────────── RESET PASSWORD ──────────────────────────────── */
+/* ──────────────────────────── RESET PASSWORD ───────────────────────────── */
 
 export const resetPassword = async (req, res) => {
   try {
     const { token, password } = req.body;
-
     if (!token || !password) {
       return res
         .status(400)
         .json({ message: "Token and new password are required" });
     }
-
     if (password.length < 8) {
       return res
         .status(400)
@@ -413,7 +395,6 @@ export const resetPassword = async (req, res) => {
     }
 
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-
     const realtor = await Realtor.findOne({
       resetPasswordToken: hashedToken,
       resetPasswordExpiry: { $gt: Date.now() },
