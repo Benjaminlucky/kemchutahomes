@@ -1,4 +1,4 @@
-import { ROISettings, Buy2SellLead } from "../models/buy2sell.model.js";
+import { ROISettings, Buy2SellLead } from "../models/Buy2sell.model.js";
 import { sendEmail } from "../utils/notifications.js";
 
 const ADMIN_EMAIL = () =>
