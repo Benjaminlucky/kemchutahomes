@@ -5,7 +5,7 @@ import {
   submitBuy2SellLead,
   getAllLeads,
   updateLeadStatus,
-} from "../controllers/buy2sell.controller.js";
+} from "../controllers/Buy2sell.controller.js";
 import { protect, isAdmin } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
