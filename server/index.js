@@ -11,7 +11,7 @@ import subscriptionRoutes from "./routes/subscription.routes.js";
 import inspectionRoutes from "./routes/inspection.routes.js";
 import clientRoutes from "./routes/client.routes.js";
 import analyticsRoutes from "./routes/analytics.routes.js";
-import buy2sellRoutes from "./routes/buy2sell.routes.js";
+import buy2sellRoutes from "./routes/Buy2sell.routes.js";
 import cloudinary from "./utils/cloudinary.config.js";
 
 const app = express();
