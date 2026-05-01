@@ -18,7 +18,7 @@ import clientRoutes from "./routes/client.routes.js";
 import commissionRoutes from "./routes/commission.routes.js"; // ← NEW
 
 // ── Scheduler ─────────────────────────────────────────────────────────────────
-import { startScheduler } from "./utils/followUp.js";
+import { startScheduler } from "./utils/followup.js"; // inspection reminders, follow-ups, payment reminders
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
 import cloudinary from "./utils/cloudinary.config.js";
