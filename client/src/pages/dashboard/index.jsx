@@ -11,7 +11,8 @@ import ManageRealtors from "./ManageRealtors";
 import ManageEstates from "./ManageEstates";
 import ManageInspections from "./ManageInspections";
 import ManageSubscriptions from "./ManageSubscriptions";
-import ManageBuy2Sell from "./ManageBuy2Sell"; // ← NEW
+import ManageBuy2Sell from "./ManageBuy2Sell";
+import ManageContact from "./ManageContact"; // ← Contact CRUD
 
 export default function Dashboard() {
   return (
@@ -23,7 +24,9 @@ export default function Dashboard() {
         <Route path="estates" element={<ManageEstates />} />
         <Route path="inspections" element={<ManageInspections />} />
         <Route path="subscriptions" element={<ManageSubscriptions />} />
-        <Route path="buy2sell" element={<ManageBuy2Sell />} /> {/* ← NEW */}
+        <Route path="buy2sell" element={<ManageBuy2Sell />} />
+        <Route path="contact" element={<ManageContact />} />{" "}
+        {/* Contact CRUD */}
         <Route path="reports" element={<Reports />} />
         {/* Realtor routes */}
         <Route path="earnings" element={<Earnings />} />

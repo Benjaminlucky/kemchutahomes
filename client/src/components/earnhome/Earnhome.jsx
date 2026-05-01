@@ -329,7 +329,7 @@ function Earnhome() {
             }}
           >
             <TrendingUp size={12} />
-            Buy2Sell Land Bank Scheme
+            Buy2Sell
           </div>
         </motion.div>
 

@@ -11,6 +11,7 @@ import {
   FaCalendarCheck,
   FaClipboardList,
   FaLandmark,
+  FaAddressCard,
 } from "react-icons/fa";
 import { useLocation, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -57,17 +58,26 @@ export default function DashboardLayout({ children }) {
             name: "Buy2Sell Scheme",
             path: "/dashboard/buy2sell",
             icon: <FaLandmark />,
-          }, // ← NEW
+          },
+          {
+            name: "Contact Info",
+            path: "/dashboard/contact",
+            icon: <FaAddressCard />,
+          },
           { name: "Reports", path: "/admin/reports", icon: <FaChartLine /> },
         ]
       : [
+          { name: "Dashboard", path: "/dashboard", icon: <FaTachometerAlt /> },
           {
-            name: "Dashboard",
-            path: "/realtor/dashboard",
-            icon: <FaTachometerAlt />,
+            name: "My Recruits",
+            path: "/dashboard/recruits",
+            icon: <FaUsers />,
           },
-          { name: "My Recruits", path: "/realtor/recruits", icon: <FaUsers /> },
-          { name: "Earnings", path: "/realtor/earnings", icon: <FaBuilding /> },
+          {
+            name: "Earnings",
+            path: "/dashboard/earnings",
+            icon: <FaBuilding />,
+          },
         ];
 
   const handleItemClick = () => {

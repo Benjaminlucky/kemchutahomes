@@ -8,18 +8,18 @@ const clientSchema = new mongoose.Schema(
     email: {
       type: String,
       required: true,
-      unique: true,
+      unique: true, // unique:true already creates the index — no .index({ email: 1 }) needed
       lowercase: true,
       trim: true,
     },
     phone: { type: String, required: true, trim: true },
     passwordHash: { type: String, required: true },
 
-    // ── Password reset (mirrors realtor pattern exactly) ───────────────────
+    // ── Password reset ──────────────────────────────────────────────────────
     resetPasswordToken: { type: String },
     resetPasswordExpiry: { type: Date },
 
-    // ── Profile ───────────────────────────────────────────────────────────
+    // ── Profile ─────────────────────────────────────────────────────────────
     avatar: {
       type: String,
       default:
@@ -32,8 +32,9 @@ const clientSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// Indexes
-clientSchema.index({ email: 1 });
+// ── Indexes ──────────────────────────────────────────────────────────────────
+// NOTE: email index is already created by unique:true above — do NOT add
+// clientSchema.index({ email: 1 }) as that causes a duplicate index warning.
 clientSchema.index({ createdAt: -1 });
 
 export default mongoose.models.Client || mongoose.model("Client", clientSchema);

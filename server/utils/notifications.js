@@ -47,7 +47,11 @@ export const fmtDate = (d) =>
 // EMAIL — Resend
 // ─────────────────────────────────────────────────────────────────────────────
 
-export async function sendEmail({ to, subject, html }) {
+/**
+ * sendEmail — supports optional PDF attachments.
+ * attachments format (Resend): [{ filename, content (base64 string), contentType }]
+ */
+export async function sendEmail({ to, subject, html, attachments }) {
   const resend = getResend();
   if (!resend) {
     console.warn("⚠️  RESEND_API_KEY missing — email skipped");
@@ -55,14 +59,28 @@ export async function sendEmail({ to, subject, html }) {
   }
   try {
     const toArray = Array.isArray(to) ? to : [to];
-    const { data, error } = await resend.emails.send({
+
+    const payload = {
       from: "Kemchuta Homes <onboarding@khlrealtorsportal.com>",
       to: toArray,
       subject,
       html,
-    });
+    };
+
+    // Resend attachment format: { filename, content (base64), type }
+    if (attachments?.length) {
+      payload.attachments = attachments.map((a) => ({
+        filename: a.filename,
+        content: a.content, // base64 string
+        type: a.contentType || "application/pdf",
+      }));
+    }
+
+    const { data, error } = await resend.emails.send(payload);
     if (error) throw new Error(error.message);
-    console.log(`✅ EMAIL sent → ${toArray.join(", ")} [${data.id}]`);
+    console.log(
+      `✅ EMAIL sent → ${toArray.join(", ")} [${data.id}] attachments:${attachments?.length || 0}`,
+    );
     return { success: true, messageId: data.id };
   } catch (err) {
     console.error(`❌ EMAIL failed → ${to} | ${err.message}`);

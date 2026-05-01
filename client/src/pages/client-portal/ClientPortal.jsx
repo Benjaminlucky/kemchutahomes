@@ -30,6 +30,14 @@ import {
   Loader2,
   Search,
   Filter,
+  Download,
+  ExternalLink,
+  RefreshCw,
+  CreditCard,
+  Wallet,
+  ArrowDown,
+  Shield,
+  Star,
 } from "lucide-react";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -106,6 +114,41 @@ const STATUS_META = {
     border: "rgba(5,150,105,0.25)",
     Icon: CheckCircle,
     label: "Completed",
+  },
+  payment_confirmed: {
+    color: "#059669",
+    bg: "rgba(5,150,105,0.1)",
+    border: "rgba(5,150,105,0.25)",
+    Icon: CreditCard,
+    label: "Payment Confirmed",
+  },
+  allocated: {
+    color: "#700CEB",
+    bg: "rgba(112,12,235,0.06)",
+    border: "rgba(112,12,235,0.2)",
+    Icon: Shield,
+    label: "Allocated",
+  },
+  active: {
+    color: "#059669",
+    bg: "rgba(5,150,105,0.1)",
+    border: "rgba(5,150,105,0.25)",
+    Icon: TrendingUp,
+    label: "Active",
+  },
+  matured: {
+    color: "#d97706",
+    bg: "rgba(217,119,6,0.1)",
+    border: "rgba(217,119,6,0.25)",
+    Icon: Star,
+    label: "Matured",
+  },
+  paid_out: {
+    color: "#059669",
+    bg: "rgba(5,150,105,0.1)",
+    border: "rgba(5,150,105,0.25)",
+    Icon: CheckCircle,
+    label: "Paid Out",
   },
 };
 
@@ -371,12 +414,75 @@ function OverviewTab({ dashData }) {
 }
 
 // ── Subscriptions Tab ──────────────────────────────────────────────────────
+function PaymentProgress({ sub }) {
+  const pct = Math.min(
+    100,
+    Math.round(((sub.amountPaid || 0) / sub.totalAmount) * 100),
+  );
+  const balance = sub.totalAmount - (sub.amountPaid || 0);
+  return (
+    <div className="mt-3 p-3 rounded-xl bg-customPurple-50/60 border border-customPurple-100">
+      <div className="flex justify-between text-xs font-bold mb-1.5">
+        <span className="text-customBlack-500">Payment Progress</span>
+        <span className="text-customPurple-600">{pct}%</span>
+      </div>
+      <div className="h-2 rounded-full bg-customPurple-100 overflow-hidden mb-2">
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{
+            width: `${pct}%`,
+            background: "linear-gradient(to right,#3F0C91,#700CEB)",
+          }}
+        />
+      </div>
+      <div className="grid grid-cols-3 gap-2 text-xs">
+        <div>
+          <p className="text-customBlack-400">Paid</p>
+          <p className="font-black text-green-600">
+            {formatCurrency(sub.amountPaid || 0)}
+          </p>
+        </div>
+        <div>
+          <p className="text-customBlack-400">Balance</p>
+          <p className="font-black text-red-500">{formatCurrency(balance)}</p>
+        </div>
+        <div>
+          <p className="text-customBlack-400">Total</p>
+          <p className="font-black text-customPurple-700">
+            {formatCurrency(sub.totalAmount)}
+          </p>
+        </div>
+      </div>
+      {sub.installmentSchedule?.length > 0 && (
+        <div className="mt-2 pt-2 border-t border-customPurple-100">
+          <p className="text-xs font-bold text-customBlack-400 mb-1">
+            Next Due
+          </p>
+          {(() => {
+            const next = sub.installmentSchedule.find((s) => !s.isPaid);
+            return next ? (
+              <p className="text-xs font-black text-amber-600">
+                {formatCurrency(next.amount)} — {formatDate(next.dueDate)}
+              </p>
+            ) : (
+              <p className="text-xs font-bold text-green-600">
+                All instalments paid ✓
+              </p>
+            );
+          })()}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SubscriptionsTab() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("");
+  const [expanded, setExpanded] = useState({});
 
   useEffect(() => {
     const load = async () => {
@@ -387,9 +493,10 @@ function SubscriptionsTab() {
           limit: 10,
           ...(status && { status }),
         });
-        const res = await authFetch(`/api/clients/subscriptions?${params}`);
+        const res = await authFetch(`/api/subscriptions/my`);
         if (!res.ok) throw new Error("Failed to load subscriptions");
-        setData(await res.json());
+        const subs = await res.json();
+        setData({ subscriptions: subs, pages: 1, total: subs.length });
       } catch (e) {
         setError(e.message);
       } finally {
@@ -399,7 +506,15 @@ function SubscriptionsTab() {
     load();
   }, [page, status]);
 
-  const STATUSES = ["", "pending", "reviewed", "approved", "rejected"];
+  const STATUSES = [
+    "",
+    "pending",
+    "reviewed",
+    "approved",
+    "payment_confirmed",
+    "allocated",
+    "rejected",
+  ];
 
   return (
     <div className="space-y-6">
@@ -479,36 +594,64 @@ function SubscriptionsTab() {
                 </thead>
                 <tbody className="divide-y divide-customBlack-50">
                   {data.subscriptions.map((sub) => (
-                    <tr
-                      key={sub._id}
-                      className="hover:bg-customPurple-50/30 transition-colors"
-                    >
-                      <td className="px-6 py-4">
-                        <p className="font-bold text-customBlack-900 text-sm">
-                          {sub.estateName}
-                        </p>
-                        <p className="text-xs text-customBlack-400">
-                          {sub.plotType}
-                        </p>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-customBlack-600">
-                        {sub.numberOfPlots} × {sub.plotSize}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="font-bold text-customPurple-700 text-sm">
-                          {formatCurrency(sub.totalAmount)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-customBlack-600">
-                        {sub.paymentPlan}
-                      </td>
-                      <td className="px-6 py-4">
-                        <StatusBadge status={sub.status} />
-                      </td>
-                      <td className="px-6 py-4 text-sm text-customBlack-400">
-                        {formatDate(sub.createdAt)}
-                      </td>
-                    </tr>
+                    <>
+                      <tr
+                        key={sub._id}
+                        className="hover:bg-customPurple-50/30 transition-colors cursor-pointer"
+                        onClick={() =>
+                          setExpanded((e) => ({ ...e, [sub._id]: !e[sub._id] }))
+                        }
+                      >
+                        <td className="px-6 py-4">
+                          <p className="font-bold text-customBlack-900 text-sm">
+                            {sub.estateName}
+                          </p>
+                          <p className="text-xs text-customBlack-400 font-mono">
+                            {sub.referenceNumber}
+                          </p>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-customBlack-600">
+                          {sub.numberOfPlots} × {sub.plotSize}
+                        </td>
+                        <td className="px-6 py-4">
+                          <p className="font-bold text-customPurple-700 text-sm">
+                            {formatCurrency(sub.totalAmount)}
+                          </p>
+                          {sub.amountPaid > 0 && (
+                            <p className="text-xs text-green-600 font-bold">
+                              {formatCurrency(sub.amountPaid)} paid
+                            </p>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-customBlack-600">
+                          {sub.paymentPlan}
+                        </td>
+                        <td className="px-6 py-4">
+                          <StatusBadge status={sub.status} />
+                        </td>
+                        <td className="px-6 py-4 text-sm text-customBlack-400">
+                          {formatDate(sub.createdAt)}
+                        </td>
+                      </tr>
+                      {expanded[sub._id] && (
+                        <tr key={sub._id + "-detail"}>
+                          <td
+                            colSpan={6}
+                            className="px-6 pb-4 pt-0 bg-customPurple-50/40"
+                          >
+                            <PaymentProgress sub={sub} />
+                            {sub.plotNumber && (
+                              <div className="mt-2 p-3 rounded-xl bg-green-50 border border-green-200 flex items-center gap-2">
+                                <Shield size={14} className="text-green-600" />
+                                <p className="text-xs font-bold text-green-700">
+                                  Plot Allocated: {sub.plotNumber}
+                                </p>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      )}
+                    </>
                   ))}
                 </tbody>
               </table>
@@ -764,27 +907,292 @@ function InspectionsTab() {
 }
 
 // ── Documents Tab ──────────────────────────────────────────────────────────
+const DOC_META = {
+  acknowledgement: {
+    label: "Subscription Acknowledgement",
+    icon: FileText,
+    color: "#700CEB",
+    desc: "Confirms receipt of your application",
+  },
+  contract: {
+    label: "Contract of Sale",
+    icon: Shield,
+    color: "#059669",
+    desc: "Official purchase agreement — sign and return",
+  },
+  invoice: {
+    label: "Payment Invoice",
+    icon: CreditCard,
+    color: "#d97706",
+    desc: "Payment details and bank account",
+  },
+  schedule: {
+    label: "Instalment Schedule",
+    icon: Calendar,
+    color: "#0891b2",
+    desc: "Your monthly payment breakdown",
+  },
+  receipt: {
+    label: "Payment Receipt",
+    icon: CheckCircle,
+    color: "#059669",
+    desc: "Proof of payment received",
+  },
+  allocation: {
+    label: "Letter of Allocation",
+    icon: Star,
+    color: "#700CEB",
+    desc: "Official plot allocation certificate",
+  },
+  certificate: {
+    label: "Investment Certificate",
+    icon: Star,
+    color: "#700CEB",
+    desc: "Buy2Sell investment certificate",
+  },
+  agreement: {
+    label: "Investment Agreement",
+    icon: Shield,
+    color: "#059669",
+    desc: "Buy2Sell investment agreement",
+  },
+  payout_confirmation: {
+    label: "Payout Confirmation",
+    icon: Wallet,
+    color: "#059669",
+    desc: "Investment payout confirmation letter",
+  },
+};
+
+function DocumentCard({ doc, subId, isBuy2Sell }) {
+  const [downloading, setDownloading] = useState(false);
+  const meta = DOC_META[doc.type] || {
+    label: doc.label,
+    icon: FileText,
+    color: "#700CEB",
+    desc: "",
+  };
+  const Icon = meta.icon;
+
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      const endpoint = isBuy2Sell
+        ? `/api/buy2sell/leads/${subId}/documents/${doc.type}`
+        : `/api/subscriptions/${subId}/documents/${doc.type}`;
+      const res = await authFetch(endpoint);
+      if (!res.ok) throw new Error("Download failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${doc.label.replace(/\s+/g, "-")}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      alert("Download failed. Please try again.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between p-4 rounded-2xl border border-customBlack-100 bg-white hover:shadow-sm transition-all">
+      <div className="flex items-center gap-3">
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{
+            background: `${meta.color}12`,
+            border: `1px solid ${meta.color}22`,
+          }}
+        >
+          <Icon size={17} style={{ color: meta.color }} />
+        </div>
+        <div>
+          <p className="font-bold text-customBlack-900 text-sm">
+            {doc.label || meta.label}
+          </p>
+          <p className="text-xs text-customBlack-400">
+            {meta.desc} · {formatDate(doc.generatedAt)}
+          </p>
+        </div>
+      </div>
+      <button
+        onClick={handleDownload}
+        disabled={downloading}
+        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all hover:-translate-y-0.5 disabled:opacity-50"
+        style={{
+          background: `${meta.color}12`,
+          color: meta.color,
+          border: `1px solid ${meta.color}22`,
+        }}
+      >
+        {downloading ? (
+          <>
+            <RefreshCw size={12} className="animate-spin" /> Generating…
+          </>
+        ) : (
+          <>
+            <Download size={12} /> Download PDF
+          </>
+        )}
+      </button>
+    </div>
+  );
+}
+
 function DocumentsTab() {
+  const [subs, setSubs] = useState([]);
+  const [b2s, setB2s] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadAll = async () => {
+      setLoading(true);
+      try {
+        const [subRes, b2sRes] = await Promise.all([
+          authFetch("/api/subscriptions/my"),
+          authFetch("/api/buy2sell/my"),
+        ]);
+        if (subRes.ok) setSubs(await subRes.json());
+        if (b2sRes.ok) setB2s(await b2sRes.json());
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadAll();
+  }, []);
+
+  const allSubs = subs.filter((s) => s.documents?.length > 0);
+  const allB2s = b2s.filter((s) => s.documents?.length > 0);
+  const hasAny = allSubs.length > 0 || allB2s.length > 0;
+
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-2xl font-bold text-customBlack-900">Documents</h3>
+        <h3 className="text-2xl font-bold text-customBlack-900">
+          My Documents
+        </h3>
         <p className="text-customBlack-400 font-medium text-sm mt-1">
-          Your legal documents and certificates
+          Download and print your legal documents and certificates
         </p>
       </div>
-      <div className="bg-white rounded-[2rem] shadow-sm border border-customBlack-100 p-16 text-center">
-        <div className="w-16 h-16 bg-customPurple-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <FileText size={28} className="text-customPurple-500" />
+
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 size={32} className="text-customPurple-500 animate-spin" />
         </div>
-        <h4 className="text-xl font-bold text-customBlack-900 mb-2">
-          Documents Coming Soon
-        </h4>
-        <p className="text-customBlack-400 text-sm max-w-sm mx-auto">
-          Once your subscription is approved, your Contract of Sale, Allocation
-          Letter, and other documents will appear here for download.
-        </p>
-      </div>
+      ) : !hasAny ? (
+        <div className="bg-white rounded-[2rem] shadow-sm border border-customBlack-100 p-16 text-center">
+          <div className="w-16 h-16 bg-customPurple-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <FileText size={28} className="text-customPurple-500" />
+          </div>
+          <h4 className="text-xl font-bold text-customBlack-900 mb-2">
+            No Documents Yet
+          </h4>
+          <p className="text-customBlack-400 text-sm max-w-sm mx-auto">
+            Documents are generated automatically when your subscription is
+            approved. Check back after your application is reviewed.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {/* Land Subscriptions */}
+          {allSubs.map((sub) => (
+            <div
+              key={sub._id}
+              className="bg-white rounded-[2rem] shadow-sm border border-customBlack-100 overflow-hidden"
+            >
+              <div className="px-6 py-4 border-b border-customBlack-50 flex items-center justify-between">
+                <div>
+                  <p className="font-black text-customBlack-900">
+                    {sub.estateName}
+                  </p>
+                  <p className="text-xs text-customBlack-400 font-mono mt-0.5">
+                    {sub.referenceNumber}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <StatusBadge status={sub.status} />
+                  <span className="text-xs text-customBlack-400 bg-customBlack-50 px-2 py-1 rounded-lg font-bold">
+                    Land Purchase
+                  </span>
+                </div>
+              </div>
+              <div className="p-4 space-y-3">
+                {sub.documents.map((doc, i) => (
+                  <DocumentCard
+                    key={i}
+                    doc={doc}
+                    subId={sub._id}
+                    isBuy2Sell={false}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {/* Buy2Sell Investments */}
+          {allB2s.map((lead) => (
+            <div
+              key={lead._id}
+              className="bg-white rounded-[2rem] shadow-sm border border-customBlack-100 overflow-hidden"
+            >
+              <div className="px-6 py-4 border-b border-customBlack-50 flex items-center justify-between">
+                <div>
+                  <p className="font-black text-customBlack-900">
+                    Buy2Sell — {lead.duration} Investment
+                  </p>
+                  <p className="text-xs text-customBlack-400 font-mono mt-0.5">
+                    {lead.referenceNumber}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <StatusBadge status={lead.status} />
+                  <span className="text-xs text-customBlack-400 bg-customPurple-50 px-2 py-1 rounded-lg font-bold text-customPurple-600">
+                    Investment
+                  </span>
+                </div>
+              </div>
+              {/* Investment summary strip */}
+              <div className="grid grid-cols-3 gap-4 px-6 py-3 bg-customPurple-50/50 border-b border-customPurple-100">
+                <div>
+                  <p className="text-xs text-customBlack-400">Principal</p>
+                  <p className="text-sm font-black text-customBlack-900">
+                    {formatCurrency(lead.principalAmount)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-customBlack-400">ROI Rate</p>
+                  <p className="text-sm font-black text-customPurple-700">
+                    {lead.roiPercent}%
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-customBlack-400">
+                    Expected Payout
+                  </p>
+                  <p className="text-sm font-black text-green-600">
+                    {formatCurrency(lead.expectedPayout)}
+                  </p>
+                </div>
+              </div>
+              <div className="p-4 space-y-3">
+                {lead.documents.map((doc, i) => (
+                  <DocumentCard
+                    key={i}
+                    doc={doc}
+                    subId={lead._id}
+                    isBuy2Sell={true}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

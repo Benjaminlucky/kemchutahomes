@@ -40,7 +40,8 @@ const inspectionSchema = new mongoose.Schema(
     persons: {
       type: Number,
       required: true,
-      enum: [1, 2, 5],
+      min: [1, "At least 1 person required"],
+      // Removed enum: [1, 2, 5] — BookInspectionModal now accepts any custom group size
       default: 1,
     },
     status: {
@@ -56,6 +57,7 @@ const inspectionSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+// Non-unique performance indexes — these are correct, no duplicate warning
 inspectionSchema.index({ inspectionDate: 1, status: 1 });
 inspectionSchema.index({ email: 1 });
 
