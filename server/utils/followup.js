@@ -153,3 +153,8 @@ export function startScheduler() {
     { timezone: "Africa/Lagos" },
   );
 }
+
+import { finalisePendingCommissions } from "../utils/commissionCalculator.js";
+
+// Daily at 2am — approves commissions past their 90-day clawback window
+cron.schedule("0 2 * * *", finalisePendingCommissions);
