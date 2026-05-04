@@ -16,7 +16,7 @@ import branchRoutes from "./routes/branch.routes.js";
 import contactRoutes from "./routes/contact.routes.js";
 import clientRoutes from "./routes/client.routes.js";
 import commissionRoutes from "./routes/commission.routes.js"; // ← NEW
-import bankAccountRoutes from "./routes/bankAccount.routes.js"; // ← NEW
+import bankAccountRoutes from "./routes/Bankaccount.routes.js"; // ← NEW
 
 // ── Scheduler ─────────────────────────────────────────────────────────────────
 import { startScheduler } from "./utils/followUp.js";

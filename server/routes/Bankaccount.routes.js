@@ -4,7 +4,7 @@ import {
   createBankAccount,
   updateBankAccount,
   deleteBankAccount,
-} from "../controllers/bankAccount.controller.js";
+} from "../controllers/Bankaccount.controller.js";
 import { protect, isAdmin } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
