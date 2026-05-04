@@ -16,9 +16,10 @@ import branchRoutes from "./routes/branch.routes.js";
 import contactRoutes from "./routes/contact.routes.js";
 import clientRoutes from "./routes/client.routes.js";
 import commissionRoutes from "./routes/commission.routes.js"; // ← NEW
+import bankAccountRoutes from "./routes/bankAccount.routes.js"; // ← NEW
 
 // ── Scheduler ─────────────────────────────────────────────────────────────────
-import { startScheduler } from "./utils/followup.js"; // inspection reminders, follow-ups, payment reminders
+import { startScheduler } from "./utils/followUp.js";
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
 import cloudinary from "./utils/cloudinary.config.js";
@@ -66,7 +67,8 @@ app.use("/api/buy2sell", buy2sellRoutes);
 app.use("/api/branches", branchRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/clients", clientRoutes);
-app.use("/api/commissions", commissionRoutes); // ← NEW
+app.use("/api/commissions", commissionRoutes);
+app.use("/api/bank-accounts", bankAccountRoutes);
 
 // ── Cloudinary health check ───────────────────────────────────────────────────
 const result = await cloudinary.api.ping();

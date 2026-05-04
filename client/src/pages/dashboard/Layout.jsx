@@ -12,6 +12,7 @@ import {
   FaClipboardList,
   FaLandmark,
   FaAddressCard,
+  FaCreditCard,
 } from "react-icons/fa";
 import { useLocation, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -55,7 +56,7 @@ export default function DashboardLayout({ children }) {
             icon: <FaClipboardList />,
           },
           {
-            name: "Buy2Sell Scheme",
+            name: "Buy2Sell",
             path: "/dashboard/buy2sell",
             icon: <FaLandmark />,
           },
@@ -63,6 +64,11 @@ export default function DashboardLayout({ children }) {
             name: "Contact Info",
             path: "/dashboard/contact",
             icon: <FaAddressCard />,
+          },
+          {
+            name: "Bank Accounts",
+            path: "/dashboard/bank-accounts",
+            icon: <FaCreditCard />,
           },
           { name: "Reports", path: "/admin/reports", icon: <FaChartLine /> },
         ]

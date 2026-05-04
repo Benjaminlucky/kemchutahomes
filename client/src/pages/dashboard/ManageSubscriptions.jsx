@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import SubscriptionProfile from "./SubscriptionProfile";
 import { motion, AnimatePresence } from "framer-motion";
 import useSWR from "swr";
 import {
@@ -33,7 +34,21 @@ const API_URL = import.meta.env.VITE_API_BASE_URL;
 const token = () => localStorage.getItem("token");
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const STATUSES = ["pending", "reviewed", "approved", "rejected"];
+const STATUSES = [
+  "pending",
+  "confirmed",
+  "partial_paid",
+  "outright_paid",
+  "inst_1_paid",
+  "inst_2_paid",
+  "inst_3_paid",
+  "inst_4_paid",
+  "inst_5_paid",
+  "inst_6_paid",
+  "completed",
+  "allocated",
+  "rejected",
+];
 
 const STATUS_META = {
   pending: {
@@ -43,19 +58,82 @@ const STATUS_META = {
     icon: Clock,
     label: "Pending",
   },
-  reviewed: {
+  confirmed: {
     color: "#700CEB",
     bg: "rgba(112,12,235,0.1)",
     border: "rgba(112,12,235,0.25)",
     icon: CheckCircle2,
-    label: "Reviewed",
+    label: "Confirmed",
   },
-  approved: {
+  partial_paid: {
+    color: "#0284c7",
+    bg: "rgba(2,132,199,0.1)",
+    border: "rgba(2,132,199,0.25)",
+    icon: CreditCard,
+    label: "Partial Paid",
+  },
+  outright_paid: {
     color: "#059669",
     bg: "rgba(5,150,105,0.1)",
     border: "rgba(5,150,105,0.25)",
     icon: Check,
-    label: "Approved",
+    label: "Outright Paid",
+  },
+  inst_1_paid: {
+    color: "#0891b2",
+    bg: "rgba(8,145,178,0.1)",
+    border: "rgba(8,145,178,0.25)",
+    icon: CreditCard,
+    label: "Inst 1 Paid",
+  },
+  inst_2_paid: {
+    color: "#0891b2",
+    bg: "rgba(8,145,178,0.1)",
+    border: "rgba(8,145,178,0.25)",
+    icon: CreditCard,
+    label: "Inst 2 Paid",
+  },
+  inst_3_paid: {
+    color: "#0891b2",
+    bg: "rgba(8,145,178,0.1)",
+    border: "rgba(8,145,178,0.25)",
+    icon: CreditCard,
+    label: "Inst 3 Paid",
+  },
+  inst_4_paid: {
+    color: "#0891b2",
+    bg: "rgba(8,145,178,0.1)",
+    border: "rgba(8,145,178,0.25)",
+    icon: CreditCard,
+    label: "Inst 4 Paid",
+  },
+  inst_5_paid: {
+    color: "#0891b2",
+    bg: "rgba(8,145,178,0.1)",
+    border: "rgba(8,145,178,0.25)",
+    icon: CreditCard,
+    label: "Inst 5 Paid",
+  },
+  inst_6_paid: {
+    color: "#0891b2",
+    bg: "rgba(8,145,178,0.1)",
+    border: "rgba(8,145,178,0.25)",
+    icon: CreditCard,
+    label: "Inst 6 Paid",
+  },
+  completed: {
+    color: "#059669",
+    bg: "rgba(5,150,105,0.1)",
+    border: "rgba(5,150,105,0.25)",
+    icon: CheckCircle2,
+    label: "Completed",
+  },
+  allocated: {
+    color: "#7c3aed",
+    bg: "rgba(124,58,237,0.1)",
+    border: "rgba(124,58,237,0.25)",
+    icon: Home,
+    label: "Allocated",
   },
   rejected: {
     color: "#dc2626",
@@ -366,331 +444,6 @@ function printSubscription(sub) {
 }
 
 // ── Detail Modal ──────────────────────────────────────────────────────────────
-function SubscriptionDetailModal({ sub, onClose, onStatusChange }) {
-  const [updating, setUpdating] = useState(false);
-  const plotMeta = PLOT_TYPE_COLOR[sub.plotType] || PLOT_TYPE_COLOR.Residential;
-  const PlotIcon = plotMeta.icon;
-
-  const handleStatusChange = async (status) => {
-    setUpdating(true);
-    try {
-      const res = await fetch(
-        `${API_URL}/api/subscriptions/${sub._id}/status`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token()}`,
-          },
-          body: JSON.stringify({ status }),
-        },
-      );
-      if (!res.ok) throw new Error();
-      onStatusChange(sub._id, status);
-    } catch {}
-    setUpdating(false);
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[9995] flex items-center justify-center p-4"
-      style={{ background: "rgba(8,4,20,0.78)", backdropFilter: "blur(12px)" }}
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.94, y: 20 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.94 }}
-        transition={{ type: "spring", stiffness: 280, damping: 24 }}
-        className="w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl flex flex-col"
-        style={{
-          background: "#fff",
-          maxHeight: "92vh",
-          boxShadow: "0 40px 100px rgba(112,12,235,0.2)",
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div
-          className="relative px-7 py-6 shrink-0 overflow-hidden"
-          style={{ background: "linear-gradient(135deg,#3F0C91,#700CEB)" }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              top: -30,
-              right: -30,
-              width: 130,
-              height: 130,
-              background: "rgba(255,255,255,0.06)",
-              borderRadius: "50%",
-            }}
-          />
-          <div className="relative flex items-start justify-between gap-4">
-            <div>
-              <p
-                style={{
-                  fontSize: 11,
-                  color: "rgba(255,255,255,0.6)",
-                  fontWeight: 700,
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  marginBottom: 4,
-                }}
-              >
-                Estate Subscription
-              </p>
-              <h2
-                style={{
-                  color: "#fff",
-                  fontSize: 18,
-                  fontWeight: 900,
-                  letterSpacing: "-0.03em",
-                }}
-              >
-                {sub.title} {sub.firstName} {sub.lastName}
-              </h2>
-              <p
-                style={{
-                  color: "rgba(255,255,255,0.65)",
-                  fontSize: 13,
-                  marginTop: 3,
-                }}
-              >
-                {sub.estateName}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <StatusDropdown
-                current={sub.status}
-                onChange={handleStatusChange}
-                loading={updating}
-              />
-              <button
-                onClick={() => printSubscription(sub)}
-                className="w-9 h-9 rounded-2xl flex items-center justify-center"
-                style={{
-                  background: "rgba(255,255,255,0.15)",
-                  color: "#fff",
-                  border: "1px solid rgba(255,255,255,0.2)",
-                }}
-                title="Print / Export"
-              >
-                <Printer size={15} />
-              </button>
-              <button
-                onClick={onClose}
-                className="w-9 h-9 rounded-2xl flex items-center justify-center"
-                style={{
-                  background: "rgba(255,255,255,0.15)",
-                  color: "#fff",
-                  border: "1px solid rgba(255,255,255,0.2)",
-                }}
-              >
-                <X size={16} />
-              </button>
-            </div>
-          </div>
-
-          {/* Amount banner */}
-          <div
-            className="flex items-center gap-6 mt-5 pt-4"
-            style={{ borderTop: "1px solid rgba(255,255,255,0.15)" }}
-          >
-            <div>
-              <p
-                style={{
-                  fontSize: 10,
-                  color: "rgba(255,255,255,0.5)",
-                  fontWeight: 700,
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                }}
-              >
-                Total Amount
-              </p>
-              <p
-                style={{
-                  fontSize: 22,
-                  fontWeight: 900,
-                  color: "#fff",
-                  letterSpacing: "-0.04em",
-                }}
-              >
-                {formatCurrency(sub.totalAmount)}
-              </p>
-            </div>
-            <div>
-              <p
-                style={{
-                  fontSize: 10,
-                  color: "rgba(255,255,255,0.5)",
-                  fontWeight: 700,
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                }}
-              >
-                Payment Plan
-              </p>
-              <p
-                style={{
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: "rgba(239,194,255,0.9)",
-                }}
-              >
-                {sub.paymentPlan}
-              </p>
-            </div>
-            <div>
-              <p
-                style={{
-                  fontSize: 10,
-                  color: "rgba(255,255,255,0.5)",
-                  fontWeight: 700,
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                }}
-              >
-                Plot Type
-              </p>
-              <div className="flex items-center gap-1.5 mt-1">
-                <PlotIcon
-                  size={12}
-                  style={{ color: "rgba(255,255,255,0.8)" }}
-                />
-                <p
-                  style={{
-                    fontSize: 14,
-                    fontWeight: 700,
-                    color: "rgba(255,255,255,0.9)",
-                  }}
-                >
-                  {sub.plotType}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Body */}
-        <div className="overflow-y-auto flex-1 px-7 py-6 space-y-1">
-          {/* Quick action buttons */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
-            {STATUSES.filter((s) => s !== sub.status).map((s) => {
-              const m = STATUS_META[s];
-              return (
-                <button
-                  key={s}
-                  disabled={updating}
-                  onClick={() => handleStatusChange(s)}
-                  className="py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
-                  style={{
-                    background: m.bg,
-                    color: m.color,
-                    border: `1px solid ${m.border}`,
-                  }}
-                >
-                  <m.icon size={12} /> {m.label}
-                </button>
-              );
-            })}
-          </div>
-
-          <SectionHeader icon={User}>Personal Information</SectionHeader>
-          <DetailRow
-            label="Full Name"
-            value={`${sub.title} ${sub.firstName} ${sub.lastName}`}
-          />
-          <DetailRow
-            label="Date of Birth"
-            value={formatDate(sub.dateOfBirth)}
-          />
-          <DetailRow label="Gender" value={sub.gender} />
-          <DetailRow label="Marital Status" value={sub.maritalStatus} />
-          {sub.spouseFirstName && (
-            <DetailRow
-              label="Spouse"
-              value={`${sub.spouseFirstName} ${sub.spouseLastName}`}
-            />
-          )}
-          <DetailRow label="Nationality" value={sub.nationality} />
-          <DetailRow label="Employer" value={sub.employerName} />
-
-          <SectionHeader icon={MapPin}>Contact & Address</SectionHeader>
-          <DetailRow label="Email" value={sub.email} />
-          <DetailRow label="Phone" value={sub.phone} />
-          <DetailRow
-            label="Address"
-            value={`${sub.residentialAddress}, ${sub.cityTown}, ${sub.lga}, ${sub.state}`}
-          />
-          <DetailRow label="Country" value={sub.countryOfResidence} />
-
-          <SectionHeader icon={FileText}>Subscription Details</SectionHeader>
-          <DetailRow label="Estate" value={sub.estateName} />
-          <DetailRow label="Plot Type" value={sub.plotType} />
-          <DetailRow label="Plot Size" value={sub.plotSize} />
-          <DetailRow label="No. of Plots" value={String(sub.numberOfPlots)} />
-          <DetailRow label="Payment Plan" value={sub.paymentPlan} />
-          <DetailRow label="Survey Type" value={sub.surveyType} />
-          <div
-            className="flex justify-between items-center py-3 mt-1"
-            style={{
-              background: "rgba(112,12,235,0.05)",
-              borderRadius: 12,
-              padding: "12px 16px",
-            }}
-          >
-            <span style={{ fontSize: 12, color: "#700CEB", fontWeight: 700 }}>
-              Total Amount Payable
-            </span>
-            <span
-              style={{
-                fontSize: 18,
-                fontWeight: 900,
-                color: "#700CEB",
-                letterSpacing: "-0.04em",
-              }}
-            >
-              {formatCurrency(sub.totalAmount)}
-            </span>
-          </div>
-
-          <SectionHeader icon={Users}>Next of Kin</SectionHeader>
-          <DetailRow
-            label="Name"
-            value={`${sub.kinFirstName} ${sub.kinLastName}`}
-          />
-          <DetailRow label="Phone" value={sub.kinPhone} />
-          <DetailRow
-            label="Address"
-            value={`${sub.kinAddress}${sub.kinCity ? `, ${sub.kinCity}` : ""}${sub.kinLga ? `, ${sub.kinLga}` : ""}`}
-          />
-
-          <div
-            className="pt-4 mt-2"
-            style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}
-          >
-            <p style={{ fontSize: 11, color: "#9ca3af", fontWeight: 600 }}>
-              Submitted on{" "}
-              {formatDate(sub.createdAt, {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </p>
-          </div>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-}
-
-// ── Main Component ─────────────────────────────────────────────────────────────
 export default function ManageSubscriptions() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -807,18 +560,14 @@ export default function ManageSubscriptions() {
     a.click();
   };
 
+  if (viewSub) {
+    return (
+      <SubscriptionProfile id={viewSub._id} onBack={() => setViewSub(null)} />
+    );
+  }
+
   return (
     <div className="space-y-6 mt-2">
-      <AnimatePresence>
-        {viewSub && (
-          <SubscriptionDetailModal
-            sub={viewSub}
-            onClose={() => setViewSub(null)}
-            onStatusChange={handleStatusChange}
-          />
-        )}
-      </AnimatePresence>
-
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>

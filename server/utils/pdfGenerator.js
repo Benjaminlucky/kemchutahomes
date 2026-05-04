@@ -8,7 +8,7 @@ import PDFDocument from "pdfkit";
 // ── Colour palette ────────────────────────────────────────────────────────────
 const PURPLE = [112, 12, 235];
 const DARK = [63, 12, 145];
-const PURPLE2 = [138, 47, 240]; // mid-purple for gradients
+const PURPLE2 = [138, 47, 240];
 const BLACK = [15, 10, 30];
 const GREY = [107, 114, 128];
 const LGREY = [243, 244, 246];
@@ -53,106 +53,95 @@ function createDoc(opts = {}) {
   });
 }
 
-// ── PREMIUM HEADER ────────────────────────────────────────────────────────────
-// Deep purple left panel + white right panel separated by a diagonal cut
+// ── HEADER ────────────────────────────────────────────────────────────────────
+// Single solid purple band. No overlapping shapes, no opacity calls.
+// Clean left/right zones separated by a vertical rule.
 function drawHeader(doc, docType, refNum) {
   const W = doc.page.width;
-  const H = 110;
-  const M = 56; // left margin of left panel content
+  const H = 90;
 
-  // Main dark background
+  // Solid header band
   doc.rect(0, 0, W, H).fill(DARK);
 
-  // Diagonal right-edge accent — creates a slanted right side on the dark area
-  doc.polygon([W * 0.58, 0], [W * 0.68, H], [W, H], [W, 0]).fill([90, 20, 180]);
+  // 3px accent line below header
+  doc.rect(0, H, W, 3).fill(PURPLE);
 
-  // Subtle horizontal rule at bottom of header
-  doc.rect(0, H, W, 3).fill(PURPLE2);
-
-  // Thin gold accent line at very top
-  doc.rect(0, 0, W, 2).fill(GOLD);
-
-  // ── Left: company name + tagline ──
+  // ── Left: company name + contact ──────────────────────────────────────────
   doc
     .fillColor(WHITE)
     .font("Helvetica-Bold")
-    .fontSize(17)
-    .text("KEMCHUTA HOMES", M, 22);
+    .fontSize(15)
+    .text("KEMCHUTA HOMES LIMITED", 48, 18);
   doc
-    .font("Helvetica-Bold")
-    .fontSize(10)
-    .fillColor([180, 140, 255])
-    .text("LIMITED", M, 42);
+    .fillColor([190, 170, 240])
+    .font("Helvetica")
+    .fontSize(8)
+    .text("Lekki, Lagos  ·  Asaba, Delta State", 48, 38);
   doc
+    .fillColor([170, 152, 220])
     .font("Helvetica")
     .fontSize(7.5)
-    .fillColor([200, 180, 255])
-    .text("Lekki, Lagos  ·  Asaba, Delta State", M, 57);
-  doc
-    .font("Helvetica")
-    .fontSize(7)
-    .fillColor([170, 150, 220])
-    .text("kemchutahomesltd.com  ·  info@kemchutahomesltd.com", M, 68);
+    .text("kemchutahomesltd.com  ·  info@kemchutahomesltd.com", 48, 50);
 
-  // Thin vertical separator
+  // Vertical divider
+  const divX = W * 0.6;
   doc
-    .moveTo(W * 0.55, 16)
-    .lineTo(W * 0.55, H - 16)
+    .moveTo(divX, 14)
+    .lineTo(divX, H - 14)
     .strokeColor([255, 255, 255])
-    .lineWidth(0.4)
-    .opacity(0.2)
+    .lineWidth(0.5)
     .stroke();
-  doc.opacity(1);
 
-  // ── Right: document type + reference ──
-  const rx = W * 0.58;
-  const rw = W - rx - 20;
+  // ── Right: doc type + reference + date ───────────────────────────────────
+  const rx = divX + 16;
+  const rw = W - rx - 36;
+
+  // Document type label
   doc
-    .fillColor([200, 180, 255])
+    .fillColor([170, 152, 255])
     .font("Helvetica-Bold")
     .fontSize(7)
-    .text(docType.toUpperCase(), rx, 24, {
+    .text(docType.toUpperCase(), rx, 20, {
       width: rw,
       align: "right",
-      letterSpacing: 1.5,
+      characterSpacing: 1.2,
     });
+
+  // Reference number — most prominent
   doc
     .fillColor(WHITE)
     .font("Helvetica-Bold")
-    .fontSize(12)
-    .text(refNum, rx, 38, { width: rw, align: "right" });
+    .fontSize(13)
+    .text(refNum, rx, 33, { width: rw, align: "right" });
+
+  // Date
   doc
-    .fillColor([180, 160, 240])
+    .fillColor([190, 178, 240])
     .font("Helvetica")
     .fontSize(7.5)
-    .text(today(), rx, 56, { width: rw, align: "right" });
+    .text(today(), rx, 52, { width: rw, align: "right" });
 }
 
-// ── PREMIUM FOOTER ────────────────────────────────────────────────────────────
+// ── FOOTER ────────────────────────────────────────────────────────────────────
 function drawFooter(doc) {
   const W = doc.page.width;
-  const fh = 44;
+  const fh = 34;
   const fy = doc.page.height - fh;
 
-  // Dark footer band
-  doc.rect(0, fy, W, fh).fill([12, 8, 25]);
-
-  // Thin purple top-edge of footer
-  doc.rect(0, fy, W, 2).fill(DARK);
-
-  // Gold accent dots
-  doc.circle(40, fy + 22, 3).fill(GOLD);
-  doc.circle(W - 40, fy + 22, 3).fill(GOLD);
+  doc.rect(0, fy, W, fh).fill([20, 14, 40]);
+  doc.rect(0, fy, W, 1.5).fill(PURPLE);
 
   doc
-    .fillColor([160, 150, 200])
+    .fillColor([140, 128, 170])
     .font("Helvetica")
     .fontSize(7.5)
     .text(
-      `© ${new Date().getFullYear()} Kemchuta Homes Limited  ·  RC No: XXXXXXXX  ·  info@kemchutahomesltd.com  ·  +234 800 000 0001  ·  +234 800 000 0003`,
-      56,
-      fy + 16,
-      { align: "center", width: W - 112 },
+      "© " +
+        new Date().getFullYear() +
+        " Kemchuta Homes Limited  ·  info@kemchutahomesltd.com  ·  +234 800 000 0001  ·  +234 800 000 0003",
+      48,
+      fy + 11,
+      { align: "center", width: W - 96 },
     );
 }
 
@@ -160,35 +149,25 @@ function drawFooter(doc) {
 function sectionHeading(doc, text, y) {
   const W = doc.page.width;
 
-  // Left accent bar
-  doc.rect(48, y + 1, 3, 11).fill(PURPLE);
+  doc.rect(48, y, 3, 14).fill(PURPLE);
 
-  // Heading text
   doc
     .fillColor(DARK)
     .font("Helvetica-Bold")
-    .fontSize(7.5)
-    .text(text.toUpperCase(), 58, y + 2, { letterSpacing: 1.8 });
+    .fontSize(8)
+    .text(text.toUpperCase(), 56, y + 3, { characterSpacing: 1.2 });
 
-  // Full-width rule — two-tone
   doc
-    .moveTo(48, y + 15)
-    .lineTo(W - 48, y + 15)
+    .moveTo(48, y + 17)
+    .lineTo(W - 48, y + 17)
     .strokeColor(MGREY)
     .lineWidth(0.6)
     .stroke();
-  doc
-    .moveTo(48, y + 15)
-    .lineTo(200, y + 15)
-    .strokeColor(PURPLE)
-    .lineWidth(0.8)
-    .stroke();
 
-  return y + 22;
+  return y + 24;
 }
 
 // ── INFO ROW ──────────────────────────────────────────────────────────────────
-// Alternating row background for readability
 let _rowIndex = 0;
 function resetRows() {
   _rowIndex = 0;
@@ -196,14 +175,12 @@ function resetRows() {
 
 function infoRow(doc, label, value, y, { highlight = false } = {}) {
   const W = doc.page.width;
-  const rh = 20;
+  const rh = 22;
 
-  // Alternating bg
-  if (_rowIndex % 2 === 0) {
-    doc.rect(48, y, W - 96, rh).fill([250, 248, 255]);
-  } else {
-    doc.rect(48, y, W - 96, rh).fill(WHITE);
-  }
+  // Very subtle alternating: white vs lightest grey — no colour tint
+  doc
+    .rect(48, y, W - 96, rh)
+    .fill(_rowIndex % 2 === 0 ? [250, 250, 253] : WHITE);
   _rowIndex++;
 
   if (highlight) {
@@ -211,87 +188,72 @@ function infoRow(doc, label, value, y, { highlight = false } = {}) {
   }
 
   doc
-    .fillColor([130, 100, 180])
+    .fillColor(GREY)
     .font("Helvetica")
-    .fontSize(8)
-    .text(label, 58, y + 6, { width: 155 });
+    .fontSize(8.5)
+    .text(label, 58, y + 7, { width: 160 });
 
   doc
-    .fillColor(highlight ? DARK : BLACK)
-    .font(highlight ? "Helvetica-Bold" : "Helvetica-Bold")
+    .fillColor(BLACK)
+    .font("Helvetica-Bold")
     .fontSize(8.5)
-    .text(value || "—", 220, y + 5, { width: W - 96 - 180 });
+    .text(value || "—", 225, y + 7, { width: W - 96 - 185 });
+
+  doc
+    .moveTo(48, y + rh)
+    .lineTo(W - 48, y + rh)
+    .strokeColor(LGREY)
+    .lineWidth(0.4)
+    .stroke();
 
   return y + rh;
 }
 
-// ── AMOUNT HIGHLIGHT BOX ──────────────────────────────────────────────────────
+// ── AMOUNT BOX ────────────────────────────────────────────────────────────────
+// Single solid rect — no overlapping layers, no opacity
 function amountBox(doc, label, value, sub, y) {
   const W = doc.page.width;
   const bw = W - 96;
-  const bh = 72;
+  const bh = 68;
 
-  // Outer glow effect — slightly larger darker rect behind
-  doc.roundedRect(46, y - 1, bw + 4, bh + 4, 9).fill([220, 200, 255]);
+  doc.roundedRect(48, y, bw, bh, 5).fill(DARK);
 
-  // Main box — deep purple gradient simulation (two rects)
-  doc.roundedRect(48, y, bw, bh, 8).fill(DARK);
-  doc.roundedRect(48 + bw * 0.4, y, bw * 0.6, bh, 8).fill([80, 20, 160]);
+  // Left accent stripe
+  doc.rect(48, y, 4, bh).fill(PURPLE);
 
-  // Subtle diagonal stripe texture
-  for (let sx = 0; sx < bw; sx += 18) {
-    doc
-      .moveTo(48 + sx, y)
-      .lineTo(48 + sx + 10, y + bh)
-      .strokeColor([255, 255, 255])
-      .lineWidth(0.25)
-      .opacity(0.06)
-      .stroke();
-  }
-  doc.opacity(1);
-
-  // Gold top-left accent bar
-  doc.rect(48, y, 4, bh).fill(GOLD);
-  doc.roundedRect(48, y, 4, bh, 2).fill(GOLD);
-
-  // Label
   doc
-    .fillColor([200, 180, 255])
+    .fillColor([170, 152, 255])
     .font("Helvetica-Bold")
     .fontSize(7)
-    .text(label.toUpperCase(), 62, y + 12, { letterSpacing: 1.2 });
+    .text(label.toUpperCase(), 62, y + 11, { characterSpacing: 1 });
 
-  // Value — large
   doc
     .fillColor(WHITE)
     .font("Helvetica-Bold")
-    .fontSize(24)
-    .text(value, 62, y + 24);
+    .fontSize(21)
+    .text(value, 62, y + 23);
 
-  // Sub-text
   if (sub) {
     doc
-      .fillColor([180, 160, 220])
+      .fillColor([155, 140, 205])
       .font("Helvetica")
       .fontSize(8)
-      .text(sub, 62, y + 54);
+      .text(sub, 62, y + 50);
   }
 
-  return y + bh + 14;
+  return y + bh + 12;
 }
 
 // ── SIGNATURE BLOCK ───────────────────────────────────────────────────────────
 function sigBlock(doc, name, title, x, y, width = 200) {
-  // Dotted signature line
   doc
     .moveTo(x, y)
     .lineTo(x + width, y)
     .strokeColor(MGREY)
-    .lineWidth(1)
-    .dash(3, { space: 2 })
+    .lineWidth(0.75)
+    .dash(4, { space: 3 })
     .stroke();
   doc.undash();
-
   doc
     .fillColor(BLACK)
     .font("Helvetica-Bold")
@@ -305,19 +267,19 @@ function sigBlock(doc, name, title, x, y, width = 200) {
 }
 
 // ── WATERMARK ─────────────────────────────────────────────────────────────────
+// Very light fill colour instead of opacity — avoids pdfkit opacity bleed
 function drawWatermark(doc, text = "KEMCHUTA HOMES") {
   doc.save();
-  doc.opacity(0.04);
-  doc.fillColor(PURPLE).font("Helvetica-Bold").fontSize(52);
   const W = doc.page.width;
   const H = doc.page.height;
-  // Rotate 45° from center
   doc.rotate(-38, { origin: [W / 2, H / 2] });
-  doc.text(text, W / 2 - 180, H / 2 - 26, { width: 360, align: "center" });
+  doc
+    .fillColor([232, 224, 252])
+    .font("Helvetica-Bold")
+    .fontSize(54)
+    .text(text, W / 2 - 200, H / 2 - 28, { width: 400, align: "center" });
   doc.restore();
-  doc.opacity(1);
 }
-
 export async function generateAcknowledgement(sub) {
   const doc = createDoc();
   const buf = streamToBuffer(doc);
@@ -442,10 +404,9 @@ export async function generateContractOfSale(sub) {
   // Dot pattern decoration in left column
   for (let dy = 160; dy < H - 160; dy += 24) {
     for (let dx = 14; dx < 160; dx += 24) {
-      doc.circle(dx, dy, 1.2).fill([255, 255, 255]).opacity(0.06);
+      doc.circle(dx, dy, 1.2).fill([40, 30, 70]);
     }
   }
-  doc.opacity(1);
 
   // ── Right side: document title block ─────────────────────────────────────
   const rx = 230;
@@ -475,14 +436,9 @@ export async function generateContractOfSale(sub) {
   doc.rect(rx, 168, 120, 3).fill(GOLD);
 
   // Reference chip
-  doc.roundedRect(rx, 188, rw, 40, 6).fill([255, 255, 255]).opacity(0.06);
-  doc.opacity(1);
   doc
     .roundedRect(rx, 188, rw, 40, 6)
-    .stroke([255, 255, 255])
-    .lineWidth(0.4)
-    .opacity(0.15);
-  doc.opacity(1);
+    .fillAndStroke([35, 22, 65], [60, 45, 100]);
   doc
     .fillColor([180, 160, 220])
     .font("Helvetica")
@@ -504,8 +460,7 @@ export async function generateContractOfSale(sub) {
   cy += 22;
 
   // Vendor box
-  doc.roundedRect(rx, cy, rw, 58, 6).fill([255, 255, 255]).opacity(0.07);
-  doc.opacity(1);
+  doc.roundedRect(rx, cy, rw, 58, 6).fill([38, 25, 68]);
   doc.rect(rx, cy, 3, 58).fill(GOLD);
   doc
     .fillColor(WHITE)
@@ -536,8 +491,7 @@ export async function generateContractOfSale(sub) {
   cy += 20;
 
   // Purchaser box
-  doc.roundedRect(rx, cy, rw, 58, 6).fill([255, 255, 255]).opacity(0.07);
-  doc.opacity(1);
+  doc.roundedRect(rx, cy, rw, 58, 6).fill([38, 25, 68]);
   doc.rect(rx, cy, 3, 58).fill(PURPLE2);
   doc
     .fillColor(WHITE)
@@ -564,11 +518,7 @@ export async function generateContractOfSale(sub) {
   cy += 70;
 
   // ── Estate summary chip ──────────────────────────────────────────────────
-  doc
-    .roundedRect(rx, cy + 10, rw, 52, 6)
-    .fill([255, 255, 255])
-    .opacity(0.05);
-  doc.opacity(1);
+  doc.roundedRect(rx, cy + 10, rw, 52, 6).fill([32, 20, 58]);
   doc
     .fillColor([180, 160, 220])
     .font("Helvetica")
@@ -616,11 +566,7 @@ export async function generateContractOfSale(sub) {
     );
 
   // Gold rule at bottom
-  doc
-    .rect(rx, H - 60, rw, 1)
-    .fill(GOLD)
-    .opacity(0.5);
-  doc.opacity(1);
+  doc.rect(rx, H - 60, rw, 1).fill([120, 95, 42]);
   doc
     .fillColor([120, 100, 160])
     .font("Helvetica")
@@ -990,7 +936,7 @@ export async function generateContractOfSale(sub) {
   return buf;
 }
 
-export async function generatePaymentInvoice(sub) {
+export async function generatePaymentInvoice(sub, banks = []) {
   const doc = createDoc();
   const buf = streamToBuffer(doc);
   const fullName = `${sub.title} ${sub.firstName} ${sub.lastName}`;
@@ -1162,33 +1108,85 @@ export async function generatePaymentInvoice(sub) {
   // ── Bank payment details ─────────────────────────────────────────────────
   y = sectionHeading(doc, "Bank Payment Details", y + 4);
 
-  // Bank box with strong visual
-  doc.roundedRect(48, y, W - 96, 96, 8).fill([245, 243, 255]);
-  doc.rect(48, y, 5, 96).fill(DARK);
+  // Render each active bank account
+  const activeBanks = banks.length
+    ? banks
+    : [
+        {
+          bankName: "ACCESS BANK PLC",
+          accountName: "KEMCHUTA HOMES LIMITED",
+          accountNumber: "Contact admin for account number",
+          sortCode: "",
+          note: "",
+        },
+      ];
 
-  const bankData = [
-    ["Bank Name", "ACCESS BANK PLC"],
-    ["Account Name", "KEMCHUTA HOMES LIMITED"],
-    ["Account Number", "XXXXXXXXXX"],
-    ["Payment Reference", ref],
-  ];
-  let by = y + 12;
-  bankData.forEach(([lbl, val]) => {
-    doc
-      .fillColor([130, 100, 180])
-      .font("Helvetica")
-      .fontSize(8)
-      .text(lbl, 64, by, { width: 150 });
-    doc
-      .fillColor(lbl === "Payment Reference" ? PURPLE : DARK)
-      .font("Helvetica-Bold")
-      .fontSize(lbl === "Payment Reference" ? 11 : 9)
-      .text(val, 224, by - (lbl === "Payment Reference" ? 1 : 0), {
-        width: W - 280,
-      });
-    by += 22;
+  activeBanks.forEach((bank, idx) => {
+    const bh = 22 * (3 + (bank.sortCode ? 1 : 0)) + 20;
+    doc.roundedRect(48, y, W - 96, bh, 6).fill([245, 243, 255]);
+    doc.rect(48, y, 4, bh).fill(idx === 0 ? DARK : PURPLE);
+
+    if (activeBanks.length > 1) {
+      doc
+        .fillColor(PURPLE)
+        .font("Helvetica-Bold")
+        .fontSize(7)
+        .text(
+          bank.isPrimary ? "★ PRIMARY ACCOUNT" : `ACCOUNT ${idx + 1}`,
+          62,
+          y + 8,
+          { characterSpacing: 1 },
+        );
+    }
+
+    const labelY = activeBanks.length > 1 ? y + 18 : y + 10;
+    const rows = [
+      ["Bank Name", bank.bankName],
+      ["Account Name", bank.accountName],
+      ["Account Number", bank.accountNumber],
+      ...(bank.sortCode ? [["Sort Code", bank.sortCode]] : []),
+    ];
+    rows.forEach(([lbl, val], ri) => {
+      const ry = labelY + ri * 20;
+      doc
+        .fillColor([130, 100, 180])
+        .font("Helvetica")
+        .fontSize(8)
+        .text(lbl, 62, ry, { width: 150 });
+      doc
+        .fillColor(DARK)
+        .font("Helvetica-Bold")
+        .fontSize(8.5)
+        .text(val, 220, ry, { width: W - 280 });
+    });
+
+    if (bank.note) {
+      doc
+        .fillColor(GREY)
+        .font("Helvetica")
+        .fontSize(7.5)
+        .text(bank.note, 62, labelY + rows.length * 20, { width: W - 130 });
+    }
+
+    y += bh + 8;
   });
-  y += 110;
+
+  // Payment reference row — always shown once, prominent
+  doc.roundedRect(48, y, W - 96, 28, 5).fill(DARK);
+  doc.rect(48, y, 4, 28).fill(PURPLE);
+  doc
+    .fillColor([180, 160, 255])
+    .font("Helvetica-Bold")
+    .fontSize(7.5)
+    .text("PAYMENT REFERENCE — quote this on every transfer", 62, y + 4, {
+      width: W - 130,
+    });
+  doc
+    .fillColor(WHITE)
+    .font("Helvetica-Bold")
+    .fontSize(12)
+    .text(ref, 62, y + 14, { width: W - 130 });
+  y += 38;
 
   // ── Warning notice ────────────────────────────────────────────────────────
   doc.roundedRect(48, y, W - 96, 52, 6).fill([255, 251, 230]);
@@ -1386,15 +1384,23 @@ export async function generateAllocationLetter(sub) {
     doc,
     "Allocated Plot",
     sub.plotNumber || "Block ___, Plot ___",
-    `${sub.plotSize}  ·  ${sub.plotType}  ·  ${sub.surveyType}`,
+    [
+      sub.plotDescription,
+      `${sub.plotSize}  ·  ${sub.plotType}  ·  ${sub.surveyType}`,
+    ]
+      .filter(Boolean)
+      .join("  ·  "),
     y,
   );
   y = sectionHeading(doc, "Allocation Details", y + 8);
   y = infoRow(doc, "Allottee", fullName, y);
   y = infoRow(doc, "Estate", sub.estateName, y);
   y = infoRow(doc, "Plot Number", sub.plotNumber || "To be confirmed", y);
+  if (sub.plotDescription) {
+    y = infoRow(doc, "Plot Description", sub.plotDescription, y);
+  }
   y = infoRow(doc, "Plot Size", sub.plotSize, y);
-  y = infoRow(doc, "Title Type", sub.surveyType, y);
+  y = infoRow(doc, "Title Type", sub.titleDocument || sub.surveyType, y);
   y = infoRow(doc, "Total Amount Paid", fmtNGN(sub.totalAmount), y);
   y = infoRow(
     doc,
@@ -1416,6 +1422,445 @@ export async function generateAllocationLetter(sub) {
   y = doc.y + 32;
   sigBlock(doc, "Managing Director", "Kemchuta Homes Limited", 48, y, 200);
   sigBlock(doc, fullName, "Allottee", doc.page.width - 248, y, 200);
+  drawFooter(doc);
+  doc.end();
+  return buf;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DOCUMENT 7: DEED OF ASSIGNMENT (Land)
+// Generated: alongside Allocation Letter after full payment + plot assigned
+// ─────────────────────────────────────────────────────────────────────────────
+export async function generateDeedOfAssignment(sub) {
+  const doc = createDoc();
+  const buf = streamToBuffer(doc);
+  const fullName =
+    `${sub.title} ${sub.firstName} ${sub.lastName}`.toUpperCase();
+  const ref =
+    sub.referenceNumber || sub._id?.toString().slice(-8).toUpperCase();
+  resetRows();
+  drawWatermark(doc, "DEED OF ASSIGNMENT");
+
+  // ── Cover page ──────────────────────────────────────────────────────────────
+  const W = doc.page.width;
+  const H = doc.page.height;
+
+  doc.rect(0, 0, W, H).fill([10, 6, 24]);
+  doc.rect(0, 0, 180, H).fill(DARK);
+  doc.rect(0, 140, 180, 2).fill(GOLD);
+  doc.rect(0, H - 142, 180, 2).fill(GOLD);
+
+  // Vertical text in left column
+  doc.save();
+  doc.fillColor(WHITE).font("Helvetica-Bold").fontSize(11);
+  doc.rotate(-90, { origin: [90, H / 2] });
+  doc.text("KEMCHUTA HOMES LIMITED", 90 - 130, H / 2 - 6, {
+    width: 260,
+    align: "center",
+  });
+  doc.restore();
+
+  doc
+    .fillColor([180, 140, 255])
+    .font("Helvetica-Bold")
+    .fontSize(36)
+    .text("KHL", 22, 60, { width: 136, align: "center" });
+  doc
+    .fillColor(GOLD)
+    .font("Helvetica")
+    .fontSize(7.5)
+    .text("EST. 2018", 22, 100, {
+      width: 136,
+      align: "center",
+      characterSpacing: 2,
+    });
+
+  // Right side title block
+  const rx = 230;
+  const rw = W - rx - 40;
+  doc.rect(rx, 60, rw, 2).fill(GOLD);
+  doc
+    .fillColor([200, 180, 255])
+    .font("Helvetica-Bold")
+    .fontSize(9)
+    .text("LEGAL DOCUMENT", rx, 76, { characterSpacing: 2.5 });
+  doc
+    .fillColor(WHITE)
+    .font("Helvetica-Bold")
+    .fontSize(34)
+    .text("DEED OF", rx, 96);
+  doc
+    .fillColor(WHITE)
+    .font("Helvetica-Bold")
+    .fontSize(34)
+    .text("ASSIGNMENT", rx, 128);
+  doc.rect(rx, 168, 120, 3).fill(GOLD);
+
+  // Reference chip
+  doc.roundedRect(rx, 188, rw, 40, 6).fill([35, 22, 65]);
+  doc
+    .fillColor([180, 160, 220])
+    .font("Helvetica")
+    .fontSize(7.5)
+    .text("REFERENCE NO.", rx + 14, 198, { characterSpacing: 1.5 });
+  doc
+    .fillColor(WHITE)
+    .font("Helvetica-Bold")
+    .fontSize(13)
+    .text(ref, rx + 14, 210);
+
+  // Assignor
+  let cy = 268;
+  doc
+    .fillColor([180, 160, 220])
+    .font("Helvetica")
+    .fontSize(8)
+    .text("BETWEEN", rx, cy, { characterSpacing: 2 });
+  cy += 22;
+  doc.roundedRect(rx, cy, rw, 58, 6).fill([38, 25, 68]);
+  doc.rect(rx, cy, 3, 58).fill(GOLD);
+  doc
+    .fillColor(WHITE)
+    .font("Helvetica-Bold")
+    .fontSize(12)
+    .text("KEMCHUTA HOMES LIMITED", rx + 14, cy + 10);
+  doc
+    .fillColor([180, 160, 220])
+    .font("Helvetica")
+    .fontSize(8.5)
+    .text("THE ASSIGNOR (VENDOR)", rx + 14, cy + 28);
+  cy += 70;
+
+  doc
+    .fillColor([180, 160, 220])
+    .font("Helvetica-Bold")
+    .fontSize(8.5)
+    .text("AND", rx, cy, { characterSpacing: 2 });
+  cy += 20;
+
+  // Assignee
+  doc.roundedRect(rx, cy, rw, 58, 6).fill([38, 25, 68]);
+  doc.rect(rx, cy, 3, 58).fill(PURPLE2);
+  doc
+    .fillColor(WHITE)
+    .font("Helvetica-Bold")
+    .fontSize(12)
+    .text(fullName, rx + 14, cy + 10, { width: rw - 20 });
+  doc
+    .fillColor([180, 160, 220])
+    .font("Helvetica")
+    .fontSize(8.5)
+    .text("THE ASSIGNEE (PURCHASER)", rx + 14, cy + 30);
+  doc
+    .fillColor([140, 120, 180])
+    .font("Helvetica")
+    .fontSize(7.5)
+    .text(
+      `${sub.residentialAddress || ""}, ${sub.cityTown || ""}, ${sub.state || ""}`.replace(
+        /^,\s*/,
+        "",
+      ),
+      rx + 14,
+      cy + 42,
+      { width: rw - 20 },
+    );
+  cy += 68;
+
+  // Property
+  doc.roundedRect(rx, cy + 10, rw, 52, 6).fill([32, 20, 58]);
+  doc
+    .fillColor([180, 160, 220])
+    .font("Helvetica")
+    .fontSize(7.5)
+    .text("PROPERTY", rx + 14, cy + 20, { characterSpacing: 1.5 });
+  doc
+    .fillColor(WHITE)
+    .font("Helvetica-Bold")
+    .fontSize(11)
+    .text(
+      `${sub.estateName?.toUpperCase() || "—"}  ·  ${sub.plotNumber || "Plot TBC"}`,
+      rx + 14,
+      cy + 32,
+      { width: rw - 28 },
+    );
+  if (sub.plotDescription) {
+    doc
+      .fillColor([140, 120, 180])
+      .font("Helvetica")
+      .fontSize(7.5)
+      .text(sub.plotDescription, rx + 14, cy + 47, { width: rw - 28 });
+  }
+
+  doc
+    .fillColor([120, 100, 160])
+    .font("Helvetica")
+    .fontSize(7.5)
+    .text(
+      `Prepared by: Obinna Obiegue Esq. · Dozie & Co. · legal@kemchutahomesltd.com`,
+      rx,
+      H - 48,
+      { width: rw },
+    );
+
+  // ── Page 2: Deed body ─────────────────────────────────────────────────────
+  doc.addPage();
+  drawWatermark(doc, "DEED OF ASSIGNMENT");
+  drawHeader(doc, "Deed of Assignment", ref);
+  const TW = W - 96;
+  let y = 126;
+
+  doc
+    .fillColor(BLACK)
+    .font("Helvetica-Bold")
+    .fontSize(11)
+    .text(
+      `THIS DEED OF ASSIGNMENT is made this _________ day of _______________ ${new Date().getFullYear()}`,
+      48,
+      y,
+      { width: TW },
+    );
+  y += 30;
+
+  doc.font("Helvetica").fontSize(9.5).fillColor(GREY).text("BETWEEN", 48, y);
+  y += 14;
+  doc
+    .font("Helvetica")
+    .fontSize(9.5)
+    .fillColor(BLACK)
+    .text(
+      `KEMCHUTA HOMES LIMITED of K/M 42, Lekki - Epe Expressway, Abijo, Lekki Peninsula, Lagos State (hereinafter called "THE ASSIGNOR") of the FIRST PART.`,
+      48,
+      y,
+      { width: TW },
+    );
+  y = doc.y + 10;
+
+  doc.font("Helvetica").fontSize(9.5).fillColor(GREY).text("AND", 48, y);
+  y += 14;
+  doc
+    .font("Helvetica")
+    .fontSize(9.5)
+    .fillColor(BLACK)
+    .text(
+      `${fullName} of ${sub.residentialAddress || ""}, ${sub.cityTown || ""}, ${sub.state || ""}, Nigeria (hereinafter called "THE ASSIGNEE") of the SECOND PART.`,
+      48,
+      y,
+      { width: TW },
+    );
+  y = doc.y + 16;
+
+  doc
+    .moveTo(48, y)
+    .lineTo(W - 48, y)
+    .strokeColor(MGREY)
+    .lineWidth(0.5)
+    .stroke();
+  y += 14;
+
+  doc
+    .fillColor(DARK)
+    .font("Helvetica-Bold")
+    .fontSize(10)
+    .text("WHEREAS:", 48, y, { width: TW });
+  y += 16;
+  [
+    `(a) The Assignor is the beneficial owner of the land and property known as "${sub.estateName?.toUpperCase()}", situated at ${sub.residentialAddress || "the location described herein"}, being more particularly described in the Schedule below.`,
+    `(b) The Assignor has agreed to assign the property described in the Schedule to the Assignee for the consideration stated herein.`,
+    `(c) The Assignee has paid in full the sum of ${fmtNGN(sub.totalAmount)} (Naira) as the purchase price, the receipt of which the Assignor hereby acknowledges.`,
+  ].forEach((clause) => {
+    doc
+      .font("Helvetica")
+      .fontSize(9.5)
+      .fillColor(BLACK)
+      .text(clause, 48, y, { width: TW, lineGap: 1.5 });
+    y = doc.y + 10;
+  });
+
+  doc
+    .moveTo(48, y)
+    .lineTo(W - 48, y)
+    .strokeColor(MGREY)
+    .lineWidth(0.5)
+    .stroke();
+  y += 14;
+  doc
+    .fillColor(DARK)
+    .font("Helvetica-Bold")
+    .fontSize(10)
+    .text("NOW THIS DEED WITNESSETH as follows:", 48, y, { width: TW });
+  y += 16;
+
+  [
+    `1. In consideration of the sum of ${fmtNGN(sub.totalAmount)} (Naira only) paid by the Assignee to the Assignor (receipt acknowledged), the Assignor hereby assigns unto the Assignee ALL THAT piece and parcel of land described in the Schedule below, TOGETHER WITH all rights, easements, and appurtenances thereto.`,
+    "2. The Assignor covenants with the Assignee that the Assignor has good right and full power to assign the said property and that the Assignee shall quietly enjoy the said property free from any encumbrance by the Assignor.",
+    "3. The Assignor shall, at the request and cost of the Assignee, execute all further documents and do all such further acts as may be necessary to vest the property absolutely in the Assignee.",
+    "4. The Assignee hereby covenants with the Assignor to pay all rates, charges, and outgoings in respect of the said property from the date hereof.",
+    "5. This Deed shall be governed by and construed in accordance with the laws of the Federal Republic of Nigeria.",
+  ].forEach((clause) => {
+    doc
+      .font("Helvetica")
+      .fontSize(9.5)
+      .fillColor(BLACK)
+      .text(clause, 48, y, { width: TW, lineGap: 1.5 });
+    y = doc.y + 8;
+  });
+
+  // Schedule
+  y += 8;
+  doc
+    .moveTo(48, y)
+    .lineTo(W - 48, y)
+    .strokeColor(MGREY)
+    .lineWidth(0.5)
+    .stroke();
+  y += 12;
+  doc
+    .fillColor(DARK)
+    .font("Helvetica-Bold")
+    .fontSize(10)
+    .text("THE SCHEDULE (Property Description)", 48, y, { width: TW });
+  y += 16;
+
+  y = sectionHeading(doc, "Property Details", y);
+  y = infoRow(doc, "Estate", sub.estateName || "—", y);
+  y = infoRow(doc, "Plot Number", sub.plotNumber || "To be confirmed", y);
+  if (sub.plotDescription) {
+    y = infoRow(doc, "Plot Description", sub.plotDescription, y);
+  }
+  y = infoRow(doc, "Plot Size", sub.plotSize || "—", y);
+  y = infoRow(doc, "Plot Type", sub.plotType || "—", y);
+  y = infoRow(doc, "Title", sub.titleDocument || sub.surveyType || "—", y);
+  y = infoRow(doc, "Total Consideration", fmtNGN(sub.totalAmount), y);
+
+  drawFooter(doc);
+
+  // ── Page 3: Execution ─────────────────────────────────────────────────────
+  doc.addPage();
+  drawWatermark(doc, "DEED OF ASSIGNMENT");
+  drawHeader(doc, "Deed of Assignment — Execution", ref);
+  y = 126;
+
+  doc
+    .font("Helvetica")
+    .fontSize(9.5)
+    .fillColor(BLACK)
+    .text(
+      "IN WITNESS WHEREOF the parties hereto have executed this Deed of Assignment on the day and year first above written.",
+      48,
+      y,
+      { width: TW, lineGap: 2 },
+    );
+  y += 40;
+
+  // Assignor execution
+  doc.roundedRect(48, y, TW, 90, 6).fill([250, 248, 255]);
+  doc.rect(48, y, 4, 90).fill(GOLD);
+  doc
+    .fillColor(DARK)
+    .font("Helvetica-Bold")
+    .fontSize(9)
+    .text("SIGNED AND DELIVERED", 62, y + 10);
+  doc
+    .fillColor(GREY)
+    .font("Helvetica")
+    .fontSize(8)
+    .text("By the within named ASSIGNOR — KEMCHUTA HOMES LIMITED", 62, y + 23);
+  doc
+    .moveTo(62, y + 62)
+    .lineTo(210, y + 62)
+    .strokeColor(MGREY)
+    .lineWidth(0.8)
+    .stroke();
+  doc
+    .moveTo(250, y + 62)
+    .lineTo(420, y + 62)
+    .strokeColor(MGREY)
+    .lineWidth(0.8)
+    .stroke();
+  doc
+    .fillColor(BLACK)
+    .font("Helvetica-Bold")
+    .fontSize(8)
+    .text("DIRECTOR", 62, y + 66);
+  doc
+    .fillColor(BLACK)
+    .font("Helvetica-Bold")
+    .fontSize(8)
+    .text("SECRETARY", 250, y + 66);
+  doc
+    .fillColor(GREY)
+    .font("Helvetica")
+    .fontSize(7)
+    .text("Kemchuta Homes Limited", 62, y + 76);
+  doc
+    .fillColor(GREY)
+    .font("Helvetica")
+    .fontSize(7)
+    .text("Kemchuta Homes Limited", 250, y + 76);
+  y += 106;
+
+  // Assignee execution
+  doc.roundedRect(48, y, TW, 90, 6).fill([248, 245, 255]);
+  doc.rect(48, y, 4, 90).fill(PURPLE);
+  doc
+    .fillColor(DARK)
+    .font("Helvetica-Bold")
+    .fontSize(9)
+    .text("SIGNED AND DELIVERED", 62, y + 10);
+  doc
+    .fillColor(GREY)
+    .font("Helvetica")
+    .fontSize(8)
+    .text("By the within named ASSIGNEE", 62, y + 23);
+  doc
+    .fillColor(BLACK)
+    .font("Helvetica-Bold")
+    .fontSize(10)
+    .text(fullName, 62, y + 36, { width: TW - 20 });
+  doc
+    .moveTo(62, y + 62)
+    .lineTo(280, y + 62)
+    .strokeColor(MGREY)
+    .lineWidth(0.8)
+    .dash(3, { space: 2 })
+    .stroke();
+  doc.undash();
+  doc
+    .fillColor(GREY)
+    .font("Helvetica")
+    .fontSize(7.5)
+    .text("Signature of Assignee", 62, y + 66);
+  doc
+    .fillColor(GREY)
+    .font("Helvetica")
+    .fontSize(8)
+    .text("Date: _______________________", 62, y + 76);
+  y += 106;
+
+  // Witness
+  doc
+    .fillColor(DARK)
+    .font("Helvetica-Bold")
+    .fontSize(9)
+    .text("IN THE PRESENCE OF:", 48, y);
+  y += 16;
+  ["Name:", "Address:", "Occupation:", "Signature:", "Date:"].forEach(
+    (label) => {
+      doc
+        .font("Helvetica")
+        .fontSize(8.5)
+        .fillColor(BLACK)
+        .text(label, 48, y, { width: 90 });
+      doc
+        .moveTo(130, y + 10)
+        .lineTo(W - 48, y + 10)
+        .strokeColor(LGREY)
+        .lineWidth(0.8)
+        .stroke();
+      y += 24;
+    },
+  );
+
   drawFooter(doc);
   doc.end();
   return buf;

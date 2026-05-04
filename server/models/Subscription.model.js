@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-// ── Payment record sub-schema ─────────────────────────────────────────────────
+// ── Payment record ────────────────────────────────────────────────────────────
 const paymentSchema = new mongoose.Schema(
   {
     amount: { type: Number, required: true },
@@ -9,7 +9,6 @@ const paymentSchema = new mongoose.Schema(
     reference: { type: String, default: "" },
     note: { type: String, default: "" },
     recordedBy: { type: String, default: "admin" },
-    // Two-step confirmation — payment is logged then separately confirmed before receipt
     confirmed: { type: Boolean, default: false },
     confirmedBy: { type: String, default: "" },
     confirmedAt: { type: Date, default: null },
@@ -17,51 +16,83 @@ const paymentSchema = new mongoose.Schema(
   { _id: true, timestamps: true },
 );
 
-// ── Document record sub-schema ────────────────────────────────────────────────
+// ── Document record ───────────────────────────────────────────────────────────
 const documentSchema = new mongoose.Schema(
   {
-    type: { type: String, required: true }, // "acknowledgement" | "contract" | "invoice" | "receipt" | "allocation"
-    label: { type: String, required: true }, // human-readable name
-    url: { type: String, default: "" }, // Cloudinary or local URL
+    type: { type: String, required: true },
+    label: { type: String, required: true },
+    url: { type: String, default: "" },
     generatedAt: { type: Date, default: Date.now },
   },
   { _id: true },
 );
 
-// ── Installment schedule entry sub-schema ─────────────────────────────────────
-const installmentSchema = new mongoose.Schema(
+// ── Instalment schedule entry ─────────────────────────────────────────────────
+const instalmentSchema = new mongoose.Schema(
   {
+    instalmentNumber: { type: Number, required: true },
     dueDate: { type: Date, required: true },
     amount: { type: Number, required: true },
     isPaid: { type: Boolean, default: false },
     paidAt: { type: Date, default: null },
     paymentId: { type: mongoose.Schema.Types.ObjectId, default: null },
+    remindersSent: { type: Number, default: 0 },
+    lastReminderAt: { type: Date, default: null },
   },
   { _id: true },
 );
 
+// ── Admin follow-up note ──────────────────────────────────────────────────────
+const noteSchema = new mongoose.Schema(
+  {
+    content: { type: String, required: true },
+    type: {
+      type: String,
+      enum: ["call", "email", "chat", "note"],
+      default: "note",
+    },
+    addedBy: { type: String, default: "admin" },
+    addedAt: { type: Date, default: Date.now },
+  },
+  { _id: true },
+);
+
+// ── Granular status machine ───────────────────────────────────────────────────
+export const STATUSES = [
+  "pending", // submitted, awaiting admin review
+  "confirmed", // admin confirmed subscription with client
+  "outright_paid", // outright — full payment received
+  "partial_paid", // outright — partial payment (balance outstanding)
+  "inst_1_paid", // instalment 1 (deposit) confirmed
+  "inst_2_paid",
+  "inst_3_paid",
+  "inst_4_paid",
+  "inst_5_paid",
+  "inst_6_paid",
+  "completed", // all payments received (auto-set)
+  "allocated", // plot assigned, all docs issued
+  "rejected",
+];
+
 // ── Main subscription schema ───────────────────────────────────────────────────
 const subscriptionSchema = new mongoose.Schema(
   {
-    // ── Reference ──────────────────────────────────────────────────────────
-    referenceNumber: { type: String, unique: true, sparse: true }, // KHL-2025-00001
+    referenceNumber: { type: String, unique: true, sparse: true },
 
-    // ── Estate ─────────────────────────────────────────────────────────────
+    // Linked records
     estateName: { type: String, required: true, trim: true },
     estateId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Estate",
       default: null,
     },
-
-    // ── Realtor who made this sale (for commission calculation) ────────────
     realtorId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Realtor",
       default: null,
     },
 
-    // ── Personal ───────────────────────────────────────────────────────────
+    // Personal
     title: { type: String, required: true },
     firstName: { type: String, required: true, trim: true },
     lastName: { type: String, required: true, trim: true },
@@ -73,7 +104,7 @@ const subscriptionSchema = new mongoose.Schema(
     nationality: { type: String, default: "Nigerian" },
     employerName: { type: String, default: "" },
 
-    // ── Contact & Address ──────────────────────────────────────────────────
+    // Contact
     residentialAddress: { type: String, required: true },
     cityTown: { type: String, required: true },
     lga: { type: String, required: true },
@@ -82,7 +113,7 @@ const subscriptionSchema = new mongoose.Schema(
     phone: { type: String, required: true },
     email: { type: String, required: true, trim: true, lowercase: true },
 
-    // ── Subscription details ───────────────────────────────────────────────
+    // Subscription details
     plotType: {
       type: String,
       required: true,
@@ -91,8 +122,9 @@ const subscriptionSchema = new mongoose.Schema(
     paymentPlan: {
       type: String,
       required: true,
-      enum: ["Outright", "6 Months Installment"],
+      enum: ["Outright", "Instalment"],
     },
+    instalmentMonths: { type: Number, min: 1, max: 6, default: null }, // null for Outright
     numberOfPlots: { type: Number, required: true, min: 1 },
     plotSize: {
       type: String,
@@ -102,20 +134,26 @@ const subscriptionSchema = new mongoose.Schema(
     surveyType: { type: String, required: true },
     totalAmount: { type: Number, required: true },
 
-    // ── Payment tracking ───────────────────────────────────────────────────
+    // Payment tracking
     amountPaid: { type: Number, default: 0 },
     payments: { type: [paymentSchema], default: [] },
-    installmentSchedule: { type: [installmentSchema], default: [] }, // only for 6-month plan
+    instalmentSchedule: { type: [instalmentSchema], default: [] },
 
-    // ── Allocation ─────────────────────────────────────────────────────────
-    plotNumber: { type: String, default: "" }, // assigned by admin e.g. "Block A, Plot 14"
+    // Admin workflow
+    notes: { type: [noteSchema], default: [] },
+    confirmedByAdmin: { type: String, default: "" },
+    confirmedAt: { type: Date, default: null },
+
+    // Allocation
+    plotNumber: { type: String, default: "" },
+    plotDescription: { type: String, default: "" }, // e.g. "Block B, Plot 14 — facing the main road"
     allocationDate: { type: Date, default: null },
-    titleDocument: { type: String, default: "" }, // C of O / Gazette etc.
+    titleDocument: { type: String, default: "" },
 
-    // ── Documents ──────────────────────────────────────────────────────────
+    // Documents
     documents: { type: [documentSchema], default: [] },
 
-    // ── Next of kin ────────────────────────────────────────────────────────
+    // Next of kin
     kinFirstName: { type: String, required: true },
     kinLastName: { type: String, required: true },
     kinAddress: { type: String, required: true },
@@ -123,44 +161,35 @@ const subscriptionSchema = new mongoose.Schema(
     kinLga: { type: String, default: "" },
     kinPhone: { type: String, required: true },
 
-    // ── Status ─────────────────────────────────────────────────────────────
-    status: {
-      type: String,
-      enum: [
-        "pending",
-        "reviewed",
-        "approved",
-        "rejected",
-        "payment_confirmed",
-        "allocated",
-      ],
-      default: "pending",
-    },
+    status: { type: String, enum: STATUSES, default: "pending" },
   },
   { timestamps: true },
 );
 
-// ── Indexes ───────────────────────────────────────────────────────────────────
 subscriptionSchema.index({ email: 1 });
 subscriptionSchema.index({ status: 1, createdAt: -1 });
 subscriptionSchema.index({ referenceNumber: 1 });
+subscriptionSchema.index({
+  "instalmentSchedule.dueDate": 1,
+  "instalmentSchedule.isPaid": 1,
+});
 
-// ── Virtual: balance remaining ─────────────────────────────────────────────
 subscriptionSchema.virtual("balanceRemaining").get(function () {
   return Math.max(0, this.totalAmount - this.amountPaid);
 });
-
-// ── Virtual: payment progress percent ─────────────────────────────────────
 subscriptionSchema.virtual("paymentProgressPercent").get(function () {
   if (!this.totalAmount) return 0;
   return Math.min(100, Math.round((this.amountPaid / this.totalAmount) * 100));
+});
+subscriptionSchema.virtual("nextInstalmentDue").get(function () {
+  return this.instalmentSchedule?.find((s) => !s.isPaid) || null;
+});
+subscriptionSchema.virtual("isPaymentComplete").get(function () {
+  return this.amountPaid >= this.totalAmount;
 });
 
 subscriptionSchema.set("toJSON", { virtuals: true });
 subscriptionSchema.set("toObject", { virtuals: true });
 
-const Subscription =
-  mongoose.models.Subscription ||
+export default mongoose.models.Subscription ||
   mongoose.model("Subscription", subscriptionSchema);
-
-export default Subscription;

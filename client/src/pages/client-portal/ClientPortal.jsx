@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import ClientSubscriptionDetail from "./ClientSubscriptionDetail";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import {
@@ -483,6 +484,7 @@ function SubscriptionsTab() {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("");
   const [expanded, setExpanded] = useState({});
+  const [selected, setSelected] = useState(null); // selected subscription for detail view
 
   useEffect(() => {
     const load = async () => {
@@ -509,12 +511,30 @@ function SubscriptionsTab() {
   const STATUSES = [
     "",
     "pending",
-    "reviewed",
-    "approved",
-    "payment_confirmed",
+    "confirmed",
+    "outright_paid",
+    "partial_paid",
+    "inst_1_paid",
+    "inst_2_paid",
+    "inst_3_paid",
+    "inst_4_paid",
+    "inst_5_paid",
+    "inst_6_paid",
+    "completed",
     "allocated",
     "rejected",
   ];
+
+  // ── Show detail view when a subscription is selected ──────────────────────
+  if (selected) {
+    return (
+      <ClientSubscriptionDetail
+        sub={selected}
+        onBack={() => setSelected(null)}
+        authFetch={authFetch}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -598,9 +618,7 @@ function SubscriptionsTab() {
                       <tr
                         key={sub._id}
                         className="hover:bg-customPurple-50/30 transition-colors cursor-pointer"
-                        onClick={() =>
-                          setExpanded((e) => ({ ...e, [sub._id]: !e[sub._id] }))
-                        }
+                        onClick={() => setSelected(sub)}
                       >
                         <td className="px-6 py-4">
                           <p className="font-bold text-customBlack-900 text-sm">
