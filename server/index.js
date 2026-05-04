@@ -19,7 +19,7 @@ import commissionRoutes from "./routes/commission.routes.js"; // ← NEW
 import bankAccountRoutes from "./routes/Bankaccount.routes.js"; // ← NEW
 
 // ── Scheduler ─────────────────────────────────────────────────────────────────
-import { startScheduler } from "./utils/followUp.js";
+import { startScheduler } from "./utils/followup.js";
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
 import cloudinary from "./utils/cloudinary.config.js";
