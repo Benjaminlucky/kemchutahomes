@@ -2,7 +2,7 @@ import {
   ROISettings,
   Buy2SellLead,
   B2S_STATUSES,
-} from "../models/buy2sell.model.js";
+} from "../models/Buy2sell.model.js";
 import Client from "../models/client.model.js";
 import {
   generateInvestmentCertificate,

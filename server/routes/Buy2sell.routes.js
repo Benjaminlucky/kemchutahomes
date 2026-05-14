@@ -12,7 +12,7 @@ import {
   processPayout,
   downloadDocument,
   updateLeadStatus,
-} from "../controllers/buy2sell.controller.js";
+} from "../controllers/Buy2sell.controller.js";
 import {
   protect,
   isAdmin,
