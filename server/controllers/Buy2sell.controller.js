@@ -10,7 +10,7 @@ import {
   generatePayoutConfirmation,
 } from "../utils/pdfGenerator.js";
 import { sendEmail } from "../utils/notifications.js";
-import { getActiveBankAccounts } from "./bankAccount.controller.js";
+import { getActiveBankAccounts } from "./Bankaccount.controller.js";
 
 const ADMIN_EMAIL = () =>
   process.env.ADMIN_EMAIL || "info@kemchutahomesltd.com";
