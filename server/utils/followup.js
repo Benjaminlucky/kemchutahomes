@@ -12,7 +12,7 @@
 
 import cron from "node-cron";
 import Inspection from "../models/inspection.model.js";
-import { Buy2SellLead } from "../models/buy2sell.model.js";
+import { Buy2SellLead } from "../models/Buy2sell.model.js";
 import { sendEmail } from "./notifications.js";
 import { sendPaymentReminders } from "../controllers/subscription.controller.js";
 import { finalisePendingCommissions } from "./commissionCalculator.js";
