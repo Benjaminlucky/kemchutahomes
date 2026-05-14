@@ -13,7 +13,7 @@ import {
   calculateCommissions,
   clawbackCommissions,
 } from "../utils/commissionCalculator.js";
-import { getActiveBankAccounts } from "./Bankaccount.controller.js";
+import { getActiveBankAccounts } from "./bankAccount.controller.js";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const FRONTEND = () =>
@@ -281,7 +281,7 @@ export const createSubscription = async (req, res) => {
 
         // Admin notification
         await sendEmail({
-          to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER || "",
+          to: process.env.ADMIN_EMAIL || "info@kemchutahomesltd.com",
           subject: `New Subscription — ${sub.estateName} [${ref}]`,
           html: emailWrap(`
             <h2 style="color:#0f0a1e;font-size:18px;font-weight:900;margin:0 0 16px;">New Subscription Received</h2>

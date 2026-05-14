@@ -168,7 +168,7 @@ const subscriptionSchema = new mongoose.Schema(
 
 subscriptionSchema.index({ email: 1 });
 subscriptionSchema.index({ status: 1, createdAt: -1 });
-subscriptionSchema.index({ referenceNumber: 1 });
+// NOTE: referenceNumber index is already created by unique:true — do not add .index({ referenceNumber: 1 })
 subscriptionSchema.index({
   "instalmentSchedule.dueDate": 1,
   "instalmentSchedule.isPaid": 1,

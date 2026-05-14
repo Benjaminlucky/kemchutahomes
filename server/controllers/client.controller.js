@@ -1,217 +1,316 @@
-import Client from "../models/client.model.js";
-import Subscription from "../models/Subscription.model.js";
-import Inspection from "../models/inspection.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import {
-  sendClientWelcomeEmail,
-  sendClientPasswordResetEmail,
-} from "../utils/email.js";
+import Client from "../models/client.model.js";
+import Subscription from "../models/Subscription.model.js";
+import Inspection from "../models/inspection.model.js";
+import { Buy2SellLead } from "../models/buy2sell.model.js";
+import { sendEmail } from "../utils/notifications.js";
 
-/* ──────────────────────────── HELPERS ──────────────────────────────────── */
+const JWT_SECRET = () => process.env.JWT_SECRET || "kemchuta_jwt_secret";
+const FRONTEND = () =>
+  process.env.FRONTEND_URL || "https://kemchutahomesltd.com";
+const EMAIL_USER = () => process.env.EMAIL_USER || "";
 
-const generateToken = (client) =>
-  jwt.sign({ id: client._id, role: "client" }, process.env.JWT_SECRET, {
-    expiresIn: "7d",
-  });
+const signToken = (id) =>
+  jwt.sign({ id, role: "client" }, JWT_SECRET(), { expiresIn: "30d" });
 
-/* ──────────────────────────── AUTH ─────────────────────────────────────── */
-
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/clients/register
+// ─────────────────────────────────────────────────────────────────────────────
 export const registerClient = async (req, res) => {
   try {
     const { firstName, lastName, email, phone, password } = req.body;
-
-    if (!firstName || !lastName || !email || !phone || !password) {
+    if (!firstName?.trim() || !lastName?.trim() || !email?.trim() || !password)
       return res.status(400).json({ message: "All fields are required" });
-    }
-
-    if (await Client.findOne({ email: email.toLowerCase().trim() })) {
-      return res.status(400).json({ message: "Email already registered" });
-    }
-
-    if (password.length < 8) {
+    if (password.length < 8)
       return res
         .status(400)
         .json({ message: "Password must be at least 8 characters" });
-    }
+
+    const exists = await Client.findOne({ email: email.toLowerCase().trim() });
+    if (exists)
+      return res
+        .status(409)
+        .json({ message: "Account already exists. Please log in." });
 
     const passwordHash = await bcrypt.hash(password, 12);
-
     const client = await Client.create({
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       email: email.toLowerCase().trim(),
-      phone: phone.trim(),
+      phone: phone?.trim() || "",
       passwordHash,
     });
 
-    // Fire-and-forget welcome email — mirrors realtor pattern
-    sendClientWelcomeEmail({
-      email: client.email,
-      firstName: client.firstName,
-    }).catch(() => null);
-
-    const token = generateToken(client);
-
-    return res.status(201).json({
-      message: "Account created successfully",
+    const token = signToken(client._id);
+    res.status(201).json({
       token,
       user: {
-        id: client._id,
+        _id: client._id,
         firstName: client.firstName,
         lastName: client.lastName,
         email: client.email,
-        role: client.role,
+        phone: client.phone,
         avatar: client.avatar,
+        role: "client",
       },
     });
   } catch (err) {
-    console.error("CLIENT REGISTER ERROR:", err);
-    return res.status(500).json({ message: "Registration failed" });
+    if (err.code === 11000)
+      return res
+        .status(409)
+        .json({ message: "Account already exists. Please log in." });
+    res.status(500).json({ message: err.message || "Registration failed" });
   }
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/clients/login
+// ─────────────────────────────────────────────────────────────────────────────
 export const loginClient = async (req, res) => {
   try {
     const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email and password required" });
-    }
+    if (!email || !password)
+      return res
+        .status(400)
+        .json({ message: "Email and password are required" });
 
     const client = await Client.findOne({ email: email.toLowerCase().trim() });
-    if (!client) {
-      return res
-        .status(404)
-        .json({ message: "No account found with this email" });
-    }
-
-    if (!client.isActive) {
+    if (!client)
+      return res.status(401).json({ message: "Invalid email or password" });
+    if (!client.isActive)
       return res
         .status(403)
-        .json({ message: "Account suspended. Contact support." });
-    }
+        .json({ message: "Account is disabled. Contact support." });
 
-    const isMatch = await bcrypt.compare(password, client.passwordHash);
-    if (!isMatch) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
+    const match = await bcrypt.compare(password, client.passwordHash);
+    if (!match)
+      return res.status(401).json({ message: "Invalid email or password" });
 
-    const token = generateToken(client);
-
-    return res.json({
-      message: "Login successful",
+    const token = signToken(client._id);
+    res.json({
       token,
       user: {
-        id: client._id,
+        _id: client._id,
         firstName: client.firstName,
         lastName: client.lastName,
         email: client.email,
-        role: client.role,
+        phone: client.phone,
         avatar: client.avatar,
+        role: "client",
       },
     });
   } catch (err) {
-    console.error("CLIENT LOGIN ERROR:", err);
-    return res.status(500).json({ message: "Login failed" });
+    res.status(500).json({ message: "Login failed" });
   }
 };
 
-/* ──────────────────────────── DASHBOARD DATA ───────────────────────────── */
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/clients/me
+// ─────────────────────────────────────────────────────────────────────────────
+export const getClientProfile = async (req, res) => {
+  try {
+    const client = await Client.findById(req.user.id)
+      .select("-passwordHash")
+      .lean();
+    if (!client) return res.status(404).json({ message: "Client not found" });
+    res.json(client);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch profile" });
+  }
+};
 
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/clients/dashboard
+// Returns subscriptions + buy2sell investments + unified stats
+// ─────────────────────────────────────────────────────────────────────────────
 export const getClientDashboard = async (req, res) => {
   try {
-    const clientId = req.user.id;
+    const email = req.user.email;
 
-    const client = await Client.findById(clientId)
-      .select("-passwordHash -resetPasswordToken -resetPasswordExpiry")
-      .lean();
-
-    if (!client) {
-      return res.status(404).json({ message: "Client not found" });
-    }
-
-    // Fetch subscriptions linked to this client's email
-    const subscriptions = await Subscription.find({ email: client.email })
-      .sort({ createdAt: -1 })
-      .lean();
-
-    // Fetch inspections linked to this client's email
-    const inspections = await Inspection.find({ email: client.email })
-      .sort({ inspectionDate: -1 })
-      .lean();
-
-    // Compute summary stats
-    const totalSubscriptions = subscriptions.length;
-    const approvedSubscriptions = subscriptions.filter(
-      (s) => s.status === "approved",
-    ).length;
-    const pendingSubscriptions = subscriptions.filter(
-      (s) => s.status === "pending",
-    ).length;
-    const totalInspections = inspections.length;
-    const upcomingInspections = inspections.filter(
-      (i) =>
-        i.status !== "cancelled" && new Date(i.inspectionDate) >= new Date(),
-    ).length;
-
-    return res.json({
-      client,
-      stats: {
-        totalSubscriptions,
-        approvedSubscriptions,
-        pendingSubscriptions,
-        totalInspections,
-        upcomingInspections,
-      },
-      recentSubscriptions: subscriptions.slice(0, 5),
-      recentInspections: inspections.slice(0, 5),
-    });
-  } catch (err) {
-    console.error("CLIENT DASHBOARD ERROR:", err);
-    return res.status(500).json({ message: "Failed to load dashboard" });
-  }
-};
-
-export const getClientSubscriptions = async (req, res) => {
-  try {
-    const client = await Client.findById(req.user.id).select("email").lean();
-    if (!client) return res.status(404).json({ message: "Client not found" });
-
-    const { page = 1, limit = 10, status } = req.query;
-    const filter = { email: client.email };
-    if (status) filter.status = status;
-
-    const skip = (Number(page) - 1) * Number(limit);
-    const [subscriptions, total] = await Promise.all([
-      Subscription.find(filter)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(Number(limit))
-        .lean(),
-      Subscription.countDocuments(filter),
+    // Fetch both in parallel — match by email (clients may have invested before registering)
+    const [subscriptions, investments] = await Promise.all([
+      Subscription.find({ email }).sort({ createdAt: -1 }).lean(),
+      Buy2SellLead.find({ email }).sort({ createdAt: -1 }).lean(),
     ]);
 
-    return res.json({
+    // Attach Buy2SellLead virtuals manually (lean() strips them)
+    investments.forEach((inv) => {
+      if (inv.investmentDate && inv.maturityDate) {
+        const total_ms =
+          new Date(inv.maturityDate) - new Date(inv.investmentDate);
+        const elapsed = Math.min(
+          Date.now() - new Date(inv.investmentDate),
+          total_ms,
+        );
+        inv.maturityProgressPercent = Math.min(
+          100,
+          Math.max(0, Math.round((elapsed / total_ms) * 100)),
+        );
+        inv.daysRemaining = Math.max(
+          0,
+          Math.ceil((new Date(inv.maturityDate) - Date.now()) / 86400000),
+        );
+      } else {
+        inv.maturityProgressPercent = 0;
+        inv.daysRemaining = null;
+      }
+      inv.balanceOutstanding = Math.max(
+        0,
+        (inv.principalAmount || 0) - (inv.amountPaid || 0),
+      );
+    });
+
+    // ── Stats ──────────────────────────────────────────────────────────────
+    const stats = {
+      // Land subscription stats
+      totalSubscriptions: subscriptions.length,
+      approvedSubscriptions: subscriptions.filter((s) =>
+        ["confirmed", "allocated", "active"].includes(s.status),
+      ).length,
+      pendingSubscriptions: subscriptions.filter((s) => s.status === "pending")
+        .length,
+      totalAmountPaid: subscriptions.reduce(
+        (acc, s) => acc + (s.amountPaid || 0),
+        0,
+      ),
+
+      // Buy2Sell investment stats
+      totalInvestments: investments.length,
+      activeInvestments: investments.filter((i) => i.status === "active")
+        .length,
+      pendingInvestments: investments.filter((i) => i.status === "pending")
+        .length,
+      totalInvested: investments.reduce(
+        (acc, i) => acc + (i.principalAmount || 0),
+        0,
+      ),
+      totalExpectedROI: investments.reduce(
+        (acc, i) => acc + (i.expectedROI || 0),
+        0,
+      ),
+      totalExpectedPayout: investments.reduce(
+        (acc, i) => acc + (i.expectedPayout || 0),
+        0,
+      ),
+      maturingInvestments: investments.filter((i) => i.status === "matured")
+        .length,
+      paidOutInvestments: investments.filter((i) => i.status === "paid_out")
+        .length,
+
+      // Inspections (keep for backward compat)
+      totalInspections: 0,
+      upcomingInspections: 0,
+    };
+
+    // Recent items for overview
+    res.json({
+      stats,
+      recentSubscriptions: subscriptions.slice(0, 3),
+      recentInvestments: investments.slice(0, 3),
       subscriptions,
-      total,
-      page: Number(page),
-      pages: Math.ceil(total / Number(limit)),
+      investments,
     });
   } catch (err) {
-    console.error("CLIENT SUBSCRIPTIONS ERROR:", err);
-    return res.status(500).json({ message: "Failed to fetch subscriptions" });
+    console.error("getClientDashboard:", err);
+    res.status(500).json({ message: "Failed to load dashboard" });
   }
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/clients/forgot-password
+// ─────────────────────────────────────────────────────────────────────────────
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const client = await Client.findOne({ email: email?.toLowerCase().trim() });
+    // Always 200 to prevent email enumeration
+    if (!client)
+      return res.json({
+        message: "If this email exists, a reset link has been sent.",
+      });
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    await Client.findByIdAndUpdate(client._id, {
+      resetPasswordToken: token,
+      resetPasswordExpiry: expiry,
+    });
+
+    const link = `${FRONTEND()}/client/reset-password?token=${token}`;
+    await sendEmail({
+      to: client.email,
+      subject: "Reset your Kemchuta Homes password",
+      html: `<p>Click the link below to reset your password (expires in 1 hour):</p>
+             <p><a href="${link}">${link}</a></p>`,
+    }).catch(() => null);
+
+    res.json({ message: "If this email exists, a reset link has been sent." });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to send reset email" });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/clients/reset-password
+// ─────────────────────────────────────────────────────────────────────────────
+export const resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+    if (!token || !password)
+      return res.status(400).json({ message: "Token and password required" });
+    if (password.length < 8)
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 8 characters" });
+
+    const client = await Client.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpiry: { $gt: new Date() },
+    });
+    if (!client)
+      return res
+        .status(400)
+        .json({ message: "Invalid or expired reset token" });
+
+    const passwordHash = await bcrypt.hash(password, 12);
+    await Client.findByIdAndUpdate(client._id, {
+      passwordHash,
+      resetPasswordToken: undefined,
+      resetPasswordExpiry: undefined,
+    });
+    res.json({ message: "Password reset successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to reset password" });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/clients/check-email?email=xxx  (public — used by Buy2SellPage)
+// Returns { exists: boolean } so frontend can show login vs register prompt
+// ─────────────────────────────────────────────────────────────────────────────
+export const checkEmailExists = async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) return res.status(400).json({ message: "Email required" });
+    const client = await Client.findOne({ email: email.toLowerCase().trim() })
+      .select("_id")
+      .lean();
+    res.json({ exists: !!client });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to check email" });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/clients/inspections  (client — paginated)
+// Returns inspections matched by the client's email
+// ─────────────────────────────────────────────────────────────────────────────
 export const getClientInspections = async (req, res) => {
   try {
-    const client = await Client.findById(req.user.id).select("email").lean();
-    if (!client) return res.status(404).json({ message: "Client not found" });
-
     const { page = 1, limit = 10, status } = req.query;
-    const filter = { email: client.email };
+    const filter = { email: req.user.email };
     if (status) filter.status = status;
 
     const skip = (Number(page) - 1) * Number(limit);
@@ -224,163 +323,13 @@ export const getClientInspections = async (req, res) => {
       Inspection.countDocuments(filter),
     ]);
 
-    return res.json({
+    res.json({
       inspections,
       total,
       page: Number(page),
       pages: Math.ceil(total / Number(limit)),
     });
   } catch (err) {
-    console.error("CLIENT INSPECTIONS ERROR:", err);
-    return res.status(500).json({ message: "Failed to fetch inspections" });
-  }
-};
-
-export const getClientProfile = async (req, res) => {
-  try {
-    const client = await Client.findById(req.user.id)
-      .select("-passwordHash -resetPasswordToken -resetPasswordExpiry")
-      .lean();
-    if (!client) return res.status(404).json({ message: "Client not found" });
-    return res.json(client);
-  } catch (err) {
-    return res.status(500).json({ message: "Failed to fetch profile" });
-  }
-};
-
-/* ──────────────────────────── FORGOT PASSWORD ──────────────────────────── */
-
-export const forgotClientPassword = async (req, res) => {
-  try {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ message: "Email is required" });
-
-    const client = await Client.findOne({ email: email.toLowerCase().trim() });
-
-    // Always 200 — prevents email enumeration (mirrors realtor pattern)
-    if (!client) {
-      return res.status(200).json({
-        message: "If that email exists, a reset link has been sent.",
-      });
-    }
-
-    const rawToken = crypto.randomBytes(32).toString("hex");
-    const hashedToken = crypto
-      .createHash("sha256")
-      .update(rawToken)
-      .digest("hex");
-
-    client.resetPasswordToken = hashedToken;
-    client.resetPasswordExpiry = Date.now() + 60 * 60 * 1000; // 1 hour
-    await client.save({ validateBeforeSave: false });
-
-    const FRONTEND_URL =
-      process.env.FRONTEND_URL || "https://kemchutahomesltd.com";
-    const resetUrl = `${FRONTEND_URL}/client/reset-password?token=${rawToken}`;
-
-    sendClientPasswordResetEmail({
-      email: client.email,
-      firstName: client.firstName,
-      resetUrl,
-    }).catch(async () => {
-      client.resetPasswordToken = undefined;
-      client.resetPasswordExpiry = undefined;
-      await client.save({ validateBeforeSave: false }).catch(() => null);
-    });
-
-    return res.status(200).json({
-      message: "If that email exists, a reset link has been sent.",
-    });
-  } catch (err) {
-    console.error("CLIENT FORGOT PASSWORD ERROR:", err);
-    return res
-      .status(500)
-      .json({ message: "Something went wrong. Please try again." });
-  }
-};
-
-/* ──────────────────────────── RESET PASSWORD ───────────────────────────── */
-
-export const resetClientPassword = async (req, res) => {
-  try {
-    const { token, password } = req.body;
-
-    if (!token || !password) {
-      return res
-        .status(400)
-        .json({ message: "Token and new password are required" });
-    }
-
-    if (password.length < 8) {
-      return res
-        .status(400)
-        .json({ message: "Password must be at least 8 characters" });
-    }
-
-    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-
-    const client = await Client.findOne({
-      resetPasswordToken: hashedToken,
-      resetPasswordExpiry: { $gt: Date.now() },
-    });
-
-    if (!client) {
-      return res
-        .status(400)
-        .json({ message: "Reset link is invalid or has expired." });
-    }
-
-    client.passwordHash = await bcrypt.hash(password, 12);
-    client.resetPasswordToken = undefined;
-    client.resetPasswordExpiry = undefined;
-    await client.save({ validateBeforeSave: false });
-
-    return res
-      .status(200)
-      .json({ message: "Password reset successful. You can now log in." });
-  } catch (err) {
-    console.error("CLIENT RESET PASSWORD ERROR:", err);
-    return res
-      .status(500)
-      .json({ message: "Something went wrong. Please try again." });
-  }
-};
-
-/* ──────────────────────────── ADMIN: LIST CLIENTS ──────────────────────── */
-
-export const getAllClients = async (req, res) => {
-  try {
-    const page = Math.max(+req.query.page || 1, 1);
-    const limit = Math.min(+req.query.limit || 10, 100);
-    const search = req.query.search || "";
-
-    const filter = search
-      ? {
-          $or: [
-            { firstName: { $regex: search, $options: "i" } },
-            { lastName: { $regex: search, $options: "i" } },
-            { email: { $regex: search, $options: "i" } },
-            { phone: { $regex: search, $options: "i" } },
-          ],
-        }
-      : {};
-
-    const total = await Client.countDocuments(filter);
-    const clients = await Client.find(filter)
-      .sort("-createdAt")
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .select("-passwordHash -resetPasswordToken -resetPasswordExpiry")
-      .lean();
-
-    return res.json({
-      docs: clients,
-      total,
-      page,
-      pages: Math.ceil(total / limit),
-    });
-  } catch (err) {
-    console.error("GET ALL CLIENTS ERROR:", err);
-    return res.status(500).json({ message: "Failed to fetch clients" });
+    res.status(500).json({ message: "Failed to fetch inspections." });
   }
 };

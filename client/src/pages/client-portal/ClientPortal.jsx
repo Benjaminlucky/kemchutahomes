@@ -65,6 +65,12 @@ const authFetch = (url, opts = {}) =>
     },
   });
 
+// fetchBlob — for binary downloads (PDF). Must NOT send Content-Type: application/json
+const fetchBlob = (url) =>
+  fetch(`${BASE_URL}${url}`, {
+    headers: { Authorization: `Bearer ${getClientToken()}` },
+  });
+
 // ── Status badge helpers ───────────────────────────────────────────────────
 const STATUS_META = {
   pending: {
@@ -257,43 +263,168 @@ function StatCard({ label, value, icon: Icon, color, delay, subtext }) {
 
 // ── Overview Tab ───────────────────────────────────────────────────────────
 function OverviewTab({ dashData }) {
-  const { stats, recentSubscriptions, recentInspections } = dashData;
+  const { stats, recentSubscriptions, recentInvestments = [] } = dashData;
+
+  const fmtNGN = (n = 0) =>
+    new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+      minimumFractionDigits: 0,
+    }).format(n);
 
   return (
     <div className="space-y-8">
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <StatCard
-          label="Total Subscriptions"
-          value={stats.totalSubscriptions}
-          icon={FaClipboardList}
-          color="text-customPurple-600"
-          delay={0}
-        />
-        <StatCard
-          label="Approved"
-          value={stats.approvedSubscriptions}
-          icon={CheckCircle}
-          color="text-green-600"
-          delay={100}
-        />
-        <StatCard
-          label="Pending"
-          value={stats.pendingSubscriptions}
-          icon={Clock}
-          color="text-amber-600"
-          delay={200}
-          subtext="Under review"
-        />
-        <StatCard
-          label="Inspections"
-          value={stats.totalInspections}
-          icon={FaCalendarCheck}
-          color="text-blue-600"
-          delay={300}
-          subtext={`${stats.upcomingInspections} upcoming`}
-        />
+      {/* Land Subscription Stats */}
+      <div>
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 px-1">
+          Land Subscriptions
+        </p>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <StatCard
+            label="Total"
+            value={stats.totalSubscriptions}
+            icon={FaClipboardList}
+            color="text-customPurple-600"
+            delay={0}
+          />
+          <StatCard
+            label="Approved"
+            value={stats.approvedSubscriptions}
+            icon={CheckCircle}
+            color="text-green-600"
+            delay={100}
+          />
+          <StatCard
+            label="Pending"
+            value={stats.pendingSubscriptions}
+            icon={Clock}
+            color="text-amber-600"
+            delay={200}
+            subtext="Under review"
+          />
+          <StatCard
+            label="Total Paid"
+            value={fmtNGN(stats.totalAmountPaid || 0)}
+            icon={Wallet}
+            color="text-blue-600"
+            delay={300}
+          />
+        </div>
       </div>
+
+      {/* Buy2Sell Investment Stats */}
+      {stats.totalInvestments > 0 && (
+        <div>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 px-1">
+            Buy2Sell Investments
+          </p>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <StatCard
+              label="Total"
+              value={stats.totalInvestments}
+              icon={TrendingUp}
+              color="text-customPurple-600"
+              delay={0}
+            />
+            <StatCard
+              label="Active"
+              value={stats.activeInvestments}
+              icon={CheckCircle}
+              color="text-green-600"
+              delay={100}
+            />
+            <StatCard
+              label="Invested"
+              value={fmtNGN(stats.totalInvested || 0)}
+              icon={Wallet}
+              color="text-amber-600"
+              delay={200}
+            />
+            <StatCard
+              label="Expected Payout"
+              value={fmtNGN(stats.totalExpectedPayout || 0)}
+              icon={Star}
+              color="text-blue-600"
+              delay={300}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Recent Buy2Sell Investments */}
+      {recentInvestments.length > 0 && (
+        <section
+          className="bg-white rounded-[2rem] shadow-sm border border-customBlack-100 overflow-hidden animate-fadeIn"
+          style={{ animationDelay: "500ms" }}
+        >
+          <div className="p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-customBlack-50">
+            <div>
+              <h3 className="text-2xl font-bold text-customBlack-900">
+                Recent Investments
+              </h3>
+              <p className="text-customBlack-400 font-medium">
+                Your Buy2Sell investment portfolio
+              </p>
+            </div>
+            <Link
+              to="/client/portal/investments"
+              className="flex items-center gap-1.5 text-customPurple-600 text-sm font-bold hover:underline"
+            >
+              View all <ChevronRight size={14} />
+            </Link>
+          </div>
+          <div className="divide-y divide-customBlack-50">
+            {recentInvestments.map((inv) => {
+              const sc = {
+                pending: { label: "Pending", color: "#d97706" },
+                partial_paid: { label: "Partial Paid", color: "#0891b2" },
+                active: { label: "Active", color: "#059669" },
+                matured: { label: "Matured", color: "#700CEB" },
+                paid_out: { label: "Paid Out", color: "#059669" },
+                closed: { label: "Closed", color: "#6b7280" },
+              }[inv.status] || { label: inv.status, color: "#6b7280" };
+              return (
+                <div
+                  key={inv._id}
+                  className="px-6 sm:px-8 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-customPurple-50/30 transition-colors"
+                >
+                  <div>
+                    <p className="font-bold text-customBlack-900">
+                      {inv.duration} Investment
+                    </p>
+                    <p className="text-xs text-customBlack-400 font-mono">
+                      {inv.referenceNumber}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <p className="text-sm font-black text-customBlack-900">
+                      {fmtNGN(inv.principalAmount)}
+                    </p>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        padding: "3px 10px",
+                        borderRadius: 20,
+                        background: `${sc.color}18`,
+                        color: sc.color,
+                      }}
+                    >
+                      {sc.label}
+                    </span>
+                    <Link
+                      to="/client/portal/investments"
+                      className="text-xs font-bold text-customPurple-600 hover:underline flex items-center gap-1"
+                    >
+                      View <ChevronRight size={12} />
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Recent Subscriptions */}
       {recentSubscriptions.length > 0 && (
@@ -998,17 +1129,22 @@ function DocumentCard({ doc, subId, isBuy2Sell }) {
       const endpoint = isBuy2Sell
         ? `/api/buy2sell/leads/${subId}/documents/${doc.type}`
         : `/api/subscriptions/${subId}/documents/${doc.type}`;
-      const res = await authFetch(endpoint);
-      if (!res.ok) throw new Error("Download failed");
+      const res = await fetchBlob(endpoint);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message || `Server error ${res.status}`);
+      }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `${doc.label.replace(/\s+/g, "-")}.pdf`;
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
     } catch (e) {
-      alert("Download failed. Please try again.");
+      alert(`Download failed: ${e.message}`);
     } finally {
       setDownloading(false);
     }
@@ -1059,10 +1195,926 @@ function DocumentCard({ doc, subId, isBuy2Sell }) {
   );
 }
 
+// ── Investment Detail Modal ────────────────────────────────────────────────
+function InvestmentDetailModal({ lead, onClose }) {
+  const [downloading, setDownloading] = useState(null);
+
+  const fmtNGN = (n = 0) =>
+    new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+      minimumFractionDigits: 0,
+    }).format(n);
+  const fmtDate = (d) =>
+    d
+      ? new Date(d).toLocaleDateString("en-NG", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })
+      : "—";
+  const PURPLE = "#700CEB";
+  const DARK = "#3F0C91";
+
+  const download = async (docType, label) => {
+    setDownloading(docType);
+    try {
+      const res = await fetchBlob(
+        `/api/buy2sell/leads/${lead._id}/documents/${docType}`,
+      );
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message || `Server error ${res.status}`);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${label.replace(/\s+/g, "-")}-${lead.referenceNumber}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    } catch (e) {
+      alert(`Download failed: ${e.message}`);
+    } finally {
+      setDownloading(null);
+    }
+  };
+
+  const pct = lead.maturityProgressPercent ?? 0;
+  const balance = Math.max(
+    0,
+    (lead.principalAmount || 0) - (lead.amountPaid || 0),
+  );
+  const isActive = lead.status === "active" || lead.status === "matured";
+  const isPaid = lead.status === "paid_out";
+
+  const STATUS_LABEL = {
+    pending: "Pending Review",
+    partial_paid: "Partial Payment Received",
+    active: "Investment Active",
+    matured: "Investment Matured",
+    paid_out: "Paid Out",
+    closed: "Closed",
+  };
+  const STATUS_COLOR = {
+    pending: "#d97706",
+    partial_paid: "#0891b2",
+    active: "#059669",
+    matured: PURPLE,
+    paid_out: "#059669",
+    closed: "#6b7280",
+  };
+
+  const DOC_LABELS = {
+    agreement: "Investment Agreement",
+    certificate: "Investment Certificate",
+    payout_confirmation: "Payout Confirmation",
+  };
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        display: "flex",
+        alignItems: "flex-end",
+        justifyContent: "center",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "rgba(0,0,0,0.55)",
+          backdropFilter: "blur(6px)",
+        }}
+        onClick={onClose}
+      />
+      <motion.div
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", stiffness: 300, damping: 32 }}
+        style={{
+          position: "relative",
+          zIndex: 1,
+          width: "100%",
+          maxWidth: 640,
+          maxHeight: "94vh",
+          background: "#fff",
+          borderRadius: "24px 24px 0 0",
+          overflowY: "auto",
+          boxShadow: "0 -16px 64px rgba(0,0,0,0.2)",
+        }}
+      >
+        {/* Drag handle */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            paddingTop: 10,
+            paddingBottom: 4,
+          }}
+        >
+          <div
+            style={{
+              width: 40,
+              height: 4,
+              borderRadius: 4,
+              background: "#e5e7eb",
+            }}
+          />
+        </div>
+
+        {/* Header */}
+        <div
+          style={{
+            padding: "16px 24px 20px",
+            background: `linear-gradient(135deg,${DARK},${PURPLE})`,
+            color: "#fff",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+            }}
+          >
+            <div>
+              <p
+                style={{
+                  fontSize: 10,
+                  color: "rgba(255,255,255,0.6)",
+                  fontWeight: 700,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  margin: "0 0 3px",
+                }}
+              >
+                Buy2Sell Investment
+              </p>
+              <h3
+                style={{
+                  fontSize: 20,
+                  fontWeight: 900,
+                  margin: "0 0 3px",
+                  letterSpacing: "-0.03em",
+                }}
+              >
+                {lead.duration} Plan
+              </h3>
+              <p
+                style={{
+                  fontSize: 11,
+                  color: "rgba(255,255,255,0.65)",
+                  margin: 0,
+                  fontFamily: "monospace",
+                }}
+              >
+                {lead.referenceNumber}
+              </p>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-end",
+                gap: 8,
+              }}
+            >
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  padding: "4px 12px",
+                  borderRadius: 20,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  background: "rgba(255,255,255,0.15)",
+                  color: "#fff",
+                }}
+              >
+                {STATUS_LABEL[lead.status] || lead.status}
+              </span>
+              <button
+                onClick={onClose}
+                style={{
+                  background: "rgba(255,255,255,0.15)",
+                  border: "none",
+                  color: "#fff",
+                  cursor: "pointer",
+                  borderRadius: 8,
+                  padding: "6px 10px",
+                  fontSize: 13,
+                  fontWeight: 700,
+                }}
+              >
+                ✕ Close
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div
+          style={{
+            padding: "20px 24px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 18,
+          }}
+        >
+          {/* Status banner */}
+          {lead.status === "partial_paid" && (
+            <div
+              style={{
+                background: "rgba(8,145,178,0.07)",
+                border: "1px solid rgba(8,145,178,0.2)",
+                borderRadius: 12,
+                padding: "12px 16px",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: "#0891b2",
+                  margin: "0 0 2px",
+                }}
+              >
+                ⏳ Partial Payment Received
+              </p>
+              <p style={{ fontSize: 12, color: "#374151", margin: 0 }}>
+                Balance of <strong>{fmtNGN(balance)}</strong> is outstanding.
+                Please complete your payment to activate the investment.
+              </p>
+            </div>
+          )}
+          {lead.status === "matured" && (
+            <div
+              style={{
+                background: "rgba(112,12,235,0.06)",
+                border: "1px solid rgba(112,12,235,0.2)",
+                borderRadius: 12,
+                padding: "12px 16px",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: PURPLE,
+                  margin: "0 0 2px",
+                }}
+              >
+                🎊 Investment Matured!
+              </p>
+              <p style={{ fontSize: 12, color: "#374151", margin: 0 }}>
+                Your investment has matured. Payout of{" "}
+                <strong>{fmtNGN(lead.expectedPayout)}</strong> is being
+                processed.
+              </p>
+            </div>
+          )}
+          {lead.status === "paid_out" && (
+            <div
+              style={{
+                background: "rgba(5,150,105,0.07)",
+                border: "1px solid rgba(5,150,105,0.2)",
+                borderRadius: 12,
+                padding: "12px 16px",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: "#059669",
+                  margin: "0 0 2px",
+                }}
+              >
+                ✅ Payout Sent!
+              </p>
+              <p style={{ fontSize: 12, color: "#374151", margin: 0 }}>
+                Your payout of{" "}
+                <strong>
+                  {fmtNGN(lead.actualPayout || lead.expectedPayout)}
+                </strong>{" "}
+                has been sent on {fmtDate(lead.payoutDate)}.
+              </p>
+            </div>
+          )}
+
+          {/* Stats grid */}
+          <div>
+            <p
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                color: "#9ca3af",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                margin: "0 0 10px",
+              }}
+            >
+              Investment Summary
+            </p>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 8,
+              }}
+            >
+              {[
+                ["Principal", fmtNGN(lead.principalAmount), "#0f0a1e"],
+                ["Amount Paid", fmtNGN(lead.amountPaid || 0), "#059669"],
+                [
+                  "Balance Due",
+                  fmtNGN(balance),
+                  balance > 0 ? "#dc2626" : "#059669",
+                ],
+                ["ROI Rate", `${lead.roiPercent}% (locked)`, PURPLE],
+                ["Expected ROI", fmtNGN(lead.expectedROI || 0), "#059669"],
+                ["Total at Maturity", fmtNGN(lead.expectedPayout || 0), DARK],
+                ["Duration", lead.duration, "#374151"],
+                ["Maturity Date", fmtDate(lead.maturityDate), "#374151"],
+              ].map(([l, v, c]) => (
+                <div
+                  key={l}
+                  style={{
+                    background: "#f9f6ff",
+                    borderRadius: 10,
+                    padding: "10px 12px",
+                  }}
+                >
+                  <p
+                    style={{
+                      fontSize: 9,
+                      fontWeight: 700,
+                      color: "#9ca3af",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                      margin: "0 0 2px",
+                    }}
+                  >
+                    {l}
+                  </p>
+                  <p
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 800,
+                      color: c,
+                      margin: 0,
+                      letterSpacing: "-0.02em",
+                    }}
+                  >
+                    {v}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Maturity progress bar */}
+          {isActive && lead.investmentDate && (
+            <div
+              style={{
+                background: "#fff",
+                borderRadius: 14,
+                padding: "16px 18px",
+                border: "1px solid rgba(0,0,0,0.07)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginBottom: 8,
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: "#374151",
+                    margin: 0,
+                  }}
+                >
+                  Maturity Progress
+                </p>
+                <span
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 900,
+                    color: pct >= 100 ? "#059669" : PURPLE,
+                  }}
+                >
+                  {pct}%
+                </span>
+              </div>
+              <div
+                style={{
+                  height: 10,
+                  background: "#f0eeff",
+                  borderRadius: 6,
+                  overflow: "hidden",
+                  marginBottom: 8,
+                }}
+              >
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${pct}%` }}
+                  transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+                  style={{
+                    height: "100%",
+                    borderRadius: 6,
+                    background:
+                      pct >= 100
+                        ? "linear-gradient(to right,#059669,#34d399)"
+                        : `linear-gradient(to right,${DARK},${PURPLE})`,
+                  }}
+                />
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  fontSize: 10,
+                  color: "#9ca3af",
+                }}
+              >
+                <span>Started: {fmtDate(lead.investmentDate)}</span>
+                {(lead.daysRemaining ?? 0) > 0 && (
+                  <span style={{ fontWeight: 700, color: PURPLE }}>
+                    {lead.daysRemaining} days left
+                  </span>
+                )}
+                <span>Matures: {fmtDate(lead.maturityDate)}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Bank payment details — only for pending / partial_paid */}
+          {["pending", "partial_paid"].includes(lead.status) && (
+            <div
+              style={{
+                background: "#f0fdf4",
+                border: "1px solid rgba(5,150,105,0.2)",
+                borderRadius: 12,
+                padding: "14px 16px",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: "#059669",
+                  margin: "0 0 8px",
+                }}
+              >
+                💳 Make Your Payment
+              </p>
+              <p style={{ fontSize: 12, color: "#374151", margin: "0 0 4px" }}>
+                <strong>Bank:</strong> ACCESS BANK PLC
+              </p>
+              <p style={{ fontSize: 12, color: "#374151", margin: "0 0 4px" }}>
+                <strong>Account:</strong> KEMCHUTA HOMES LIMITED
+              </p>
+              <p style={{ fontSize: 12, color: "#374151", margin: "0 0 8px" }}>
+                <strong>Number:</strong> XXXXXXXXXX
+              </p>
+              <p style={{ fontSize: 12, color: "#374151", margin: 0 }}>
+                <strong>Reference:</strong>{" "}
+                <span
+                  style={{
+                    color: PURPLE,
+                    fontWeight: 800,
+                    fontFamily: "monospace",
+                  }}
+                >
+                  {lead.referenceNumber}
+                </span>
+              </p>
+              <p style={{ fontSize: 11, color: "#6b7280", margin: "8px 0 0" }}>
+                Always quote your reference on every transfer. Send proof to
+                info@kemchutahomesltd.com
+              </p>
+            </div>
+          )}
+
+          {/* Documents */}
+          {lead.documents?.length > 0 && (
+            <div>
+              <p
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: "#9ca3af",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  margin: "0 0 10px",
+                }}
+              >
+                Your Documents ({lead.documents.length})
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {lead.documents.map((doc, i) => {
+                  const label = DOC_LABELS[doc.type] || doc.label || doc.type;
+                  const isLoading = downloading === doc.type;
+                  const docColors = {
+                    agreement: {
+                      bg: "rgba(5,150,105,0.08)",
+                      color: "#059669",
+                      icon: "📄",
+                    },
+                    certificate: {
+                      bg: "rgba(112,12,235,0.08)",
+                      color: PURPLE,
+                      icon: "🏆",
+                    },
+                    payout_confirmation: {
+                      bg: "rgba(5,150,105,0.08)",
+                      color: "#059669",
+                      icon: "✅",
+                    },
+                  };
+                  const style = docColors[doc.type] || {
+                    bg: "rgba(112,12,235,0.06)",
+                    color: PURPLE,
+                    icon: "📎",
+                  };
+                  return (
+                    <div
+                      key={i}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "12px 14px",
+                        background: style.bg,
+                        borderRadius: 12,
+                        border: `1px solid ${style.color}20`,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                        }}
+                      >
+                        <span style={{ fontSize: 20 }}>{style.icon}</span>
+                        <div>
+                          <p
+                            style={{
+                              fontSize: 13,
+                              fontWeight: 700,
+                              color: "#0f0a1e",
+                              margin: "0 0 2px",
+                            }}
+                          >
+                            {label}
+                          </p>
+                          <p
+                            style={{
+                              fontSize: 10,
+                              color: "#9ca3af",
+                              margin: 0,
+                            }}
+                          >
+                            {doc.generatedAt
+                              ? new Date(doc.generatedAt).toLocaleDateString(
+                                  "en-NG",
+                                  {
+                                    day: "numeric",
+                                    month: "short",
+                                    year: "numeric",
+                                  },
+                                )
+                              : ""}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => download(doc.type, label)}
+                        disabled={isLoading}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 5,
+                          padding: "8px 14px",
+                          borderRadius: 10,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          background: style.color,
+                          color: "#fff",
+                          border: "none",
+                          cursor: isLoading ? "not-allowed" : "pointer",
+                          opacity: isLoading ? 0.6 : 1,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {isLoading ? "⏳ Loading…" : "⬇ Download"}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* No documents yet */}
+          {(!lead.documents || lead.documents.length === 0) && (
+            <div
+              style={{
+                textAlign: "center",
+                padding: "20px 0",
+                color: "#9ca3af",
+              }}
+            >
+              <p style={{ fontSize: 20, margin: "0 0 6px" }}>📋</p>
+              <p style={{ fontSize: 13, fontWeight: 600, margin: 0 }}>
+                Documents will appear here once your investment is activated.
+              </p>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+// ── InvestmentsTab — dedicated Buy2Sell investments page ──────────────────────
+function InvestmentsTab() {
+  const [investments, setInvestments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedInvestment, setSelectedInvestment] = useState(null);
+
+  const fmtNGN = (n = 0) =>
+    new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+      minimumFractionDigits: 0,
+    }).format(n);
+  const fmtDate = (d) =>
+    d
+      ? new Date(d).toLocaleDateString("en-NG", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : "—";
+
+  const PURPLE = "#700CEB";
+  const DARK = "#3F0C91";
+
+  const STATUS_CONFIG = {
+    pending: { label: "Pending", color: "#d97706", bg: "#fef3c7" },
+    partial_paid: { label: "Partial Paid", color: "#0891b2", bg: "#e0f2fe" },
+    active: { label: "Active", color: "#059669", bg: "#d1fae5" },
+    matured: { label: "Matured", color: "#700CEB", bg: "#f3e8ff" },
+    paid_out: { label: "Paid Out", color: "#059669", bg: "#d1fae5" },
+    closed: { label: "Closed", color: "#6b7280", bg: "#f3f4f6" },
+  };
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const res = await authFetch("/api/buy2sell/my");
+        if (res.ok) setInvestments(await res.json());
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  if (loading)
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 size={36} className="text-customPurple-500 animate-spin" />
+      </div>
+    );
+
+  if (investments.length === 0)
+    return (
+      <div className="bg-white rounded-[2rem] shadow-sm border border-customBlack-100 p-16 text-center">
+        <div
+          className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4"
+          style={{ background: `${PURPLE}10` }}
+        >
+          <TrendingUp size={36} style={{ color: PURPLE }} />
+        </div>
+        <h4 className="text-xl font-bold text-customBlack-900 mb-2">
+          No Investments Yet
+        </h4>
+        <p className="text-customBlack-400 text-sm max-w-xs mx-auto mb-6">
+          Start your Buy2Sell investment journey and earn up to 75% ROI over 18
+          months.
+        </p>
+        <a
+          href="/buy2sell"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "12px 24px",
+            borderRadius: 14,
+            fontWeight: 700,
+            fontSize: 14,
+            color: "#fff",
+            background: `linear-gradient(135deg,${DARK},${PURPLE})`,
+            textDecoration: "none",
+          }}
+        >
+          Start Investing →
+        </a>
+      </div>
+    );
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-2xl font-bold text-customBlack-900">
+            My Buy2Sell Investments
+          </h3>
+          <p className="text-customBlack-400 font-medium text-sm mt-1">
+            {investments.length} investment{investments.length !== 1 ? "s" : ""}
+          </p>
+        </div>
+        <a
+          href="/buy2sell"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "10px 18px",
+            borderRadius: 12,
+            fontWeight: 700,
+            fontSize: 12,
+            color: "#fff",
+            background: `linear-gradient(135deg,${DARK},${PURPLE})`,
+            textDecoration: "none",
+          }}
+        >
+          + New Investment
+        </a>
+      </div>
+
+      <div className="space-y-4">
+        {investments.map((inv, i) => {
+          const sc = STATUS_CONFIG[inv.status] || STATUS_CONFIG.pending;
+          const pct = inv.maturityProgressPercent ?? 0;
+          const isActive = inv.status === "active" || inv.status === "matured";
+
+          return (
+            <motion.div
+              key={inv._id}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.07 }}
+              className="bg-white rounded-[1.5rem] shadow-sm border border-customBlack-100 overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => setSelectedInvestment(inv)}
+            >
+              {/* Card header */}
+              <div className="px-6 py-4 flex items-center justify-between border-b border-customBlack-50">
+                <div className="flex items-center gap-3">
+                  <div
+                    style={{
+                      width: 42,
+                      height: 42,
+                      borderRadius: 12,
+                      background: `${PURPLE}12`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <TrendingUp size={20} style={{ color: PURPLE }} />
+                  </div>
+                  <div>
+                    <p className="font-black text-customBlack-900 text-base">
+                      {inv.duration} Investment
+                    </p>
+                    <p className="text-xs text-customBlack-400 font-mono mt-0.5">
+                      {inv.referenceNumber}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      padding: "3px 10px",
+                      borderRadius: 20,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      background: sc.bg,
+                      color: sc.color,
+                    }}
+                  >
+                    {sc.label}
+                  </span>
+                  <ChevronRight size={16} className="text-customBlack-300" />
+                </div>
+              </div>
+
+              {/* Card body — 4-stat grid */}
+              <div className="px-6 py-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {[
+                    ["Principal", fmtNGN(inv.principalAmount), "#0f0a1e"],
+                    ["ROI Rate", `${inv.roiPercent}% locked`, PURPLE],
+                    ["Expected ROI", fmtNGN(inv.expectedROI || 0), "#059669"],
+                    ["Maturity", fmtDate(inv.maturityDate), "#374151"],
+                  ].map(([l, v, c]) => (
+                    <div key={l}>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-0.5">
+                        {l}
+                      </p>
+                      <p className="text-sm font-black" style={{ color: c }}>
+                        {v}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Maturity progress bar — only for active investments */}
+                {isActive && inv.investmentDate && (
+                  <div className="mt-4">
+                    <div className="flex justify-between items-center mb-1.5">
+                      <span className="text-xs text-gray-400">
+                        Investment Progress
+                      </span>
+                      <span
+                        className="text-xs font-bold"
+                        style={{ color: pct >= 100 ? "#059669" : PURPLE }}
+                      >
+                        {pct}%
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        height: 6,
+                        background: "#f0eeff",
+                        borderRadius: 4,
+                        overflow: "hidden",
+                      }}
+                    >
+                      <div
+                        style={{
+                          height: "100%",
+                          width: `${pct}%`,
+                          borderRadius: 4,
+                          background:
+                            pct >= 100
+                              ? "#059669"
+                              : `linear-gradient(to right,${DARK},${PURPLE})`,
+                          transition: "width 0.6s ease",
+                        }}
+                      />
+                    </div>
+                    {(inv.daysRemaining ?? 0) > 0 && (
+                      <p className="text-[10px] text-gray-400 mt-1">
+                        {inv.daysRemaining} days until maturity
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* Investment detail modal */}
+      <AnimatePresence>
+        {selectedInvestment && (
+          <InvestmentDetailModal
+            lead={selectedInvestment}
+            onClose={() => setSelectedInvestment(null)}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 function DocumentsTab() {
   const [subs, setSubs] = useState([]);
   const [b2s, setB2s] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedInvestment, setSelectedInvestment] = useState(null);
 
   useEffect(() => {
     const loadAll = async () => {
@@ -1153,62 +2205,117 @@ function DocumentsTab() {
           ))}
 
           {/* Buy2Sell Investments */}
-          {allB2s.map((lead) => (
-            <div
-              key={lead._id}
-              className="bg-white rounded-[2rem] shadow-sm border border-customBlack-100 overflow-hidden"
-            >
-              <div className="px-6 py-4 border-b border-customBlack-50 flex items-center justify-between">
-                <div>
-                  <p className="font-black text-customBlack-900">
-                    Buy2Sell — {lead.duration} Investment
-                  </p>
-                  <p className="text-xs text-customBlack-400 font-mono mt-0.5">
-                    {lead.referenceNumber}
-                  </p>
+          {allB2s.map((lead) => {
+            const pct = lead.maturityProgressPercent ?? 0;
+            const isActive =
+              lead.status === "active" || lead.status === "matured";
+            return (
+              <div
+                key={lead._id}
+                className="bg-white rounded-[2rem] shadow-sm border border-customBlack-100 overflow-hidden cursor-pointer hover:shadow-md transition-all"
+                onClick={() => setSelectedInvestment(lead)}
+              >
+                <div className="px-6 py-4 border-b border-customBlack-50 flex items-center justify-between">
+                  <div>
+                    <p className="font-black text-customBlack-900">
+                      Buy2Sell — {lead.duration} Investment
+                    </p>
+                    <p className="text-xs text-customBlack-400 font-mono mt-0.5">
+                      {lead.referenceNumber}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <StatusBadge status={lead.status} />
+                    <span className="text-xs text-customPurple-600 bg-customPurple-50 px-2 py-1 rounded-lg font-bold">
+                      View Details →
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <StatusBadge status={lead.status} />
-                  <span className="text-xs text-customBlack-400 bg-customPurple-50 px-2 py-1 rounded-lg font-bold text-customPurple-600">
-                    Investment
-                  </span>
+                {/* Stats strip */}
+                <div className="grid grid-cols-3 gap-4 px-6 py-3 bg-customPurple-50/50 border-b border-customPurple-100">
+                  <div>
+                    <p className="text-xs text-customBlack-400">Principal</p>
+                    <p className="text-sm font-black text-customBlack-900">
+                      {formatCurrency(lead.principalAmount)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-customBlack-400">ROI Rate</p>
+                    <p className="text-sm font-black text-customPurple-700">
+                      {lead.roiPercent}%
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-customBlack-400">Total Payout</p>
+                    <p className="text-sm font-black text-green-600">
+                      {formatCurrency(lead.expectedPayout)}
+                    </p>
+                  </div>
+                </div>
+                {/* Maturity progress bar */}
+                {isActive && (
+                  <div className="px-6 py-3 border-b border-customBlack-50">
+                    <div className="flex justify-between text-xs text-customBlack-400 mb-1.5">
+                      <span>Maturity Progress</span>
+                      <span className="font-bold" style={{ color: "#700CEB" }}>
+                        {pct}%
+                        {lead.daysRemaining > 0
+                          ? ` · ${lead.daysRemaining}d left`
+                          : ""}
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        height: 6,
+                        background: "#f0eeff",
+                        borderRadius: 6,
+                        overflow: "hidden",
+                      }}
+                    >
+                      <div
+                        style={{
+                          height: "100%",
+                          width: `${pct}%`,
+                          borderRadius: 6,
+                          background:
+                            pct >= 100
+                              ? "#059669"
+                              : "linear-gradient(to right,#3F0C91,#700CEB)",
+                          transition: "width 0.5s",
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+                <div className="p-4 space-y-2">
+                  {lead.documents.slice(0, 2).map((doc, i) => (
+                    <DocumentCard
+                      key={i}
+                      doc={doc}
+                      subId={lead._id}
+                      isBuy2Sell={true}
+                    />
+                  ))}
+                  {lead.documents.length > 2 && (
+                    <p className="text-xs text-customBlack-400 text-center pt-1">
+                      +{lead.documents.length - 2} more documents — click to
+                      view all
+                    </p>
+                  )}
                 </div>
               </div>
-              {/* Investment summary strip */}
-              <div className="grid grid-cols-3 gap-4 px-6 py-3 bg-customPurple-50/50 border-b border-customPurple-100">
-                <div>
-                  <p className="text-xs text-customBlack-400">Principal</p>
-                  <p className="text-sm font-black text-customBlack-900">
-                    {formatCurrency(lead.principalAmount)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-customBlack-400">ROI Rate</p>
-                  <p className="text-sm font-black text-customPurple-700">
-                    {lead.roiPercent}%
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-customBlack-400">
-                    Expected Payout
-                  </p>
-                  <p className="text-sm font-black text-green-600">
-                    {formatCurrency(lead.expectedPayout)}
-                  </p>
-                </div>
-              </div>
-              <div className="p-4 space-y-3">
-                {lead.documents.map((doc, i) => (
-                  <DocumentCard
-                    key={i}
-                    doc={doc}
-                    subId={lead._id}
-                    isBuy2Sell={true}
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
+            );
+          })}
+
+          {/* Investment detail modal */}
+          <AnimatePresence>
+            {selectedInvestment && (
+              <InvestmentDetailModal
+                lead={selectedInvestment}
+                onClose={() => setSelectedInvestment(null)}
+              />
+            )}
+          </AnimatePresence>
         </div>
       )}
     </div>
@@ -1339,6 +2446,11 @@ export default function ClientPortal() {
       name: "Subscriptions",
       path: "/client/portal/subscriptions",
       icon: <FaClipboardList />,
+    },
+    {
+      name: "Investments",
+      path: "/client/portal/investments",
+      icon: <TrendingUp size={16} />,
     },
     {
       name: "Inspections",
@@ -1500,6 +2612,7 @@ export default function ClientPortal() {
           <Routes>
             <Route index element={<OverviewTab dashData={dashData} />} />
             <Route path="subscriptions" element={<SubscriptionsTab />} />
+            <Route path="investments" element={<InvestmentsTab />} />
             <Route path="inspections" element={<InspectionsTab />} />
             <Route path="documents" element={<DocumentsTab />} />
             <Route path="profile" element={<ProfileTab client={client} />} />
@@ -1511,16 +2624,10 @@ export default function ClientPortal() {
         </div>
       </main>
 
-      <style jsx>{`
+      <style>{`
         @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(10px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
         .animate-fadeIn {
           animation: fadeIn 0.6s ease-out forwards;

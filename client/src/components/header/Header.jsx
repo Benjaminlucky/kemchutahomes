@@ -11,13 +11,10 @@ import {
   UserPlus,
   FileText,
   CalendarCheck,
+  TrendingUp,
 } from "lucide-react";
 import "./header.css";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Single source of truth for all client links.
-// Used by desktop dropdown AND mobile accordion — no duplication.
-// ─────────────────────────────────────────────────────────────────────────────
 const clientMenuSections = [
   {
     label: "My Portal",
@@ -61,9 +58,6 @@ const clientMenuSections = [
   },
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Desktop dropdown
-// ─────────────────────────────────────────────────────────────────────────────
 function ClientDropdown() {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -77,7 +71,6 @@ function ClientDropdown() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
-
   useEffect(() => {
     setOpen(false);
   }, [location]);
@@ -212,32 +205,26 @@ function ClientDropdown() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MAIN HEADER
-// ─────────────────────────────────────────────────────────────────────────────
 function Header() {
   const location = useLocation();
   const isActive = (path) => location.pathname === path;
   const isClientActive = location.pathname.startsWith("/client");
+  const isBuy2SellActive = location.pathname === "/buy2sell";
 
   const [openMenu, setOpenMenu] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileClientOpen, setMobileClientOpen] = useState(false);
 
-  // Scroll → glass effect
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Close everything on route change
   useEffect(() => {
     setOpenMenu(false);
     setMobileClientOpen(false);
   }, [location]);
-
-  // Lock body scroll when mobile menu open
   useEffect(() => {
     document.body.style.overflow = openMenu ? "hidden" : "unset";
     return () => {
@@ -251,10 +238,6 @@ function Header() {
   };
   const closeMenu = () => setOpenMenu(false);
 
-  // Shared sticky + glass nav bar style
-  // z-index 9995 keeps the nav bar above all page content (heroes, sliders,
-  // Swiper, map overlays etc.) while still leaving room for the mobile panel
-  // (9998) and desktop dropdown (9999) to sit on top of it.
   const navBarStyle = {
     position: "sticky",
     top: 0,
@@ -273,9 +256,7 @@ function Header() {
 
   return (
     <div className="mainNavWrapper w-full">
-      {/* ══════════════════════════════════════════════════════════════════
-          DESKTOP  (md +)
-      ══════════════════════════════════════════════════════════════════ */}
+      {/* ── DESKTOP ─────────────────────────────────────────────────────── */}
       <div className="hidden md:block" style={navBarStyle}>
         <div
           className="w-11/12 lg:w-10/12 mx-auto flex items-center justify-between"
@@ -284,7 +265,6 @@ function Header() {
             transition: "padding 0.3s ease",
           }}
         >
-          {/* Logo */}
           <Link to="/" className="flex-shrink-0">
             <img
               src="/assets/kemchutaMainLogo.svg"
@@ -294,7 +274,6 @@ function Header() {
             />
           </Link>
 
-          {/* Centre: page links + Client Portal dropdown */}
           <nav className="flex items-center gap-6 lg:gap-8 xl:gap-10">
             {mainLink.map((link, index) => (
               <div
@@ -309,11 +288,50 @@ function Header() {
                 </Link>
               </div>
             ))}
-            {/* Client Portal dropdown — login & signup are INSIDE this */}
+
+            {/* ── Buy2Sell pill ── */}
+            <Link to="/buy2sell" className="relative flex-shrink-0">
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "5px",
+                  padding: "6px 16px",
+                  borderRadius: "20px",
+                  background: isBuy2SellActive
+                    ? "linear-gradient(135deg,#3F0C91,#700CEB)"
+                    : "rgba(112,12,235,0.08)",
+                  color: isBuy2SellActive ? "#fff" : "#700CEB",
+                  fontWeight: 700,
+                  fontSize: "13px",
+                  transition: "all 0.2s",
+                  boxShadow: isBuy2SellActive
+                    ? "0 2px 10px rgba(112,12,235,0.35)"
+                    : "none",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background =
+                    "linear-gradient(135deg,#3F0C91,#700CEB)";
+                  e.currentTarget.style.color = "#fff";
+                  e.currentTarget.style.boxShadow =
+                    "0 2px 10px rgba(112,12,235,0.35)";
+                }}
+                onMouseLeave={(e) => {
+                  if (!isBuy2SellActive) {
+                    e.currentTarget.style.background = "rgba(112,12,235,0.08)";
+                    e.currentTarget.style.color = "#700CEB";
+                    e.currentTarget.style.boxShadow = "none";
+                  }
+                }}
+              >
+                <TrendingUp size={13} />
+                Buy2Sell
+              </span>
+            </Link>
+
             <ClientDropdown />
           </nav>
 
-          {/* Right: Realtor CTAs only */}
           <div className="flex items-center gap-2.5 flex-shrink-0">
             <Link
               to="/login"
@@ -332,7 +350,6 @@ function Header() {
             >
               Realtor Login
             </Link>
-
             <Link
               to="/signup"
               className="text-xs lg:text-sm font-bold uppercase px-4 lg:px-5 py-2 rounded-full text-white whitespace-nowrap transition-all duration-200"
@@ -357,11 +374,8 @@ function Header() {
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════════════════════════════
-          MOBILE  (below md)
-      ══════════════════════════════════════════════════════════════════ */}
+      {/* ── MOBILE ──────────────────────────────────────────────────────── */}
       <div className="md:hidden" style={navBarStyle}>
-        {/* Top bar */}
         <div className="px-4 sm:px-5 py-3.5 flex items-center justify-between">
           <Link to="/" onClick={closeMenu} className="flex-shrink-0">
             <img
@@ -370,8 +384,6 @@ function Header() {
               className="w-32 sm:w-36 h-auto"
             />
           </Link>
-
-          {/* Hamburger only — no extra pills */}
           <button
             type="button"
             onClick={toggleMenu}
@@ -411,11 +423,9 @@ function Header() {
           </button>
         </div>
 
-        {/* Slide-down overlay */}
         <AnimatePresence>
           {openMenu && (
             <>
-              {/* Backdrop — covers entire viewport above ALL page content */}
               <motion.div
                 key="backdrop"
                 initial={{ opacity: 0 }}
@@ -428,7 +438,6 @@ function Header() {
                 aria-hidden="true"
               />
 
-              {/* Panel — sits above backdrop and nav bar */}
               <motion.div
                 key="panel"
                 initial={{ opacity: 0, y: -12 }}
@@ -444,7 +453,7 @@ function Header() {
                   borderBottom: "1px solid rgba(112,12,235,0.08)",
                 }}
               >
-                {/* Page nav links */}
+                {/* Page links */}
                 <div className="px-4 sm:px-5 pt-4 pb-2">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 px-2">
                     Navigate
@@ -480,7 +489,59 @@ function Header() {
                   })}
                 </div>
 
-                {/* Divider */}
+                {/* ── Buy2Sell mobile link ── */}
+                <div className="px-4 sm:px-5 pb-1">
+                  <Link
+                    to="/buy2sell"
+                    onClick={closeMenu}
+                    className="flex items-center justify-between px-3 py-3 rounded-xl transition-colors duration-150 mb-0.5"
+                    style={{
+                      background: isBuy2SellActive
+                        ? "rgba(112,12,235,0.07)"
+                        : "transparent",
+                    }}
+                    onTouchStart={(e) => {
+                      if (!isBuy2SellActive)
+                        e.currentTarget.style.background =
+                          "rgba(112,12,235,0.04)";
+                    }}
+                    onTouchEnd={(e) => {
+                      if (!isBuy2SellActive)
+                        e.currentTarget.style.background = "transparent";
+                    }}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                        style={{
+                          background: "linear-gradient(135deg,#3F0C91,#700CEB)",
+                        }}
+                      >
+                        <TrendingUp size={13} style={{ color: "#fff" }} />
+                      </div>
+                      <div>
+                        <p
+                          className="text-sm font-semibold"
+                          style={{
+                            color: isBuy2SellActive ? "#700CEB" : "#111",
+                          }}
+                        >
+                          Buy2Sell
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          Invest &amp; earn up to 75% ROI
+                        </p>
+                      </div>
+                    </div>
+                    {isBuy2SellActive && (
+                      <span
+                        className="w-1.5 h-1.5 rounded-full"
+                        style={{ background: "#700CEB" }}
+                      />
+                    )}
+                  </Link>
+                </div>
+
                 <div
                   style={{
                     height: 1,
@@ -492,7 +553,6 @@ function Header() {
 
                 {/* Client Portal accordion */}
                 <div className="px-4 sm:px-5 pb-2">
-                  {/* Accordion toggle */}
                   <button
                     onClick={() => setMobileClientOpen((v) => !v)}
                     className="w-full flex items-center justify-between px-3 py-3 rounded-xl transition-colors duration-150"
@@ -525,7 +585,6 @@ function Header() {
                     </motion.span>
                   </button>
 
-                  {/* Accordion body — all client links including login & signup */}
                   <AnimatePresence initial={false}>
                     {mobileClientOpen && (
                       <motion.div
@@ -616,7 +675,6 @@ function Header() {
                   </AnimatePresence>
                 </div>
 
-                {/* Divider */}
                 <div
                   style={{
                     height: 1,
@@ -626,7 +684,7 @@ function Header() {
                   }}
                 />
 
-                {/* Realtor CTA buttons only */}
+                {/* Realtor CTAs */}
                 <div className="px-4 sm:px-5 py-4 space-y-2.5">
                   <Link
                     to="/signup"

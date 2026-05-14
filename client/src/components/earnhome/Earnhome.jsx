@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import {
   TrendingUp,
@@ -27,7 +28,12 @@ const DURATIONS = [
     roiKey: "roiPercent6Months",
     desc: "Short-term",
   },
-  { key: "1 Year", label: "1 Yr", roiKey: "roiPercent1Year", desc: "Mid-term" },
+  {
+    key: "12 Months",
+    label: "12 Mo",
+    roiKey: "roiPercent12Months",
+    desc: "Mid-term",
+  },
   {
     key: "18 Months",
     label: "18 Mo",
@@ -166,13 +172,14 @@ function Earnhome() {
   const isInView = useInView(ref, { once: true, threshold: 0.1 });
 
   // ── All original state — unchanged ────────────────────────────────────────
+  const navigate = useNavigate();
   const [roi, setRoi] = useState(null);
   const [roiLoading, setRoiLoad] = useState(true);
   const [form, setForm] = useState({
     fullName: "",
     email: "",
     phone: "",
-    duration: "1 Year",
+    duration: "12 Months",
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -212,29 +219,14 @@ function Earnhome() {
   };
 
   // ── Submit — unchanged ────────────────────────────────────────────────────
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    const errs = validate();
-    if (Object.keys(errs).length) {
-      setErrors(errs);
-      return;
-    }
-    setLoading(true);
-    setApiError("");
-    try {
-      const res = await fetch(`${BASE_URL}/api/buy2sell/leads`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Submission failed");
-      setSuccess(true);
-    } catch (err) {
-      setApiError(err.message || "Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    // Redirect to the full Buy2Sell investment flow, pre-filling any entered data
+    const params = new URLSearchParams({ duration: form.duration });
+    if (form.fullName.trim()) params.set("fullName", form.fullName.trim());
+    if (form.email.trim()) params.set("email", form.email.trim());
+    if (form.phone.trim()) params.set("phone", form.phone.trim());
+    navigate(`/buy2sell?${params.toString()}`);
   };
 
   const roiNow = currentROI();
@@ -329,7 +321,7 @@ function Earnhome() {
             }}
           >
             <TrendingUp size={12} />
-            Buy2Sell
+            Buy2Sell Land Bank Scheme
           </div>
         </motion.div>
 
@@ -545,199 +537,142 @@ function Earnhome() {
 
               {/* ── Form ──────────────────────────────────────────────── */}
               <AnimatePresence mode="wait">
-                {success ? (
-                  <motion.div
-                    key="success"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="flex flex-col items-center text-center py-10 px-4"
-                    style={{
-                      borderRadius: 16,
-                      background: "rgba(5,150,105,0.1)",
-                      border: "1px solid rgba(5,150,105,0.25)",
-                    }}
-                  >
+                <motion.form
+                  key="form"
+                  onSubmit={handleSubmit}
+                  className="space-y-4"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  {apiError && (
                     <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 300,
-                        damping: 20,
-                        delay: 0.1,
-                      }}
-                      className="w-16 h-16 rounded-full flex items-center justify-center mb-5"
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl"
                       style={{
-                        background: "rgba(5,150,105,0.2)",
-                        border: "2px solid rgba(5,150,105,0.4)",
+                        background: "rgba(239,68,68,0.1)",
+                        border: "1px solid rgba(239,68,68,0.3)",
                       }}
                     >
-                      <CheckCircle size={28} style={{ color: "#34d399" }} />
-                    </motion.div>
-                    <h4
-                      style={{
-                        fontSize: 20,
-                        fontWeight: 900,
-                        color: "#34d399",
-                        marginBottom: 8,
-                        letterSpacing: "-0.03em",
-                      }}
-                    >
-                      Enquiry Received!
-                    </h4>
-                    <p
-                      style={{
-                        fontSize: 14,
-                        color: "rgba(255,255,255,0.6)",
-                        lineHeight: 1.7,
-                      }}
-                    >
-                      Thank you! Our investment team will contact you within{" "}
-                      <strong style={{ color: "#fff" }}>24 hours</strong> to
-                      walk you through the Buy2Sell scheme.
-                    </p>
-                  </motion.div>
-                ) : (
-                  <motion.form
-                    key="form"
-                    onSubmit={handleSubmit}
-                    className="space-y-4"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                  >
-                    {apiError && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl"
+                      <AlertTriangle
+                        size={14}
+                        style={{ color: "#fca5a5", flexShrink: 0 }}
+                      />
+                      <p
                         style={{
-                          background: "rgba(239,68,68,0.1)",
-                          border: "1px solid rgba(239,68,68,0.3)",
+                          fontSize: 13,
+                          color: "#fca5a5",
+                          fontWeight: 500,
+                          margin: 0,
                         }}
                       >
-                        <AlertTriangle
-                          size={14}
-                          style={{ color: "#fca5a5", flexShrink: 0 }}
-                        />
-                        <p
-                          style={{
-                            fontSize: 13,
-                            color: "#fca5a5",
-                            fontWeight: 500,
-                            margin: 0,
-                          }}
-                        >
-                          {apiError}
-                        </p>
-                      </motion.div>
+                        {apiError}
+                      </p>
+                    </motion.div>
+                  )}
+
+                  <FormField label="Full Name" error={errors.fullName}>
+                    <input
+                      type="text"
+                      placeholder="e.g. Chukwuemeka Obi"
+                      value={form.fullName}
+                      onChange={(e) => set("fullName", e.target.value)}
+                      style={inputStyle(errors.fullName)}
+                      onFocus={(e) => {
+                        if (!errors.fullName)
+                          e.target.style.borderColor = "rgba(112,12,235,0.6)";
+                      }}
+                      onBlur={(e) => {
+                        if (!errors.fullName)
+                          e.target.style.borderColor = "rgba(255,255,255,0.12)";
+                      }}
+                    />
+                  </FormField>
+
+                  <FormField label="Email Address" error={errors.email}>
+                    <input
+                      type="email"
+                      placeholder="you@example.com"
+                      value={form.email}
+                      onChange={(e) => set("email", e.target.value)}
+                      style={inputStyle(errors.email)}
+                      onFocus={(e) => {
+                        if (!errors.email)
+                          e.target.style.borderColor = "rgba(112,12,235,0.6)";
+                      }}
+                      onBlur={(e) => {
+                        if (!errors.email)
+                          e.target.style.borderColor = "rgba(255,255,255,0.12)";
+                      }}
+                    />
+                  </FormField>
+
+                  <FormField label="Mobile Number" error={errors.phone}>
+                    <input
+                      type="tel"
+                      placeholder="08012345678"
+                      value={form.phone}
+                      onChange={(e) => set("phone", e.target.value)}
+                      style={inputStyle(errors.phone)}
+                      onFocus={(e) => {
+                        if (!errors.phone)
+                          e.target.style.borderColor = "rgba(112,12,235,0.6)";
+                      }}
+                      onBlur={(e) => {
+                        if (!errors.phone)
+                          e.target.style.borderColor = "rgba(255,255,255,0.12)";
+                      }}
+                    />
+                  </FormField>
+
+                  <motion.button
+                    type="submit"
+                    disabled={loading}
+                    whileTap={{ scale: 0.98 }}
+                    whileHover={{
+                      boxShadow: "0 16px 48px rgba(112,12,235,0.55)",
+                    }}
+                    className="w-full flex items-center justify-center gap-2 font-bold text-white"
+                    style={{
+                      padding: "15px 24px",
+                      borderRadius: 14,
+                      fontSize: 15,
+                      letterSpacing: "-0.01em",
+                      background: loading
+                        ? "rgba(112,12,235,0.4)"
+                        : `linear-gradient(135deg, ${PURPLE_DARK}, ${PURPLE}, ${PURPLE_MID})`,
+                      border: "none",
+                      cursor: loading ? "not-allowed" : "pointer",
+                      boxShadow: loading
+                        ? "none"
+                        : "0 8px 28px rgba(112,12,235,0.4)",
+                      transition: "box-shadow 0.3s",
+                      marginTop: 8,
+                    }}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 size={18} className="animate-spin" />{" "}
+                        Submitting…
+                      </>
+                    ) : (
+                      <>
+                        Start Investing Now <ArrowRight size={16} />
+                      </>
                     )}
+                  </motion.button>
 
-                    <FormField label="Full Name" error={errors.fullName}>
-                      <input
-                        type="text"
-                        placeholder="e.g. Chukwuemeka Obi"
-                        value={form.fullName}
-                        onChange={(e) => set("fullName", e.target.value)}
-                        style={inputStyle(errors.fullName)}
-                        onFocus={(e) => {
-                          if (!errors.fullName)
-                            e.target.style.borderColor = "rgba(112,12,235,0.6)";
-                        }}
-                        onBlur={(e) => {
-                          if (!errors.fullName)
-                            e.target.style.borderColor =
-                              "rgba(255,255,255,0.12)";
-                        }}
-                      />
-                    </FormField>
-
-                    <FormField label="Email Address" error={errors.email}>
-                      <input
-                        type="email"
-                        placeholder="you@example.com"
-                        value={form.email}
-                        onChange={(e) => set("email", e.target.value)}
-                        style={inputStyle(errors.email)}
-                        onFocus={(e) => {
-                          if (!errors.email)
-                            e.target.style.borderColor = "rgba(112,12,235,0.6)";
-                        }}
-                        onBlur={(e) => {
-                          if (!errors.email)
-                            e.target.style.borderColor =
-                              "rgba(255,255,255,0.12)";
-                        }}
-                      />
-                    </FormField>
-
-                    <FormField label="Mobile Number" error={errors.phone}>
-                      <input
-                        type="tel"
-                        placeholder="08012345678"
-                        value={form.phone}
-                        onChange={(e) => set("phone", e.target.value)}
-                        style={inputStyle(errors.phone)}
-                        onFocus={(e) => {
-                          if (!errors.phone)
-                            e.target.style.borderColor = "rgba(112,12,235,0.6)";
-                        }}
-                        onBlur={(e) => {
-                          if (!errors.phone)
-                            e.target.style.borderColor =
-                              "rgba(255,255,255,0.12)";
-                        }}
-                      />
-                    </FormField>
-
-                    <motion.button
-                      type="submit"
-                      disabled={loading}
-                      whileTap={{ scale: 0.98 }}
-                      whileHover={{
-                        boxShadow: "0 16px 48px rgba(112,12,235,0.55)",
-                      }}
-                      className="w-full flex items-center justify-center gap-2 font-bold text-white"
-                      style={{
-                        padding: "15px 24px",
-                        borderRadius: 14,
-                        fontSize: 15,
-                        letterSpacing: "-0.01em",
-                        background: loading
-                          ? "rgba(112,12,235,0.4)"
-                          : `linear-gradient(135deg, ${PURPLE_DARK}, ${PURPLE}, ${PURPLE_MID})`,
-                        border: "none",
-                        cursor: loading ? "not-allowed" : "pointer",
-                        boxShadow: loading
-                          ? "none"
-                          : "0 8px 28px rgba(112,12,235,0.4)",
-                        transition: "box-shadow 0.3s",
-                        marginTop: 8,
-                      }}
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 size={18} className="animate-spin" />{" "}
-                          Submitting…
-                        </>
-                      ) : (
-                        <>
-                          Get Investment Details <ArrowRight size={16} />
-                        </>
-                      )}
-                    </motion.button>
-
-                    <p
-                      style={{
-                        fontSize: 11,
-                        color: "rgba(255,255,255,0.3)",
-                        textAlign: "center",
-                        margin: "4px 0 0",
-                      }}
-                    >
-                      Our team responds within 24 hours · No commitment required
-                    </p>
-                  </motion.form>
-                )}
+                  <p
+                    style={{
+                      fontSize: 11,
+                      color: "rgba(255,255,255,0.3)",
+                      textAlign: "center",
+                      margin: "4px 0 0",
+                    }}
+                  >
+                    Our team responds within 24 hours · No commitment required
+                  </p>
+                </motion.form>
               </AnimatePresence>
             </div>
           </motion.div>

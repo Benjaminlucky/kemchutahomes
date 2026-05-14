@@ -37,6 +37,6 @@ const branchSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-branchSchema.index({ branchId: 1 });
+// NOTE: branchId index is already created by unique:true — do not add .index({ branchId: 1 })
 
 export default mongoose.models.Branch || mongoose.model("Branch", branchSchema);

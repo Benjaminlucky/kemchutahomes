@@ -1,15 +1,18 @@
 import express from "express";
+import jwt from "jsonwebtoken";
 import {
   getROISettings,
   updateROISettings,
   submitBuy2SellLead,
   getAllLeads,
-  updateLeadStatus,
-  confirmPrincipal,
+  getLeadById,
+  getMyInvestments,
+  recordPayment,
+  markMatured,
   processPayout,
   downloadDocument,
-  getMyInvestments,
-} from "../controllers/Buy2sell.controller.js";
+  updateLeadStatus,
+} from "../controllers/buy2sell.controller.js";
 import {
   protect,
   isAdmin,
@@ -18,20 +21,53 @@ import {
 
 const router = express.Router();
 
-// ── Public ────────────────────────────────────────────────────────────────────
-router.get("/roi", getROISettings); // frontend reads live ROI rates
-router.post("/leads", submitBuy2SellLead); // form submission
+// ── protectAdminOrClient — checks token role first, avoids protect() calling
+// res.status(401) directly for client tokens (which breaks the callback chain)
+const protectAdminOrClient = (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Not authorized. No token." });
+    }
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-// ── Client portal ─────────────────────────────────────────────────────────────
+    if (decoded.role === "client") {
+      return protectClient(req, res, next);
+    }
+    protect(req, res, (err) => {
+      if (err) return next(err);
+      isAdmin(req, res, (err2) => {
+        if (err2) return res.status(403).json({ message: "Access denied." });
+        next();
+      });
+    });
+  } catch (err) {
+    return res.status(401).json({ message: "Invalid or expired token." });
+  }
+};
+
+// Public
+router.get("/roi", getROISettings);
+router.post("/leads", submitBuy2SellLead);
+
+// Shared
+router.get(
+  "/leads/:id/documents/:docType",
+  protectAdminOrClient,
+  downloadDocument,
+);
+
+// Client
 router.get("/my", protectClient, getMyInvestments);
-router.get("/leads/:id/documents/:docType", protectClient, downloadDocument);
 
-// ── Admin ─────────────────────────────────────────────────────────────────────
+// Admin
 router.put("/roi", protect, isAdmin, updateROISettings);
 router.get("/leads", protect, isAdmin, getAllLeads);
+router.get("/leads/:id", protect, isAdmin, getLeadById);
 router.patch("/leads/:id/status", protect, isAdmin, updateLeadStatus);
-router.post("/leads/:id/confirm-principal", protect, isAdmin, confirmPrincipal); // confirms payment received → Certificate + Agreement PDFs
-router.post("/leads/:id/process-payout", protect, isAdmin, processPayout); // maturity payout → Payout Confirmation PDF
-router.get("/leads/:id/documents/:docType", protect, isAdmin, downloadDocument);
+router.post("/leads/:id/record-payment", protect, isAdmin, recordPayment);
+router.patch("/leads/:id/mature", protect, isAdmin, markMatured);
+router.post("/leads/:id/process-payout", protect, isAdmin, processPayout);
 
 export default router;

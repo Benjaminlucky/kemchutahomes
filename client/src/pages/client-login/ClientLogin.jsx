@@ -6,7 +6,12 @@ import { Eye, EyeOff, Home } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const ClientLogin = () => {
-  const [formData, setFormData] = useState({ email: "", password: "" });
+  const _p = new URLSearchParams(window.location.search);
+  const _redirect = _p.get("redirect") || "/client/portal/investments";
+  const [formData, setFormData] = useState({
+    email: _p.get("email") || "",
+    password: "",
+  });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -42,7 +47,7 @@ const ClientLogin = () => {
       toast.success("Welcome back!");
 
       setTimeout(() => {
-        window.location.href = "/client/portal";
+        window.location.href = _redirect;
       }, 500);
     } catch (error) {
       toast.error(error.message || "Login failed.");

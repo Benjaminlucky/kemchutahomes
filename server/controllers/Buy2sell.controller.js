@@ -1,90 +1,153 @@
-import { ROISettings, Buy2SellLead } from "../models/Buy2sell.model.js";
+import {
+  ROISettings,
+  Buy2SellLead,
+  B2S_STATUSES,
+} from "../models/buy2sell.model.js";
+import Client from "../models/client.model.js";
 import {
   generateInvestmentCertificate,
   generateInvestmentAgreement,
   generatePayoutConfirmation,
 } from "../utils/pdfGenerator.js";
 import { sendEmail } from "../utils/notifications.js";
+import { getActiveBankAccounts } from "./bankAccount.controller.js";
 
 const ADMIN_EMAIL = () =>
-  process.env.ADMIN_EMAIL || process.env.EMAIL_USER || "";
-
+  process.env.ADMIN_EMAIL || "info@kemchutahomesltd.com";
+const FRONTEND = () =>
+  process.env.FRONTEND_URL || "https://kemchutahomesltd.com";
+const pdfB64 = (buf) => buf.toString("base64");
 const fmtNGN = (n = 0) =>
   new Intl.NumberFormat("en-NG", {
     style: "currency",
     currency: "NGN",
     minimumFractionDigits: 0,
   }).format(n);
+const fmtDate = (d) =>
+  d
+    ? new Date(d).toLocaleDateString("en-NG", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : "—";
 
-function pdfToBase64(buffer) {
-  return buffer.toString("base64");
-}
-
-// ── Maturity date calculator ───────────────────────────────────────────────────
+// ── Maturity date — each month = exactly 30 days ──────────────────────────────
 function calcMaturityDate(startDate, duration) {
   const d = new Date(startDate);
-  switch (duration) {
-    case "6 Months":
-      d.setMonth(d.getMonth() + 6);
-      break;
-    case "1 Year":
-      d.setFullYear(d.getFullYear() + 1);
-      break;
-    case "18 Months":
-      d.setMonth(d.getMonth() + 18);
-      break;
-    default:
-      d.setFullYear(d.getFullYear() + 1);
-  }
+  const days =
+    duration === "6 Months" ? 180 : duration === "12 Months" ? 360 : 540;
+  d.setDate(d.getDate() + days);
   return d;
 }
 
-// ── Ref number ────────────────────────────────────────────────────────────────
-async function generateRefNumber() {
+// ── Reference number ──────────────────────────────────────────────────────────
+async function genRef() {
   const year = new Date().getFullYear();
   const count = await Buy2SellLead.countDocuments();
   return `KHL-B2S-${year}-${String(count + 1).padStart(5, "0")}`;
 }
 
-// ── GET /api/buy2sell/roi  (public) ──────────────────────────────────────────
+// ── Email wrapper ─────────────────────────────────────────────────────────────
+const wrap = (content) => `
+<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#f5f3ff;font-family:'Segoe UI',Arial,sans-serif;">
+<div style="max-width:600px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(112,12,235,0.1);">
+  <div style="background:linear-gradient(135deg,#3F0C91,#700CEB);padding:36px;text-align:center;">
+    <p style="color:rgba(255,255,255,0.7);font-size:12px;margin:0;letter-spacing:1px;text-transform:uppercase;">Kemchuta Homes · Buy2Sell</p>
+  </div>
+  <div style="padding:36px;">${content}</div>
+  <div style="background:#0f0a1e;padding:20px 36px;text-align:center;">
+    <p style="color:#6b7280;font-size:11px;margin:0;">© ${new Date().getFullYear()} Kemchuta Homes Limited · info@kemchutahomesltd.com</p>
+  </div>
+</div></body></html>`;
+
+const infoBox = (rows) =>
+  `<div style="background:#f9f6ff;border-radius:10px;padding:18px 20px;margin:20px 0;border-left:4px solid #700CEB;">
+    ${rows.map(([l, v]) => `<p style="margin:5px 0;font-size:13px;color:#374151;"><strong>${l}:</strong> ${v}</p>`).join("")}
+  </div>`;
+
+const bankBox = (ref, banks = []) => {
+  const accs = banks.length
+    ? banks
+    : [
+        {
+          bankName: "ACCESS BANK PLC",
+          accountName: "KEMCHUTA HOMES LIMITED",
+          accountNumber: "Contact admin",
+          note: "",
+        },
+      ];
+  const rows = accs
+    .map(
+      (a) => `
+    <p style="margin:3px 0;font-size:13px;color:#374151;"><strong>Bank:</strong> ${a.bankName}</p>
+    <p style="margin:3px 0;font-size:13px;color:#374151;"><strong>Account:</strong> ${a.accountName}</p>
+    <p style="margin:3px 0;font-size:13px;color:#374151;"><strong>Number:</strong> ${a.accountNumber}</p>
+    ${a.note ? `<p style="margin:3px 0;font-size:12px;color:#6b7280;font-style:italic;">${a.note}</p>` : ""}
+  `,
+    )
+    .join(
+      '<hr style="border:none;border-top:1px solid #e5e7eb;margin:10px 0;">',
+    );
+  return `<div style="background:#f0fdf4;border-radius:10px;padding:18px 20px;margin:20px 0;border-left:4px solid #059669;">
+    <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:#059669;">Payment Details</p>
+    ${rows}
+    <p style="margin:10px 0 4px;font-size:13px;color:#374151;"><strong>Reference:</strong> <strong style="color:#700CEB;">${ref}</strong></p>
+    <p style="margin:8px 0 0;font-size:12px;color:#6b7280;">Always quote your reference on every transfer.</p>
+  </div>`;
+};
+
+const btn = (text, url) =>
+  `<div style="text-align:center;margin:24px 0;">
+    <a href="${url}" style="display:inline-block;background:linear-gradient(135deg,#3F0C91,#700CEB);color:#fff;padding:14px 32px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none;">${text}</a>
+  </div>`;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/buy2sell/roi  (public)
+// ─────────────────────────────────────────────────────────────────────────────
 export const getROISettings = async (req, res) => {
   try {
-    let settings = await ROISettings.findOne({ singleton: "global" }).lean();
-    if (!settings) settings = await ROISettings.create({ singleton: "global" });
-    res.json(settings);
+    let s = await ROISettings.findOne({ singleton: "global" }).lean();
+    if (!s) s = (await ROISettings.create({ singleton: "global" })).toObject();
+    // Back-compat: if roiPercent1Year exists rename to 12Months
+    if (s.roiPercent1Year !== undefined && s.roiPercent12Months === undefined) {
+      s.roiPercent12Months = s.roiPercent1Year;
+    }
+    res.json(s);
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch ROI settings" });
   }
 };
 
-// ── PUT /api/buy2sell/roi  (admin) ────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// PUT /api/buy2sell/roi  (admin)
+// ─────────────────────────────────────────────────────────────────────────────
 export const updateROISettings = async (req, res) => {
   try {
     const {
       roiPercent6Months,
-      roiPercent1Year,
+      roiPercent12Months,
       roiPercent18Months,
       minInvestment,
+      maxInvestment,
       description,
     } = req.body;
+    const update = { updatedBy: req.user?.email || "admin" };
+    if (roiPercent6Months !== undefined)
+      update.roiPercent6Months = Number(roiPercent6Months);
+    if (roiPercent12Months !== undefined)
+      update.roiPercent12Months = Number(roiPercent12Months);
+    if (roiPercent18Months !== undefined)
+      update.roiPercent18Months = Number(roiPercent18Months);
+    if (minInvestment !== undefined)
+      update.minInvestment = Number(minInvestment);
+    if (maxInvestment !== undefined)
+      update.maxInvestment = Number(maxInvestment);
+    if (description !== undefined) update.description = description;
     const settings = await ROISettings.findOneAndUpdate(
       { singleton: "global" },
-      {
-        ...(roiPercent6Months !== undefined && {
-          roiPercent6Months: Number(roiPercent6Months),
-        }),
-        ...(roiPercent1Year !== undefined && {
-          roiPercent1Year: Number(roiPercent1Year),
-        }),
-        ...(roiPercent18Months !== undefined && {
-          roiPercent18Months: Number(roiPercent18Months),
-        }),
-        ...(minInvestment !== undefined && {
-          minInvestment: Number(minInvestment),
-        }),
-        ...(description !== undefined && { description }),
-        updatedBy: req.user?.email || "admin",
-      },
+      update,
       { new: true, upsert: true },
     );
     res.json({ message: "ROI settings updated", settings });
@@ -93,88 +156,191 @@ export const updateROISettings = async (req, res) => {
   }
 };
 
-// ── POST /api/buy2sell/leads  (public — form submission) ─────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/buy2sell/leads  — multi-step form submission
+// Body includes KYC + investment details. ROI is snapshotted at this moment.
+// ─────────────────────────────────────────────────────────────────────────────
 export const submitBuy2SellLead = async (req, res) => {
   try {
-    const { fullName, email, phone, duration } = req.body;
+    const {
+      fullName,
+      email,
+      phone,
+      duration,
+      principalAmount,
+      dateOfBirth,
+      gender,
+      nationality,
+      address,
+      city,
+      state,
+      idType,
+      idNumber,
+      idDocumentUrl,
+    } = req.body;
+
     if (!fullName?.trim() || !email?.trim() || !phone?.trim())
       return res
         .status(400)
         .json({ message: "Full name, email and phone are required" });
+    if (!principalAmount || Number(principalAmount) <= 0)
+      return res.status(400).json({ message: "Investment amount is required" });
+    if (!["6 Months", "12 Months", "18 Months"].includes(duration))
+      return res.status(400).json({ message: "Invalid duration" });
 
+    // Snapshot ROI at submission time
     const roi = await ROISettings.findOne({ singleton: "global" }).lean();
     const roiMap = {
       "6 Months": roi?.roiPercent6Months ?? 22,
-      "1 Year": roi?.roiPercent1Year ?? 48,
+      "12 Months": roi?.roiPercent12Months ?? 48,
       "18 Months": roi?.roiPercent18Months ?? 75,
     };
-    const roiPercent = roiMap[duration] ?? roiMap["1 Year"];
-    const referenceNumber = await generateRefNumber();
+    const roiPercent = roiMap[duration];
+    const referenceNumber = await genRef();
+    const banks = await getActiveBankAccounts();
+
+    // ── Check if a client account already exists for this email ──────────
+    const existingClient = await Client.findOne({
+      email: email.trim().toLowerCase(),
+    })
+      .select("_id firstName")
+      .lean();
 
     const lead = await Buy2SellLead.create({
+      referenceNumber,
       fullName: fullName.trim(),
       email: email.trim().toLowerCase(),
       phone: phone.trim(),
-      duration: duration || "1 Year",
-      roiPercent,
-      referenceNumber,
+      duration,
+      principalAmount: Number(principalAmount),
+      roiPercent, // ← snapshotted, never changes
+      clientId: existingClient?._id || null, // ← link if account exists
+      dateOfBirth: dateOfBirth || null,
+      gender: gender || "",
+      nationality: nationality || "Nigerian",
+      address: address || "",
+      city: city || "",
+      state: state || "",
+      idType: idType || "",
+      idNumber: idNumber || "",
     });
+
+    const roi_amount = Math.round(
+      (lead.principalAmount * lead.roiPercent) / 100,
+    );
+    const total_payout = lead.principalAmount + roi_amount;
+
+    // ── Generate invoice PDF and send congratulatory email ────────────────
+    try {
+      // Build a temporary "lead" object with enough data for generateInvestmentAgreement
+      const tempLead = {
+        ...lead.toObject(),
+        expectedROI: roi_amount,
+        expectedPayout: total_payout,
+        investmentDate: new Date(),
+        maturityDate: calcMaturityDate(new Date(), duration),
+      };
+      const [agreementBuf] = await Promise.all([
+        generateInvestmentAgreement(tempLead),
+      ]);
+
+      await sendEmail({
+        to: lead.email,
+        subject: `🎉 Buy2Sell Investment Received — ${referenceNumber}`,
+        attachments: [
+          {
+            filename: `Buy2Sell-Invoice-${referenceNumber}.pdf`,
+            content: pdfB64(agreementBuf),
+            contentType: "application/pdf",
+          },
+        ],
+        html: wrap(`
+          <h2 style="color:#0f0a1e;font-size:22px;font-weight:900;margin:0 0 8px;">Congratulations, ${lead.fullName}! 🎉</h2>
+          <p style="color:#374151;font-size:15px;line-height:1.75;margin:0 0 16px;">
+            Your Buy2Sell investment application has been received. Here are your investment details:
+          </p>
+          ${infoBox([
+            ["Reference", referenceNumber],
+            ["Investment Amount", fmtNGN(lead.principalAmount)],
+            ["Duration", duration],
+            ["ROI Rate", `${roiPercent}% (locked in)`],
+            ["Expected ROI", fmtNGN(roi_amount)],
+            ["Expected Total Payout", fmtNGN(total_payout)],
+            [
+              "Estimated Maturity",
+              fmtDate(calcMaturityDate(new Date(), duration)),
+            ],
+          ])}
+          ${bankBox(referenceNumber, banks)}
+          <p style="font-size:13px;color:#374151;margin:16px 0;">
+            Please make your investment payment and quote reference <strong style="color:#700CEB;">${referenceNumber}</strong> on the transfer.
+            Your ROI rate of <strong>${roiPercent}%</strong> is locked in at today's rate and will not change.
+          </p>
+          <p style="font-size:13px;color:#374151;">Your <strong>Investment Agreement</strong> is attached for your records.</p>
+          ${btn("View My Portal", `${FRONTEND()}/client/portal`)}
+        `),
+      });
+    } catch (emailErr) {
+      console.error("Buy2Sell submission email failed:", emailErr.message);
+    }
 
     // Admin notification
     sendEmail({
       to: ADMIN_EMAIL(),
-      subject: `New Buy2Sell Lead — ${fullName} [${referenceNumber}]`,
-      html: `<div style="font-family:sans-serif;padding:24px;">
-        <h2>New Buy2Sell Enquiry</h2>
-        <p><strong>Ref:</strong> ${referenceNumber}</p>
-        <p><strong>Name:</strong> ${fullName}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Phone:</strong> ${phone}</p>
-        <p><strong>Duration:</strong> ${duration}</p>
-        <p><strong>ROI Rate:</strong> ${roiPercent}%</p>
-      </div>`,
+      subject: `New Buy2Sell Investment — ${lead.fullName} [${referenceNumber}]`,
+      html: wrap(`
+        <h2 style="color:#0f0a1e;font-size:18px;font-weight:900;margin:0 0 16px;">New Buy2Sell Investment</h2>
+        ${infoBox([
+          ["Reference", referenceNumber],
+          ["Investor", lead.fullName],
+          ["Email", lead.email],
+          ["Phone", lead.phone],
+          ["Amount", fmtNGN(lead.principalAmount)],
+          ["Duration", duration],
+          ["ROI Rate", `${roiPercent}%`],
+        ])}
+      `),
     }).catch(() => null);
 
-    // Client acknowledgement
-    sendEmail({
-      to: email.trim(),
-      subject: `Buy2Sell Enquiry Received — Kemchuta Homes [${referenceNumber}]`,
-      html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px;">
-        <div style="background:linear-gradient(135deg,#3F0C91,#700CEB);padding:28px 32px;border-radius:10px;margin-bottom:24px;">
-          <h1 style="color:#fff;margin:0;font-size:20px;font-weight:900;">Enquiry Received!</h1>
-        </div>
-        <p style="color:#374151;font-size:15px;line-height:1.75;">
-          Dear ${fullName},<br><br>
-          Thank you for your interest in our Buy2Sell investment scheme.
-          Your reference number is <strong>${referenceNumber}</strong>.<br><br>
-          Our investment team will contact you within <strong>24 hours</strong> to discuss the next steps,
-          including confirming your investment amount and payment details.
-        </p>
-      </div>`,
-    }).catch(() => null);
+    // Save investment agreement doc record
+    await Buy2SellLead.findByIdAndUpdate(lead._id, {
+      $push: {
+        documents: {
+          type: "agreement",
+          label: "Investment Agreement",
+          generatedAt: new Date(),
+        },
+      },
+    });
 
     res.status(201).json({
       message:
-        "Enquiry submitted successfully! We'll contact you within 24 hours.",
+        "Investment application submitted! Check your email for confirmation.",
+      clientExists: !!existingClient, // ← tells frontend whether to show login or register
       lead: {
-        id: lead._id,
+        _id: lead._id,
         referenceNumber,
-        fullName,
-        email,
-        phone,
+        fullName: lead.fullName,
+        email: lead.email,
         duration,
+        principalAmount: lead.principalAmount,
         roiPercent,
+        expectedROI: roi_amount,
+        expectedPayout: total_payout,
+        status: "pending",
       },
     });
   } catch (err) {
     console.error("submitBuy2SellLead:", err);
     res
       .status(500)
-      .json({ message: "Failed to submit enquiry. Please try again." });
+      .json({ message: err.message || "Failed to submit investment." });
   }
 };
 
-// ── GET /api/buy2sell/leads  (admin) ─────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/buy2sell/leads  (admin)
+// ─────────────────────────────────────────────────────────────────────────────
 export const getAllLeads = async (req, res) => {
   try {
     const { page = 1, limit = 20, status, search } = req.query;
@@ -196,6 +362,31 @@ export const getAllLeads = async (req, res) => {
         .lean(),
       Buy2SellLead.countDocuments(filter),
     ]);
+    // Attach virtuals
+    leads.forEach((l) => {
+      if (l.investmentDate && l.maturityDate) {
+        const total_ms = new Date(l.maturityDate) - new Date(l.investmentDate);
+        const elapsed = Math.min(
+          new Date() - new Date(l.investmentDate),
+          total_ms,
+        );
+        l.maturityProgressPercent = Math.min(
+          100,
+          Math.max(0, Math.round((elapsed / total_ms) * 100)),
+        );
+        l.daysRemaining = Math.max(
+          0,
+          Math.ceil((new Date(l.maturityDate) - new Date()) / 86400000),
+        );
+      } else {
+        l.maturityProgressPercent = 0;
+        l.daysRemaining = null;
+      }
+      l.balanceOutstanding = Math.max(
+        0,
+        (l.principalAmount || 0) - (l.amountPaid || 0),
+      );
+    });
     res.json({
       leads,
       total,
@@ -207,156 +398,222 @@ export const getAllLeads = async (req, res) => {
   }
 };
 
-// ── PATCH /api/buy2sell/leads/:id/status  (admin) ────────────────────────────
-export const updateLeadStatus = async (req, res) => {
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/buy2sell/leads/:id  (admin)
+// ─────────────────────────────────────────────────────────────────────────────
+export const getLeadById = async (req, res) => {
   try {
-    const { status, notes } = req.body;
-    const valid = [
-      "new",
-      "contacted",
-      "approved",
-      "active",
-      "matured",
-      "paid_out",
-      "closed",
-    ];
-    if (status && !valid.includes(status))
-      return res.status(400).json({ message: "Invalid status" });
+    const lead = await Buy2SellLead.findById(req.params.id);
+    if (!lead) return res.status(404).json({ message: "Investment not found" });
+    res.json(lead); // virtuals included via toJSON
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch investment" });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/buy2sell/my  (client)
+// ─────────────────────────────────────────────────────────────────────────────
+export const getMyInvestments = async (req, res) => {
+  try {
+    // Match by email OR clientId — covers investments made before account creation
+    const query = {
+      $or: [{ email: req.user.email }, { clientId: req.user.id }],
+    };
+    const leads = await Buy2SellLead.find(query).sort({ createdAt: -1 });
+    res.json(leads);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch investments." });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/buy2sell/leads/:id/record-payment  (admin — Step 1: log payment)
+// ─────────────────────────────────────────────────────────────────────────────
+export const recordPayment = async (req, res) => {
+  try {
+    const { amount, method, reference, note, paidAt } = req.body;
+    if (!amount || Number(amount) <= 0)
+      return res.status(400).json({ message: "Valid amount required" });
 
     const lead = await Buy2SellLead.findByIdAndUpdate(
       req.params.id,
-      { ...(status && { status }), ...(notes !== undefined && { notes }) },
-      { new: true },
-    );
-    if (!lead) return res.status(404).json({ message: "Lead not found" });
-    res.json({ message: "Lead updated", lead });
-  } catch (err) {
-    res.status(500).json({ message: "Failed to update lead" });
-  }
-};
-
-// ── POST /api/buy2sell/leads/:id/confirm-principal  (admin)
-// Admin confirms principal received, triggers Certificate + Agreement PDFs
-// ─────────────────────────────────────────────────────────────────────────────
-export const confirmPrincipal = async (req, res) => {
-  try {
-    const { principalAmount, investmentDate } = req.body;
-    if (!principalAmount || principalAmount <= 0)
-      return res
-        .status(400)
-        .json({ message: "Valid principal amount required" });
-
-    const lead = await Buy2SellLead.findById(req.params.id);
-    if (!lead) return res.status(404).json({ message: "Lead not found" });
-
-    const start = investmentDate ? new Date(investmentDate) : new Date();
-    const maturityDate = calcMaturityDate(start, lead.duration);
-    const expectedROI = Math.round(principalAmount * (lead.roiPercent / 100));
-    const expectedPayout = principalAmount + expectedROI;
-
-    const updated = await Buy2SellLead.findByIdAndUpdate(
-      lead._id,
       {
-        principalAmount,
-        investmentDate: start,
-        maturityDate,
-        expectedROI,
-        expectedPayout,
-        status: "active",
         $push: {
           payments: {
-            amount: principalAmount,
-            paidAt: start,
-            method: req.body.method || "Bank Transfer",
-            reference: req.body.reference || "",
+            amount: Number(amount),
+            paidAt: paidAt ? new Date(paidAt) : new Date(),
+            method: method || "Bank Transfer",
+            reference: reference || "",
+            note: note || "",
             type: "principal",
+            confirmedBy: req.user?.email || "admin",
           },
         },
+        $inc: { amountPaid: Number(amount) },
       },
       { new: true },
     );
+    if (!lead) return res.status(404).json({ message: "Investment not found" });
 
-    // Generate Certificate + Agreement in parallel
-    Promise.all([
-      generateInvestmentCertificate(updated),
-      generateInvestmentAgreement(updated),
-    ])
-      .then(async ([certBuf, agrmtBuf]) => {
+    // Auto-advance status based on payment
+    const balance = lead.principalAmount - lead.amountPaid;
+    let newStatus = lead.status;
+    if (balance <= 0 && lead.status !== "active") {
+      // Full principal received → activate investment
+      newStatus = "active";
+    } else if (lead.amountPaid > 0 && lead.status === "pending") {
+      newStatus = "partial_paid";
+    }
+
+    const update = { status: newStatus };
+
+    // If fully paid, set investmentDate and maturityDate
+    if (newStatus === "active" && !lead.investmentDate) {
+      const invDate = new Date();
+      update.investmentDate = invDate;
+      update.maturityDate = calcMaturityDate(invDate, lead.duration);
+      update.expectedROI = Math.round(
+        (lead.principalAmount * lead.roiPercent) / 100,
+      );
+      update.expectedPayout =
+        lead.principalAmount +
+        Math.round((lead.principalAmount * lead.roiPercent) / 100);
+    }
+
+    const updatedLead = await Buy2SellLead.findByIdAndUpdate(
+      req.params.id,
+      update,
+      { new: true },
+    );
+
+    const banks = await getActiveBankAccounts();
+
+    // ── Send email based on status ─────────────────────────────────────────
+    if (newStatus === "active") {
+      // Full payment confirmed — generate certificate + send activation email
+      try {
+        const certBuf = await generateInvestmentCertificate(updatedLead);
+        const ref = updatedLead.referenceNumber;
         await sendEmail({
-          to: updated.email,
-          subject: `Investment Active — ${updated.duration} Plan [${updated.referenceNumber}]`,
-          html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px;">
-            <div style="background:linear-gradient(135deg,#3F0C91,#700CEB);padding:28px 32px;border-radius:10px;margin-bottom:24px;">
-              <h1 style="color:#fff;margin:0;font-size:20px;font-weight:900;">Investment Confirmed! 🎉</h1>
-            </div>
-            <p style="color:#374151;font-size:15px;line-height:1.75;">
-              Dear ${updated.fullName},<br><br>
-              Your Buy2Sell investment is now <strong>active</strong>. Here are your investment details:<br><br>
-              💰 <strong>Principal:</strong> ${fmtNGN(principalAmount)}<br>
-              📈 <strong>ROI Rate:</strong> ${updated.roiPercent}%<br>
-              💵 <strong>Expected ROI:</strong> ${fmtNGN(expectedROI)}<br>
-              🏆 <strong>Expected Payout:</strong> ${fmtNGN(expectedPayout)}<br>
-              📅 <strong>Maturity Date:</strong> ${maturityDate.toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" })}<br><br>
-              Your Investment Certificate and Agreement are attached. Please sign and return the Agreement.
-            </p>
-          </div>`,
+          to: updatedLead.email,
+          subject: `✅ Investment Activated — ${ref}`,
           attachments: [
             {
-              filename: `Investment-Certificate-${updated.referenceNumber}.pdf`,
-              content: pdfToBase64(certBuf),
-              encoding: "base64",
-              contentType: "application/pdf",
-            },
-            {
-              filename: `Investment-Agreement-${updated.referenceNumber}.pdf`,
-              content: pdfToBase64(agrmtBuf),
-              encoding: "base64",
+              filename: `Investment-Certificate-${ref}.pdf`,
+              content: pdfB64(certBuf),
               contentType: "application/pdf",
             },
           ],
+          html: wrap(`
+            <h2 style="color:#059669;font-size:22px;font-weight:900;margin:0 0 8px;">Investment Activated! ✅</h2>
+            <p style="color:#374151;font-size:15px;line-height:1.75;margin:0 0 16px;">
+              Dear <strong>${updatedLead.fullName}</strong>, your investment of <strong>${fmtNGN(updatedLead.principalAmount)}</strong>
+              has been fully confirmed and your investment is now <strong>active</strong>.
+            </p>
+            ${infoBox([
+              ["Reference", ref],
+              ["Principal", fmtNGN(updatedLead.principalAmount)],
+              ["ROI Rate", `${updatedLead.roiPercent}% (locked in)`],
+              ["Expected ROI", fmtNGN(updatedLead.expectedROI)],
+              ["Total Payout", fmtNGN(updatedLead.expectedPayout)],
+              ["Investment Date", fmtDate(updatedLead.investmentDate)],
+              ["Maturity Date", fmtDate(updatedLead.maturityDate)],
+            ])}
+            <p style="font-size:13px;color:#374151;">Your <strong>Investment Certificate</strong> is attached.</p>
+            ${btn("View My Dashboard", `${FRONTEND()}/client/portal`)}
+          `),
         });
-        await Buy2SellLead.findByIdAndUpdate(lead._id, {
+        await Buy2SellLead.findByIdAndUpdate(updatedLead._id, {
           $push: {
             documents: {
-              $each: [
-                {
-                  type: "certificate",
-                  label: "Investment Certificate",
-                  generatedAt: new Date(),
-                },
-                {
-                  type: "agreement",
-                  label: "Investment Agreement",
-                  generatedAt: new Date(),
-                },
-              ],
+              type: "certificate",
+              label: "Investment Certificate",
+              generatedAt: new Date(),
             },
           },
         });
-      })
-      .catch((err) =>
-        console.error("Investment PDF generation failed:", err.message),
-      );
+      } catch (e) {
+        console.error("Activation email failed:", e.message);
+      }
+    } else if (newStatus === "partial_paid") {
+      const ref = updatedLead.referenceNumber;
+      const balance2 = updatedLead.principalAmount - updatedLead.amountPaid;
+      await sendEmail({
+        to: updatedLead.email,
+        subject: `Payment Received — Buy2Sell [${ref}]`,
+        html: wrap(`
+          <h2 style="color:#700CEB;font-size:22px;font-weight:900;margin:0 0 8px;">Payment Received</h2>
+          <p style="color:#374151;font-size:15px;line-height:1.75;margin:0 0 16px;">
+            Dear <strong>${updatedLead.fullName}</strong>, we have received a payment of
+            <strong>${fmtNGN(Number(amount))}</strong> toward your Buy2Sell investment.
+          </p>
+          ${infoBox([
+            ["Reference", ref],
+            ["Amount Paid", fmtNGN(updatedLead.amountPaid)],
+            ["Balance Due", fmtNGN(balance2)],
+            ["Status", "Partial Payment — balance outstanding"],
+          ])}
+          ${bankBox(ref, banks)}
+          <p style="font-size:13px;color:#374151;">Please pay the remaining balance to activate your investment.</p>
+        `),
+      }).catch(() => null);
+    }
 
-    res.json({
-      message: "Principal confirmed. Investment is now active.",
-      lead: updated,
-    });
+    res.json({ message: "Payment recorded.", lead: updatedLead });
   } catch (err) {
-    console.error("confirmPrincipal:", err);
-    res.status(500).json({ message: "Failed to confirm principal." });
+    console.error("recordPayment:", err);
+    res.status(500).json({ message: "Failed to record payment." });
   }
 };
 
-// ── POST /api/buy2sell/leads/:id/process-payout  (admin)
-// Admin triggers payout at maturity — generates Payout Confirmation
+// ─────────────────────────────────────────────────────────────────────────────
+// PATCH /api/buy2sell/leads/:id/mature  (admin — mark investment matured)
+// ─────────────────────────────────────────────────────────────────────────────
+export const markMatured = async (req, res) => {
+  try {
+    const lead = await Buy2SellLead.findByIdAndUpdate(
+      req.params.id,
+      { status: "matured" },
+      { new: true },
+    );
+    if (!lead) return res.status(404).json({ message: "Investment not found" });
+
+    await sendEmail({
+      to: lead.email,
+      subject: `🎊 Investment Matured — ${lead.referenceNumber}`,
+      html: wrap(`
+        <h2 style="color:#059669;font-size:22px;font-weight:900;margin:0 0 8px;">Your Investment Has Matured! 🎊</h2>
+        <p style="color:#374151;font-size:15px;line-height:1.75;margin:0 0 16px;">
+          Dear <strong>${lead.fullName}</strong>, congratulations! Your Buy2Sell investment has reached maturity.
+          Your payout of <strong>${fmtNGN(lead.expectedPayout)}</strong> is being processed.
+        </p>
+        ${infoBox([
+          ["Reference", lead.referenceNumber],
+          ["Principal", fmtNGN(lead.principalAmount)],
+          ["ROI Earned", fmtNGN(lead.expectedROI)],
+          ["Total Payout", fmtNGN(lead.expectedPayout)],
+          ["Maturity Date", fmtDate(lead.maturityDate)],
+        ])}
+        <p style="font-size:13px;color:#374151;">Our team will process your payout shortly. We will notify you once payment is sent.</p>
+        ${btn("View My Dashboard", `${FRONTEND()}/client/portal`)}
+      `),
+    }).catch(() => null);
+
+    res.json({ message: "Investment marked as matured.", lead });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to mark matured." });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/buy2sell/leads/:id/process-payout  (admin)
 // ─────────────────────────────────────────────────────────────────────────────
 export const processPayout = async (req, res) => {
   try {
     const { actualPayout, payoutReference } = req.body;
-
     const lead = await Buy2SellLead.findById(req.params.id);
-    if (!lead) return res.status(404).json({ message: "Lead not found" });
+    if (!lead) return res.status(404).json({ message: "Investment not found" });
 
     const payout = actualPayout || lead.expectedPayout;
     const updated = await Buy2SellLead.findByIdAndUpdate(
@@ -372,100 +629,107 @@ export const processPayout = async (req, res) => {
             method: req.body.method || "Bank Transfer",
             reference: payoutReference || "",
             type: "payout",
+            confirmedBy: req.user?.email || "admin",
           },
         },
       },
       { new: true },
     );
 
-    // Generate Payout Confirmation
-    generatePayoutConfirmation(updated)
-      .then(async (pdfBuffer) => {
-        await sendEmail({
-          to: updated.email,
-          subject: `Investment Matured — Payout Confirmed [${updated.referenceNumber}]`,
-          html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px;">
-            <div style="background:linear-gradient(135deg,#3F0C91,#700CEB);padding:28px 32px;border-radius:10px;margin-bottom:24px;">
-              <h1 style="color:#fff;margin:0;font-size:20px;font-weight:900;">Payout Sent! 🎊</h1>
-            </div>
-            <p style="color:#374151;font-size:15px;line-height:1.75;">
-              Dear ${updated.fullName},<br><br>
-              Congratulations! Your Buy2Sell investment has matured and your payout of
-              <strong>${fmtNGN(payout)}</strong> has been processed.<br><br>
-              Please find your Payout Confirmation Letter attached.
-              Thank you for investing with Kemchuta Homes!
-            </p>
-          </div>`,
-          attachments: [
-            {
-              filename: `Payout-Confirmation-${updated.referenceNumber}.pdf`,
-              content: pdfToBase64(pdfBuffer),
-              encoding: "base64",
-              contentType: "application/pdf",
-            },
-          ],
-        });
-        await Buy2SellLead.findByIdAndUpdate(lead._id, {
-          $push: {
-            documents: {
-              type: "payout_confirmation",
-              label: "Payout Confirmation",
-              generatedAt: new Date(),
-            },
+    try {
+      const confirmBuf = await generatePayoutConfirmation(updated);
+      await sendEmail({
+        to: updated.email,
+        subject: `🎉 Payout Sent — Buy2Sell [${updated.referenceNumber}]`,
+        attachments: [
+          {
+            filename: `Payout-${updated.referenceNumber}.pdf`,
+            content: pdfB64(confirmBuf),
+            contentType: "application/pdf",
           },
-        });
-      })
-      .catch((err) =>
-        console.error("Payout confirmation PDF failed:", err.message),
-      );
+        ],
+        html: wrap(`
+          <h2 style="color:#059669;font-size:22px;font-weight:900;margin:0 0 8px;">Payout Sent! 🎉</h2>
+          <p style="color:#374151;font-size:15px;line-height:1.75;margin:0 0 16px;">
+            Dear <strong>${updated.fullName}</strong>, your Buy2Sell investment payout of
+            <strong>${fmtNGN(payout)}</strong> has been processed and sent!
+          </p>
+          ${infoBox([
+            ["Reference", updated.referenceNumber],
+            ["Principal", fmtNGN(updated.principalAmount)],
+            ["ROI Earned", fmtNGN(updated.expectedROI)],
+            ["Total Payout", fmtNGN(payout)],
+            ["Payout Date", fmtDate(new Date())],
+          ])}
+          <p style="font-size:13px;color:#374151;">Thank you for investing with Kemchuta Homes. We hope to serve you again!</p>
+          ${btn("View My Dashboard", `${FRONTEND()}/client/portal`)}
+        `),
+      });
+      await Buy2SellLead.findByIdAndUpdate(updated._id, {
+        $push: {
+          documents: {
+            type: "payout_confirmation",
+            label: "Payout Confirmation",
+            generatedAt: new Date(),
+          },
+        },
+      });
+    } catch (e) {
+      console.error("Payout email failed:", e.message);
+    }
 
-    res.json({ message: "Payout processed successfully.", lead: updated });
+    res.json({ message: "Payout processed.", lead: updated });
   } catch (err) {
     res.status(500).json({ message: "Failed to process payout." });
   }
 };
 
-// ── GET /api/buy2sell/leads/:id/documents/:docType — Download PDF ─────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/buy2sell/leads/:id/documents/:docType  (admin + client)
+// ─────────────────────────────────────────────────────────────────────────────
 export const downloadDocument = async (req, res) => {
   try {
     const lead = await Buy2SellLead.findById(req.params.id);
-    if (!lead) return res.status(404).json({ message: "Lead not found" });
+    if (!lead) return res.status(404).json({ message: "Investment not found" });
 
     const { docType } = req.params;
-    let pdfBuffer;
-    switch (docType) {
-      case "certificate":
-        pdfBuffer = await generateInvestmentCertificate(lead);
-        break;
-      case "agreement":
-        pdfBuffer = await generateInvestmentAgreement(lead);
-        break;
-      case "payout_confirmation":
-        pdfBuffer = await generatePayoutConfirmation(lead);
-        break;
-      default:
-        return res.status(400).json({ message: "Invalid document type." });
-    }
+    let buf;
+    if (docType === "certificate")
+      buf = await generateInvestmentCertificate(lead);
+    else if (docType === "agreement")
+      buf = await generateInvestmentAgreement(lead);
+    else if (docType === "payout_confirmation")
+      buf = await generatePayoutConfirmation(lead);
+    else return res.status(400).json({ message: "Invalid document type" });
 
     res.set({
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="${docType}-${lead.referenceNumber}.pdf"`,
-      "Content-Length": pdfBuffer.length,
+      "Content-Length": buf.length,
     });
-    res.end(pdfBuffer);
+    res.end(buf);
   } catch (err) {
     res.status(500).json({ message: "Failed to generate document." });
   }
 };
 
-// ── GET /api/buy2sell/my — Client portal ─────────────────────────────────────
-export const getMyInvestments = async (req, res) => {
+// ─────────────────────────────────────────────────────────────────────────────
+// PATCH /api/buy2sell/leads/:id/status  (admin — generic status update)
+// ─────────────────────────────────────────────────────────────────────────────
+export const updateLeadStatus = async (req, res) => {
   try {
-    const leads = await Buy2SellLead.find({ email: req.user.email })
-      .sort({ createdAt: -1 })
-      .lean();
-    res.json(leads);
+    const { status, notes } = req.body;
+    if (status && !B2S_STATUSES.includes(status))
+      return res.status(400).json({ message: "Invalid status" });
+
+    const lead = await Buy2SellLead.findByIdAndUpdate(
+      req.params.id,
+      { ...(status && { status }), ...(notes !== undefined && { notes }) },
+      { new: true },
+    );
+    if (!lead) return res.status(404).json({ message: "Investment not found" });
+    res.json({ message: "Investment updated", lead });
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch investments." });
+    res.status(500).json({ message: "Failed to update investment" });
   }
 };

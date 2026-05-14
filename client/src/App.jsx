@@ -31,6 +31,7 @@ import ForgotPassword from "./pages/forgot-password/ForgotPassword";
 import ResetPassword from "./pages/reset-password/resetPassword";
 import AdminForgotPassword from "./pages/admin-forgot-password/AdminForgotPassword";
 import AdminResetPassword from "./pages/admin-reset-password/AdminResetPassword";
+import Buy2SellPage from "./pages/buy2sell/Buy2SellPage";
 
 // ── NEW CLIENT IMPORTS ───────────────────────────────────────────────────────
 import ClientLogin from "./pages/client-login/ClientLogin";
@@ -61,6 +62,7 @@ function AppWrapper() {
           <Route path="/developments" element={<Developments />} />
           <Route path="/estate/:estateName" element={<EstateDetails />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/buy2sell" element={<Buy2SellPage />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
           <Route path="/admin/signup" element={<AdminSignup />} />

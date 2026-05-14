@@ -4,119 +4,158 @@ import useSWR from "swr";
 import {
   TrendingUp,
   Save,
-  Users,
-  Clock,
-  CheckCircle,
-  AlertTriangle,
   Loader2,
-  ChevronDown,
   X,
+  CreditCard,
+  CheckCircle,
+  Clock,
+  Star,
+  AlertTriangle,
+  RefreshCw,
+  ArrowRight,
+  Wallet,
 } from "lucide-react";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
+const BASE = import.meta.env.VITE_API_BASE_URL;
 const PURPLE = "#700CEB";
-const PURPLE_DARK = "#3F0C91";
+const DARK = "#3F0C91";
 
-// ── Auth fetcher ──────────────────────────────────────────────────────────────
-const token = () => localStorage.getItem("token");
-const fetcher = async (url) => {
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token()}` },
-  });
-  if (!res.ok) throw new Error("Failed to fetch");
-  return res.json();
-};
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-const fmtDate = (d) =>
-  new Date(d).toLocaleDateString("en-NG", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-const fmtNGN = (n) =>
+const tok = () => localStorage.getItem("token");
+const fmtNGN = (n = 0) =>
   new Intl.NumberFormat("en-NG", {
     style: "currency",
     currency: "NGN",
     minimumFractionDigits: 0,
   }).format(n);
+const fmtDate = (d) =>
+  d
+    ? new Date(d).toLocaleDateString("en-NG", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : "—";
 
-const STATUS_COLORS = {
-  new: { bg: "rgba(59,130,246,0.1)", color: "#2563eb" },
-  contacted: { bg: "rgba(245,158,11,0.1)", color: "#d97706" },
-  converted: { bg: "rgba(34,197,94,0.1)", color: "#16a34a" },
-  closed: { bg: "rgba(107,114,128,0.1)", color: "#6b7280" },
+const fetcher = async (url) => {
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${tok()}` },
+  });
+  if (!res.ok) {
+    const b = await res.json().catch(() => ({}));
+    throw new Error(b.message || "Failed");
+  }
+  return res.json();
 };
 
-function StatusPill({ status }) {
-  const s = STATUS_COLORS[status] || STATUS_COLORS.new;
+const STATUS = {
+  pending: {
+    label: "Pending",
+    color: "#d97706",
+    bg: "rgba(217,119,6,0.1)",
+    icon: Clock,
+  },
+  partial_paid: {
+    label: "Partial Paid",
+    color: "#0891b2",
+    bg: "rgba(8,145,178,0.1)",
+    icon: CreditCard,
+  },
+  active: {
+    label: "Active",
+    color: "#059669",
+    bg: "rgba(5,150,105,0.1)",
+    icon: TrendingUp,
+  },
+  matured: {
+    label: "Matured",
+    color: PURPLE,
+    bg: "rgba(112,12,235,0.1)",
+    icon: Star,
+  },
+  paid_out: {
+    label: "Paid Out",
+    color: "#059669",
+    bg: "rgba(5,150,105,0.1)",
+    icon: CheckCircle,
+  },
+  closed: {
+    label: "Closed",
+    color: "#6b7280",
+    bg: "rgba(107,114,128,0.1)",
+    icon: X,
+  },
+};
+
+function StatusBadge({ status }) {
+  const s = STATUS[status] || STATUS.pending;
+  const I = s.icon;
   return (
     <span
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold capitalize"
-      style={{ background: s.bg, color: s.color }}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 4,
+        padding: "3px 10px",
+        borderRadius: 20,
+        fontSize: 11,
+        fontWeight: 700,
+        background: s.bg,
+        color: s.color,
+      }}
     >
-      <span
-        className="w-1.5 h-1.5 rounded-full"
-        style={{ background: s.color }}
-      />
-      {status}
+      <I size={10} />
+      {s.label}
     </span>
   );
 }
 
-function Skeleton({ className = "" }) {
+function Sk({ h = 14, w = "100%" }) {
   return (
-    <div className={`bg-gray-100 animate-pulse rounded-xl ${className}`} />
+    <div
+      className="animate-pulse rounded-lg"
+      style={{ height: h, width: w, background: "#f0eeff" }}
+    />
   );
 }
 
-// ── ROI Settings Panel ────────────────────────────────────────────────────────
-function ROIPanel() {
+// ── ROI Settings ──────────────────────────────────────────────────────────────
+function ROISettings() {
   const {
     data: roi,
-    error,
     isLoading,
     mutate,
-  } = useSWR(`${BASE_URL}/api/buy2sell/roi`, fetcher, {
-    revalidateOnFocus: false,
-  });
-
+  } = useSWR(`${BASE}/api/buy2sell/roi`, fetcher, { revalidateOnFocus: false });
   const [fields, setFields] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [err, setErr] = useState("");
 
-  // Initialise editable fields from API data
-  const roiData = fields || roi;
+  const current = fields || roi;
+  const set = (k, v) => setFields((f) => ({ ...(f || roi), [k]: v }));
 
-  const setField = (k, v) => {
-    setFields((prev) => ({ ...(prev || roi), [k]: v }));
-    setSaved(false);
-    setErr("");
-  };
-
-  const handleSave = async () => {
+  const save = async () => {
     setSaving(true);
     setErr("");
+    setSaved(false);
     try {
-      const res = await fetch(`${BASE_URL}/api/buy2sell/roi`, {
+      const res = await fetch(`${BASE}/api/buy2sell/roi`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token()}`,
+          Authorization: `Bearer ${tok()}`,
         },
         body: JSON.stringify({
-          roiPercent6Months: Number(roiData.roiPercent6Months),
-          roiPercent1Year: Number(roiData.roiPercent1Year),
-          roiPercent18Months: Number(roiData.roiPercent18Months),
-          minInvestment: Number(roiData.minInvestment),
-          description: roiData.description || "",
+          roiPercent6Months: Number(current.roiPercent6Months || 22),
+          roiPercent12Months: Number(current.roiPercent12Months || 48),
+          roiPercent18Months: Number(current.roiPercent18Months || 75),
+          minInvestment: Number(current.minInvestment || 1000000),
+          maxInvestment: Number(current.maxInvestment || 50000000),
+          description: current.description || "",
         }),
       });
       const d = await res.json();
       if (!res.ok) throw new Error(d.message);
-      mutate(d.settings, false);
+      await mutate(d.settings);
       setFields(null);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
@@ -127,459 +166,1519 @@ function ROIPanel() {
     }
   };
 
-  if (isLoading)
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {[0, 1, 2].map((i) => (
-          <Skeleton key={i} className="h-28" />
-        ))}
-      </div>
-    );
-
-  if (error)
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-red-600 text-sm">
-        Failed to load ROI settings. Check your connection.
-      </div>
-    );
-
-  const roiFields = [
-    { key: "roiPercent6Months", label: "6 Months ROI", icon: "6M" },
-    { key: "roiPercent1Year", label: "1 Year ROI", icon: "1Y" },
-    { key: "roiPercent18Months", label: "18 Months ROI", icon: "18M" },
-  ];
-
-  return (
-    <div className="space-y-5">
-      {/* ROI % inputs */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {roiFields.map(({ key, label, icon }) => (
-          <div
-            key={key}
-            className="bg-white rounded-2xl p-5 border border-gray-100"
-            style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                {label}
-              </span>
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black text-white"
-                style={{
-                  background: `linear-gradient(135deg,${PURPLE_DARK},${PURPLE})`,
-                }}
-              >
-                {icon}
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                min="0"
-                max="500"
-                step="0.5"
-                value={roiData?.[key] ?? ""}
-                onChange={(e) => setField(key, e.target.value)}
-                className="w-full text-2xl font-black text-gray-900 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:border-customPurple-400 transition-colors"
-                style={{ fontFamily: "inherit" }}
-              />
-              <span className="text-2xl font-black text-gray-400">%</span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Min investment */}
-      <div
-        className="bg-white rounded-2xl p-5 border border-gray-100"
-        style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}
-      >
-        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">
-          Minimum Investment (NGN)
-        </label>
-        <input
-          type="number"
-          min="0"
-          step="50000"
-          value={roiData?.minInvestment ?? ""}
-          onChange={(e) => setField("minInvestment", e.target.value)}
-          className="w-full text-xl font-bold text-gray-900 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-customPurple-400 transition-colors"
-          style={{ fontFamily: "inherit" }}
-        />
-        <p className="text-xs text-gray-400 mt-1">
-          Currently:{" "}
-          {roiData?.minInvestment ? fmtNGN(roiData.minInvestment) : "—"}
-        </p>
-      </div>
-
-      {/* Notes */}
-      <div
-        className="bg-white rounded-2xl p-5 border border-gray-100"
-        style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}
-      >
-        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">
-          Admin Notes (internal only)
-        </label>
-        <textarea
-          rows={3}
-          value={roiData?.description ?? ""}
-          onChange={(e) => setField("description", e.target.value)}
-          placeholder="e.g. Rates updated for Q2 2025 due to market appreciation..."
-          className="w-full text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-customPurple-400 transition-colors resize-none"
-          style={{ fontFamily: "inherit" }}
-        />
-      </div>
-
-      {/* Last updated */}
-      {roi?.updatedAt && (
-        <p className="text-xs text-gray-400">
-          Last updated: {fmtDate(roi.updatedAt)} by {roi.updatedBy || "admin"}
-        </p>
-      )}
-
-      {err && (
-        <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-          <AlertTriangle size={14} className="text-red-500 flex-shrink-0" />
-          <p className="text-sm text-red-600 font-medium">{err}</p>
-        </div>
-      )}
-
-      <button
-        onClick={handleSave}
-        disabled={saving}
-        className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-60"
-        style={{
-          background: `linear-gradient(135deg,${PURPLE_DARK},${PURPLE})`,
-          boxShadow: "0 4px 12px rgba(112,12,235,0.3)",
-        }}
-      >
-        {saving ? (
-          <>
-            <Loader2 size={15} className="animate-spin" /> Saving...
-          </>
-        ) : saved ? (
-          <>
-            <CheckCircle size={15} /> Saved!
-          </>
-        ) : (
-          <>
-            <Save size={15} /> Save ROI Settings
-          </>
-        )}
-      </button>
-    </div>
-  );
-}
-
-// ── Lead row status updater ────────────────────────────────────────────────────
-function LeadStatusDropdown({ lead, onUpdate }) {
-  const [open, setOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-
-  const update = async (status) => {
-    setSaving(true);
-    setOpen(false);
-    try {
-      const res = await fetch(
-        `${BASE_URL}/api/buy2sell/leads/${lead._id}/status`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token()}`,
-          },
-          body: JSON.stringify({ status }),
-        },
-      );
-      if (!res.ok) throw new Error();
-      onUpdate(lead._id, status);
-    } catch {
-      /* silent */
-    } finally {
-      setSaving(false);
-    }
+  const inp = {
+    width: "100%",
+    padding: "10px 14px",
+    borderRadius: 10,
+    fontSize: 14,
+    border: "1.5px solid rgba(0,0,0,0.1)",
+    outline: "none",
+    background: "#fafafa",
+    color: "#0f0a1e",
+    boxSizing: "border-box",
+    fontFamily: "inherit",
+  };
+  const focus = (e) => {
+    e.target.style.borderColor = `${PURPLE}60`;
+    e.target.style.boxShadow = `0 0 0 3px ${PURPLE}10`;
+  };
+  const blur = (e) => {
+    e.target.style.borderColor = "rgba(0,0,0,0.1)";
+    e.target.style.boxShadow = "none";
   };
 
   return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        disabled={saving}
-        className="flex items-center gap-1"
+    <div
+      style={{
+        background: "#fff",
+        borderRadius: 20,
+        padding: "24px 28px",
+        border: "1px solid rgba(0,0,0,0.07)",
+        boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          marginBottom: 20,
+        }}
       >
-        <StatusPill status={lead.status} />
-        {saving ? (
-          <Loader2 size={11} className="animate-spin text-gray-400" />
-        ) : (
-          <ChevronDown size={11} className="text-gray-400" />
+        <div>
+          <p
+            style={{
+              fontSize: 14,
+              fontWeight: 800,
+              color: "#0f0a1e",
+              margin: 0,
+            }}
+          >
+            ROI Rate Settings
+          </p>
+          <p style={{ fontSize: 12, color: "#9ca3af", margin: "3px 0 0" }}>
+            Changes apply to <strong>new</strong> investments only. Existing
+            investors keep their locked-in rate forever.
+          </p>
+        </div>
+        {saved && (
+          <span
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: "#059669",
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            <CheckCircle size={14} /> Saved
+          </span>
         )}
-      </button>
-      <AnimatePresence>
-        {open && (
-          <>
-            <div
-              className="fixed inset-0 z-10"
-              onClick={() => setOpen(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              className="absolute left-0 top-8 z-20 bg-white rounded-xl shadow-xl border border-gray-100 py-1 min-w-[130px]"
-            >
-              {["new", "contacted", "converted", "closed"].map((s) => (
-                <button
-                  key={s}
-                  onClick={() => update(s)}
-                  className="w-full text-left px-3 py-2 text-xs font-bold hover:bg-gray-50 capitalize transition-colors"
-                  style={{ color: STATUS_COLORS[s]?.color || "#374151" }}
+      </div>
+
+      {isLoading ? (
+        <div className="space-y-3">
+          {[...Array(3)].map((_, i) => (
+            <Sk key={i} h={40} />
+          ))}
+        </div>
+      ) : (
+        <>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3,1fr)",
+              gap: 14,
+              marginBottom: 16,
+            }}
+          >
+            {[
+              { key: "roiPercent6Months", label: "6 Months ROI (%)" },
+              { key: "roiPercent12Months", label: "12 Months ROI (%)" },
+              { key: "roiPercent18Months", label: "18 Months ROI (%)" },
+            ].map(({ key, label }) => (
+              <div key={key}>
+                <label
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: "#9ca3af",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.07em",
+                    display: "block",
+                    marginBottom: 5,
+                  }}
                 >
-                  {s}
-                </button>
-              ))}
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+                  {label}
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={500}
+                  value={current?.[key] ?? ""}
+                  onChange={(e) => set(key, e.target.value)}
+                  style={inp}
+                  onFocus={focus}
+                  onBlur={blur}
+                />
+              </div>
+            ))}
+          </div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 14,
+              marginBottom: 16,
+            }}
+          >
+            {[
+              { key: "minInvestment", label: "Min Investment (NGN)" },
+              { key: "maxInvestment", label: "Max Investment (NGN)" },
+            ].map(({ key, label }) => (
+              <div key={key}>
+                <label
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: "#9ca3af",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.07em",
+                    display: "block",
+                    marginBottom: 5,
+                  }}
+                >
+                  {label}
+                </label>
+                <input
+                  type="number"
+                  value={current?.[key] ?? ""}
+                  onChange={(e) => set(key, e.target.value)}
+                  style={inp}
+                  onFocus={focus}
+                  onBlur={blur}
+                />
+              </div>
+            ))}
+          </div>
+          {err && (
+            <p style={{ fontSize: 12, color: "#dc2626", marginBottom: 10 }}>
+              {err}
+            </p>
+          )}
+          <button
+            onClick={save}
+            disabled={saving}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "10px 20px",
+              borderRadius: 12,
+              fontSize: 13,
+              fontWeight: 700,
+              color: "#fff",
+              border: "none",
+              cursor: saving ? "not-allowed" : "pointer",
+              background: saving
+                ? "rgba(112,12,235,0.4)"
+                : `linear-gradient(135deg,${DARK},${PURPLE})`,
+            }}
+          >
+            {saving ? (
+              <>
+                <Loader2 size={14} className="animate-spin" /> Saving…
+              </>
+            ) : (
+              <>
+                <Save size={14} /> Save ROI Rates
+              </>
+            )}
+          </button>
+        </>
+      )}
     </div>
   );
 }
 
-// ── Leads Table ───────────────────────────────────────────────────────────────
-function LeadsTable() {
-  const [page, setPage] = useState(1);
-  const [statusFilter, setFilter] = useState("");
-  const [leads, setLeads] = useState([]);
+// ── Investment detail slide-over ──────────────────────────────────────────────
+function InvestmentDrawer({ lead, onClose, onRefresh }) {
+  const [payForm, setPayForm] = useState({
+    amount: "",
+    method: "Bank Transfer",
+    reference: "",
+    paidAt: "",
+  });
+  const [paying, setPaying] = useState(false);
+  const [maturing, setMaturing] = useState(false);
+  const [payingOut, setPayingOut] = useState(false);
+  const [payoutAmt, setPayoutAmt] = useState("");
+  const [err, setErr] = useState("");
 
-  const { data, error, isLoading } = useSWR(
-    `${BASE_URL}/api/buy2sell/leads?page=${page}&limit=15${statusFilter ? `&status=${statusFilter}` : ""}`,
+  const api = async (url, method, body) => {
+    const res = await fetch(`${BASE}${url}`, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${tok()}`,
+      },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    });
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.message);
+    return d;
+  };
+
+  const recordPay = async () => {
+    if (!payForm.amount || Number(payForm.amount) <= 0) {
+      setErr("Enter a valid amount");
+      return;
+    }
+    setPaying(true);
+    setErr("");
+    try {
+      await api(`/api/buy2sell/leads/${lead._id}/record-payment`, "POST", {
+        amount: Number(payForm.amount),
+        method: payForm.method,
+        reference: payForm.reference,
+        paidAt: payForm.paidAt || undefined,
+      });
+      setPayForm({
+        amount: "",
+        method: "Bank Transfer",
+        reference: "",
+        paidAt: "",
+      });
+      onRefresh();
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setPaying(false);
+    }
+  };
+
+  const markMature = async () => {
+    setMaturing(true);
+    setErr("");
+    try {
+      await api(`/api/buy2sell/leads/${lead._id}/mature`, "PATCH");
+      onRefresh();
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setMaturing(false);
+    }
+  };
+
+  const doPayout = async () => {
+    setPayingOut(true);
+    setErr("");
+    try {
+      await api(`/api/buy2sell/leads/${lead._id}/process-payout`, "POST", {
+        actualPayout: payoutAmt ? Number(payoutAmt) : undefined,
+      });
+      onRefresh();
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setPayingOut(false);
+    }
+  };
+
+  const pct = lead.maturityProgressPercent ?? 0;
+  const balance = Math.max(
+    0,
+    (lead.principalAmount || 0) - (lead.amountPaid || 0),
+  );
+  const inp = {
+    width: "100%",
+    padding: "9px 12px",
+    borderRadius: 9,
+    fontSize: 13,
+    border: "1.5px solid rgba(0,0,0,0.1)",
+    outline: "none",
+    background: "#fafafa",
+    color: "#0f0a1e",
+    boxSizing: "border-box",
+    fontFamily: "inherit",
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 60 }}>
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "rgba(0,0,0,0.4)",
+          backdropFilter: "blur(4px)",
+        }}
+        onClick={onClose}
+      />
+      <motion.div
+        initial={{ x: "100%" }}
+        animate={{ x: 0 }}
+        exit={{ x: "100%" }}
+        transition={{ type: "spring", stiffness: 260, damping: 30 }}
+        style={{
+          position: "absolute",
+          right: 0,
+          top: 0,
+          width: "100%",
+          maxWidth: 480,
+          height: "100%",
+          background: "#fff",
+          boxShadow: "-8px 0 40px rgba(0,0,0,0.15)",
+          overflowY: "auto",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <div
+          style={{
+            padding: "20px 24px",
+            background: `linear-gradient(135deg,${DARK},${PURPLE})`,
+            color: "#fff",
+            flexShrink: 0,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+            }}
+          >
+            <div>
+              <p
+                style={{
+                  fontSize: 10,
+                  color: "rgba(255,255,255,0.6)",
+                  fontWeight: 700,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  margin: "0 0 3px",
+                }}
+              >
+                Buy2Sell Investment
+              </p>
+              <h3
+                style={{
+                  fontSize: 17,
+                  fontWeight: 900,
+                  margin: "0 0 2px",
+                  letterSpacing: "-0.03em",
+                }}
+              >
+                {lead.fullName}
+              </h3>
+              <p
+                style={{
+                  fontSize: 11,
+                  color: "rgba(255,255,255,0.7)",
+                  margin: 0,
+                  fontFamily: "monospace",
+                }}
+              >
+                {lead.referenceNumber}
+              </p>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <StatusBadge status={lead.status} />
+              <button
+                onClick={onClose}
+                style={{
+                  background: "rgba(255,255,255,0.15)",
+                  border: "none",
+                  color: "#fff",
+                  cursor: "pointer",
+                  borderRadius: 8,
+                  padding: 6,
+                  display: "flex",
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div
+          style={{
+            flex: 1,
+            padding: "20px 24px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 18,
+          }}
+        >
+          {err && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "10px 14px",
+                background: "rgba(220,38,38,0.07)",
+                borderRadius: 10,
+                border: "1px solid rgba(220,38,38,0.2)",
+              }}
+            >
+              <AlertTriangle
+                size={14}
+                style={{ color: "#dc2626", flexShrink: 0 }}
+              />
+              <p style={{ fontSize: 12, color: "#dc2626", margin: 0 }}>{err}</p>
+            </div>
+          )}
+
+          {/* Summary */}
+          <div
+            style={{
+              background: "#f9f6ff",
+              borderRadius: 14,
+              padding: "16px 18px",
+            }}
+          >
+            <p
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                color: "#9ca3af",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                margin: "0 0 12px",
+              }}
+            >
+              Investment Summary
+            </p>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 8,
+              }}
+            >
+              {[
+                ["Principal", fmtNGN(lead.principalAmount), "#0f0a1e"],
+                ["Paid", fmtNGN(lead.amountPaid || 0), "#059669"],
+                [
+                  "Balance Due",
+                  fmtNGN(balance),
+                  balance > 0 ? "#dc2626" : "#059669",
+                ],
+                ["ROI Rate", `${lead.roiPercent}% locked`, PURPLE],
+                ["Expected ROI", fmtNGN(lead.expectedROI || 0), "#059669"],
+                ["Total at Maturity", fmtNGN(lead.expectedPayout || 0), DARK],
+                ["Duration", lead.duration || "—", "#374151"],
+                ["Maturity Date", fmtDate(lead.maturityDate), "#374151"],
+              ].map(([l, v, c]) => (
+                <div
+                  key={l}
+                  style={{
+                    background: "#fff",
+                    borderRadius: 10,
+                    padding: "10px 12px",
+                  }}
+                >
+                  <p
+                    style={{
+                      fontSize: 9,
+                      fontWeight: 700,
+                      color: "#9ca3af",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                      margin: "0 0 2px",
+                    }}
+                  >
+                    {l}
+                  </p>
+                  <p
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 800,
+                      color: c,
+                      margin: 0,
+                    }}
+                  >
+                    {v}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Maturity progress */}
+          {(lead.status === "active" || lead.status === "matured") &&
+            lead.investmentDate && (
+              <div
+                style={{
+                  background: "#fff",
+                  borderRadius: 14,
+                  padding: "16px 18px",
+                  border: "1px solid rgba(0,0,0,0.07)",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginBottom: 8,
+                  }}
+                >
+                  <p
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "#374151",
+                      margin: 0,
+                    }}
+                  >
+                    Maturity Progress
+                  </p>
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 900,
+                      color: pct >= 100 ? "#059669" : PURPLE,
+                    }}
+                  >
+                    {pct}%
+                  </span>
+                </div>
+                <div
+                  style={{
+                    height: 10,
+                    background: "#f0eeff",
+                    borderRadius: 6,
+                    overflow: "hidden",
+                    marginBottom: 8,
+                  }}
+                >
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${pct}%` }}
+                    transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+                    style={{
+                      height: "100%",
+                      borderRadius: 6,
+                      background:
+                        pct >= 100
+                          ? "linear-gradient(to right,#059669,#34d399)"
+                          : `linear-gradient(to right,${DARK},${PURPLE})`,
+                    }}
+                  />
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    fontSize: 10,
+                    color: "#9ca3af",
+                  }}
+                >
+                  <span>Start: {fmtDate(lead.investmentDate)}</span>
+                  {(lead.daysRemaining ?? 0) > 0 && (
+                    <span>{lead.daysRemaining}d left</span>
+                  )}
+                  <span>End: {fmtDate(lead.maturityDate)}</span>
+                </div>
+              </div>
+            )}
+
+          {/* KYC */}
+          <details
+            style={{
+              background: "#f9f9fc",
+              borderRadius: 12,
+              padding: "12px 16px",
+              border: "1px solid rgba(0,0,0,0.06)",
+            }}
+          >
+            <summary
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                color: "#374151",
+                cursor: "pointer",
+              }}
+            >
+              KYC &amp; Contact Details
+            </summary>
+            <div
+              style={{
+                marginTop: 10,
+                display: "flex",
+                flexDirection: "column",
+                gap: 5,
+              }}
+            >
+              {[
+                ["Email", lead.email],
+                ["Phone", lead.phone],
+                [
+                  "Address",
+                  [lead.address, lead.city, lead.state]
+                    .filter(Boolean)
+                    .join(", "),
+                ],
+                ["ID Type", lead.idType],
+                ["ID Number", lead.idNumber],
+              ]
+                .filter(([, v]) => v)
+                .map(([l, v]) => (
+                  <div
+                    key={l}
+                    style={{ display: "flex", gap: 8, fontSize: 12 }}
+                  >
+                    <span
+                      style={{ color: "#9ca3af", width: 80, flexShrink: 0 }}
+                    >
+                      {l}
+                    </span>
+                    <span style={{ color: "#374151", fontWeight: 600 }}>
+                      {v}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          </details>
+
+          {/* Record payment */}
+          {!["paid_out", "closed"].includes(lead.status) && (
+            <div
+              style={{
+                background: "#f9f6ff",
+                borderRadius: 14,
+                padding: "16px 18px",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: DARK,
+                  margin: "0 0 12px",
+                }}
+              >
+                Record Payment Received
+              </p>
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 10 }}
+              >
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: 10,
+                  }}
+                >
+                  <div>
+                    <label
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        color: "#9ca3af",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.06em",
+                        display: "block",
+                        marginBottom: 4,
+                      }}
+                    >
+                      Amount (NGN)
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="Amount received"
+                      value={payForm.amount}
+                      onChange={(e) =>
+                        setPayForm((f) => ({ ...f, amount: e.target.value }))
+                      }
+                      style={inp}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        color: "#9ca3af",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.06em",
+                        display: "block",
+                        marginBottom: 4,
+                      }}
+                    >
+                      Date
+                    </label>
+                    <input
+                      type="date"
+                      value={payForm.paidAt}
+                      onChange={(e) =>
+                        setPayForm((f) => ({ ...f, paidAt: e.target.value }))
+                      }
+                      style={inp}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        color: "#9ca3af",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.06em",
+                        display: "block",
+                        marginBottom: 4,
+                      }}
+                    >
+                      Method
+                    </label>
+                    <select
+                      value={payForm.method}
+                      onChange={(e) =>
+                        setPayForm((f) => ({ ...f, method: e.target.value }))
+                      }
+                      style={{ ...inp, cursor: "pointer" }}
+                    >
+                      {["Bank Transfer", "Cash", "POS", "Online"].map((m) => (
+                        <option key={m}>{m}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        color: "#9ca3af",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.06em",
+                        display: "block",
+                        marginBottom: 4,
+                      }}
+                    >
+                      Reference
+                    </label>
+                    <input
+                      placeholder="Bank reference"
+                      value={payForm.reference}
+                      onChange={(e) =>
+                        setPayForm((f) => ({ ...f, reference: e.target.value }))
+                      }
+                      style={inp}
+                    />
+                  </div>
+                </div>
+                <button
+                  onClick={recordPay}
+                  disabled={paying}
+                  style={{
+                    width: "100%",
+                    padding: "10px 0",
+                    borderRadius: 10,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: "#fff",
+                    border: "none",
+                    cursor: paying ? "not-allowed" : "pointer",
+                    background: paying
+                      ? "rgba(112,12,235,0.4)"
+                      : `linear-gradient(135deg,${DARK},${PURPLE})`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                  }}
+                >
+                  {paying ? (
+                    <>
+                      <Loader2 size={13} className="animate-spin" /> Recording…
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard size={13} /> Confirm Payment Received
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Mark matured */}
+          {lead.status === "active" && (
+            <button
+              onClick={markMature}
+              disabled={maturing}
+              style={{
+                width: "100%",
+                padding: "11px 0",
+                borderRadius: 12,
+                fontSize: 13,
+                fontWeight: 700,
+                color: "#fff",
+                border: "none",
+                cursor: maturing ? "not-allowed" : "pointer",
+                background: maturing
+                  ? "rgba(217,119,6,0.4)"
+                  : "linear-gradient(135deg,#d97706,#f59e0b)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+              }}
+            >
+              {maturing ? (
+                <>
+                  <Loader2 size={13} className="animate-spin" /> Processing…
+                </>
+              ) : (
+                <>
+                  <Star size={13} /> Mark as Matured
+                </>
+              )}
+            </button>
+          )}
+
+          {/* Process payout */}
+          {lead.status === "matured" && (
+            <div
+              style={{
+                background: "rgba(5,150,105,0.05)",
+                border: "1px solid rgba(5,150,105,0.2)",
+                borderRadius: 14,
+                padding: "14px 16px",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: "#059669",
+                  margin: "0 0 6px",
+                }}
+              >
+                Process Payout
+              </p>
+              <p style={{ fontSize: 11, color: "#6b7280", margin: "0 0 10px" }}>
+                Default: <strong>{fmtNGN(lead.expectedPayout)}</strong>.
+                Override if needed.
+              </p>
+              <input
+                type="number"
+                placeholder={String(lead.expectedPayout || "")}
+                value={payoutAmt}
+                onChange={(e) => setPayoutAmt(e.target.value)}
+                style={{ ...inp, marginBottom: 10 }}
+              />
+              <button
+                onClick={doPayout}
+                disabled={payingOut}
+                style={{
+                  width: "100%",
+                  padding: "10px 0",
+                  borderRadius: 10,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: "#fff",
+                  border: "none",
+                  cursor: payingOut ? "not-allowed" : "pointer",
+                  background: payingOut
+                    ? "rgba(5,150,105,0.4)"
+                    : "linear-gradient(135deg,#059669,#34d399)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                }}
+              >
+                {payingOut ? (
+                  <>
+                    <Loader2 size={13} className="animate-spin" /> Processing…
+                  </>
+                ) : (
+                  <>
+                    <Wallet size={13} /> Send Payout &amp; Notify Client
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* Payment history */}
+          {lead.payments?.length > 0 && (
+            <div>
+              <p
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#9ca3af",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  margin: "0 0 10px",
+                }}
+              >
+                Payment History
+              </p>
+              {lead.payments.map((p, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "10px 14px",
+                    background: "#f9f6ff",
+                    borderRadius: 10,
+                    marginBottom: 6,
+                  }}
+                >
+                  <div>
+                    <p
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 700,
+                        color: "#0f0a1e",
+                        margin: "0 0 2px",
+                      }}
+                    >
+                      {fmtNGN(p.amount)}
+                    </p>
+                    <p style={{ fontSize: 10, color: "#9ca3af", margin: 0 }}>
+                      {p.method} · {fmtDate(p.paidAt)}
+                      {p.reference ? ` · ${p.reference}` : ""}
+                    </p>
+                  </div>
+                  <span
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 700,
+                      padding: "2px 8px",
+                      borderRadius: 8,
+                      background:
+                        p.type === "payout"
+                          ? "rgba(5,150,105,0.1)"
+                          : "rgba(112,12,235,0.1)",
+                      color: p.type === "payout" ? "#059669" : PURPLE,
+                    }}
+                  >
+                    {p.type}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+// ── Main page ─────────────────────────────────────────────────────────────────
+export default function ManageBuy2Sell() {
+  const [tab, setTab] = useState("leads");
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
+  const [page, setPage] = useState(1);
+  const [selected, setSelected] = useState(null);
+
+  const buildUrl = () => {
+    const p = new URLSearchParams({ page, limit: 15 });
+    if (status) p.set("status", status);
+    if (search) p.set("search", search);
+    return `${BASE}/api/buy2sell/leads?${p}`;
+  };
+
+  const { data, isLoading, error, mutate } = useSWR(
+    tab === "leads" ? buildUrl() : null,
     fetcher,
     { revalidateOnFocus: false },
   );
 
-  // Merge SWR data into local state for optimistic updates
-  React.useEffect(() => {
-    if (data?.leads) setLeads(data.leads);
-  }, [data]);
+  const refresh = useCallback(async () => {
+    await mutate();
+    if (selected) {
+      try {
+        const res = await fetch(`${BASE}/api/buy2sell/leads/${selected._id}`, {
+          headers: { Authorization: `Bearer ${tok()}` },
+        });
+        const fresh = await res.json();
+        if (res.ok) setSelected(fresh);
+      } catch {}
+    }
+  }, [mutate, selected]);
 
-  const onUpdate = useCallback((id, status) => {
-    setLeads((prev) => prev.map((l) => (l._id === id ? { ...l, status } : l)));
-  }, []);
-
-  const pages = data?.pages || 1;
-
-  return (
-    <div
-      className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
-      style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}
-    >
-      {/* Filter bar */}
-      <div className="p-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h4 className="text-sm font-black text-gray-900">Leads</h4>
-          <p className="text-xs text-gray-400 mt-0.5">
-            {data?.total ?? "—"} total enquiries
-          </p>
-        </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => {
-            setFilter(e.target.value);
-            setPage(1);
-          }}
-          className="text-xs font-bold border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:border-customPurple-400 bg-white"
-          style={{ fontFamily: "inherit" }}
-        >
-          <option value="">All Statuses</option>
-          {["new", "contacted", "converted", "closed"].map((s) => (
-            <option key={s} value={s} className="capitalize">
-              {s.charAt(0).toUpperCase() + s.slice(1)}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="overflow-x-auto">
-        <table className="min-w-full">
-          <thead>
-            <tr className="bg-gray-50/80">
-              {[
-                "Name",
-                "Email",
-                "Phone",
-                "Duration",
-                "ROI",
-                "Status",
-                "Date",
-              ].map((h) => (
-                <th
-                  key={h}
-                  className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap"
-                >
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {isLoading ? (
-              [...Array(5)].map((_, i) => (
-                <tr key={i}>
-                  <td colSpan={7} className="px-4 py-3">
-                    <div className="h-4 bg-gray-100 animate-pulse rounded-lg" />
-                  </td>
-                </tr>
-              ))
-            ) : error ? (
-              <tr>
-                <td
-                  colSpan={7}
-                  className="py-12 text-center text-sm text-red-500"
-                >
-                  Failed to load leads
-                </td>
-              </tr>
-            ) : leads.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="py-16 text-center">
-                  <Users size={32} className="mx-auto text-gray-200 mb-3" />
-                  <p className="text-sm font-bold text-gray-400">
-                    No leads yet
-                  </p>
-                </td>
-              </tr>
-            ) : (
-              leads.map((lead, i) => (
-                <motion.tr
-                  key={lead._id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: i * 0.03 }}
-                  className="hover:bg-purple-50/20 transition-colors"
-                >
-                  <td className="px-4 py-3 text-sm font-semibold text-gray-800 whitespace-nowrap">
-                    {lead.fullName}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
-                    {lead.email}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
-                    {lead.phone}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <div className="flex items-center gap-1">
-                      <Clock size={11} className="text-gray-400" />
-                      <span className="text-xs font-bold text-gray-600">
-                        {lead.duration}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <span
-                      className="text-sm font-black"
-                      style={{ color: PURPLE }}
-                    >
-                      {lead.roiPercent}%
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <LeadStatusDropdown lead={lead} onUpdate={onUpdate} />
-                  </td>
-                  <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">
-                    {fmtDate(lead.createdAt)}
-                  </td>
-                </motion.tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      {pages > 1 && (
-        <div className="px-5 py-4 border-t border-gray-100 flex items-center justify-between">
-          <span className="text-xs text-gray-400">
-            Page {page} of {pages}
-          </span>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="px-3 py-1.5 text-xs font-bold border border-gray-200 rounded-lg disabled:opacity-40 transition-all"
-            >
-              ← Prev
-            </button>
-            <button
-              onClick={() => setPage((p) => Math.min(pages, p + 1))}
-              disabled={page === pages}
-              className="px-3 py-1.5 text-xs font-bold border border-gray-200 rounded-lg disabled:opacity-40 transition-all"
-            >
-              Next →
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Main Page ─────────────────────────────────────────────────────────────────
-export default function ManageBuy2Sell() {
-  const [tab, setTab] = useState("roi"); // "roi" | "leads"
+  const leads = data?.leads || [];
+  const STATUS_FILTERS = [
+    { key: "", label: "All" },
+    { key: "pending", label: "Pending" },
+    { key: "partial_paid", label: "Partial Paid" },
+    { key: "active", label: "Active" },
+    { key: "matured", label: "Matured" },
+    { key: "paid_out", label: "Paid Out" },
+    { key: "closed", label: "Closed" },
+  ];
 
   return (
     <div className="space-y-6 mt-4 sm:mt-8 pb-10">
-      {/* Page header */}
-      <div className="flex items-center gap-3">
-        <div
-          className="w-1 h-7 rounded-full"
-          style={{
-            background: `linear-gradient(to bottom,${PURPLE_DARK},${PURPLE})`,
-          }}
-        />
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
-            Buy2Sell Scheme
-          </h2>
-          <p className="text-xs text-gray-400 mt-0.5">
-            Manage ROI settings and investor leads
-          </p>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 12,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div
+            style={{
+              width: 4,
+              height: 28,
+              borderRadius: 2,
+              background: `linear-gradient(to bottom,${DARK},${PURPLE})`,
+            }}
+          />
+          <div>
+            <h2
+              style={{
+                fontSize: 26,
+                fontWeight: 900,
+                color: "#0f0a1e",
+                letterSpacing: "-0.04em",
+                margin: 0,
+              }}
+            >
+              Buy2Sell
+            </h2>
+            <p style={{ fontSize: 12, color: "#9ca3af", margin: "3px 0 0" }}>
+              Investment management &amp; ROI settings
+            </p>
+          </div>
         </div>
+        <button
+          onClick={refresh}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "8px 16px",
+            borderRadius: 12,
+            fontSize: 12,
+            fontWeight: 700,
+            color: "#6b7280",
+            background: "#f3f4f6",
+            border: "none",
+            cursor: "pointer",
+          }}
+        >
+          <RefreshCw size={13} /> Refresh
+        </button>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 border-b border-gray-200 pb-0">
+      <div style={{ display: "flex", gap: 8 }}>
         {[
-          { key: "roi", label: "ROI Settings", icon: TrendingUp },
-          { key: "leads", label: "Leads", icon: Users },
-        ].map(({ key, label, icon: Icon }) => (
+          { k: "leads", l: "Investments" },
+          { k: "roi", l: "ROI Settings" },
+        ].map(({ k, l }) => (
           <button
-            key={key}
-            onClick={() => setTab(key)}
-            className="flex items-center gap-2 px-4 py-3 text-sm font-bold transition-all border-b-2 -mb-px"
+            key={k}
+            onClick={() => setTab(k)}
             style={{
-              borderColor: tab === key ? PURPLE : "transparent",
-              color: tab === key ? PURPLE : "#6b7280",
+              padding: "8px 20px",
+              borderRadius: 20,
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: "pointer",
+              border: "none",
+              background: tab === k ? PURPLE : "#f3f4f6",
+              color: tab === k ? "#fff" : "#6b7280",
             }}
           >
-            <Icon size={14} />
-            {label}
+            {l}
           </button>
         ))}
       </div>
 
-      {/* Tab content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={tab}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+      {tab === "roi" && <ROISettings />}
+
+      {tab === "leads" && (
+        <div
+          style={{
+            background: "#fff",
+            borderRadius: 20,
+            border: "1px solid rgba(0,0,0,0.07)",
+            overflow: "hidden",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
+          }}
         >
-          {tab === "roi" && <ROIPanel />}
-          {tab === "leads" && <LeadsTable />}
-        </motion.div>
+          <div
+            style={{
+              padding: "16px 20px",
+              borderBottom: "1px solid rgba(0,0,0,0.06)",
+              display: "flex",
+              flexDirection: "column",
+              gap: 12,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                gap: 10,
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <input
+                type="text"
+                placeholder="Search name, email, reference…"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                style={{
+                  flex: "1 1 220px",
+                  padding: "9px 14px",
+                  borderRadius: 10,
+                  fontSize: 13,
+                  border: "1.5px solid rgba(0,0,0,0.1)",
+                  outline: "none",
+                  background: "#fafafa",
+                  color: "#0f0a1e",
+                  fontFamily: "inherit",
+                }}
+              />
+              <p
+                style={{
+                  fontSize: 12,
+                  color: "#9ca3af",
+                  margin: 0,
+                  flexShrink: 0,
+                }}
+              >
+                {data?.total ?? 0} investments
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {STATUS_FILTERS.map(({ key, label }) => (
+                <button
+                  key={key}
+                  onClick={() => {
+                    setStatus(key);
+                    setPage(1);
+                  }}
+                  style={{
+                    padding: "5px 14px",
+                    borderRadius: 20,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    border: "none",
+                    cursor: "pointer",
+                    background: status === key ? PURPLE : "#f3f4f6",
+                    color: status === key ? "#fff" : "#6b7280",
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {isLoading ? (
+            <div style={{ padding: 24 }} className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <Sk key={i} h={52} />
+              ))}
+            </div>
+          ) : error ? (
+            <div style={{ padding: "40px 24px", textAlign: "center" }}>
+              <AlertTriangle
+                size={32}
+                style={{ color: "#dc2626", margin: "0 auto 10px" }}
+              />
+              <p style={{ color: "#dc2626", fontWeight: 600 }}>
+                Failed to load
+              </p>
+            </div>
+          ) : leads.length === 0 ? (
+            <div style={{ padding: "60px 24px", textAlign: "center" }}>
+              <TrendingUp
+                size={36}
+                style={{ color: "#e5e7eb", margin: "0 auto 12px" }}
+              />
+              <p
+                style={{
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: "#9ca3af",
+                  margin: 0,
+                }}
+              >
+                No investments found
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ background: "#f9f6ff" }}>
+                    {[
+                      "Investor",
+                      "Amount",
+                      "Duration / ROI",
+                      "Maturity Progress",
+                      "Status",
+                      "",
+                    ].map((h) => (
+                      <th
+                        key={h}
+                        style={{
+                          padding: "10px 16px",
+                          textAlign: "left",
+                          fontSize: 10,
+                          fontWeight: 700,
+                          color: "#9ca3af",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.07em",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {leads.map((lead, i) => {
+                    const pct = lead.maturityProgressPercent ?? 0;
+                    const isActive =
+                      lead.status === "active" || lead.status === "matured";
+                    return (
+                      <motion.tr
+                        key={lead._id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: i * 0.03 }}
+                        style={{
+                          borderBottom: "1px solid rgba(0,0,0,0.04)",
+                          cursor: "pointer",
+                        }}
+                        className="hover:bg-purple-50/30 transition-colors"
+                        onClick={() => setSelected(lead)}
+                      >
+                        <td style={{ padding: "12px 16px" }}>
+                          <p
+                            style={{
+                              fontSize: 13,
+                              fontWeight: 700,
+                              color: "#0f0a1e",
+                              margin: "0 0 2px",
+                            }}
+                          >
+                            {lead.fullName}
+                          </p>
+                          <p
+                            style={{
+                              fontSize: 10,
+                              color: "#9ca3af",
+                              margin: 0,
+                            }}
+                          >
+                            {lead.email}
+                          </p>
+                          <p
+                            style={{
+                              fontSize: 10,
+                              color: "#9ca3af",
+                              margin: 0,
+                              fontFamily: "monospace",
+                            }}
+                          >
+                            {lead.referenceNumber}
+                          </p>
+                        </td>
+                        <td style={{ padding: "12px 16px" }}>
+                          <p
+                            style={{
+                              fontSize: 13,
+                              fontWeight: 800,
+                              color: "#0f0a1e",
+                              margin: "0 0 2px",
+                            }}
+                          >
+                            {fmtNGN(lead.principalAmount)}
+                          </p>
+                          {lead.amountPaid > 0 &&
+                            lead.amountPaid < lead.principalAmount && (
+                              <p
+                                style={{
+                                  fontSize: 10,
+                                  color: "#d97706",
+                                  margin: 0,
+                                }}
+                              >
+                                Paid: {fmtNGN(lead.amountPaid)}
+                              </p>
+                            )}
+                        </td>
+                        <td style={{ padding: "12px 16px" }}>
+                          <p
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 700,
+                              color: DARK,
+                              margin: "0 0 2px",
+                            }}
+                          >
+                            {lead.duration}
+                          </p>
+                          <p
+                            style={{
+                              fontSize: 11,
+                              color: PURPLE,
+                              fontWeight: 700,
+                              margin: 0,
+                            }}
+                          >
+                            {lead.roiPercent}% ROI
+                          </p>
+                        </td>
+                        <td style={{ padding: "12px 16px", minWidth: 130 }}>
+                          {isActive ? (
+                            <div>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  marginBottom: 4,
+                                }}
+                              >
+                                <span
+                                  style={{ fontSize: 10, color: "#9ca3af" }}
+                                >
+                                  Progress
+                                </span>
+                                <span
+                                  style={{
+                                    fontSize: 11,
+                                    fontWeight: 800,
+                                    color: pct >= 100 ? "#059669" : PURPLE,
+                                  }}
+                                >
+                                  {pct}%
+                                </span>
+                              </div>
+                              <div
+                                style={{
+                                  height: 6,
+                                  background: "#f0eeff",
+                                  borderRadius: 4,
+                                  overflow: "hidden",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    height: "100%",
+                                    width: `${pct}%`,
+                                    borderRadius: 4,
+                                    background:
+                                      pct >= 100
+                                        ? "#059669"
+                                        : `linear-gradient(to right,${DARK},${PURPLE})`,
+                                    transition: "width 0.5s",
+                                  }}
+                                />
+                              </div>
+                              {(lead.daysRemaining ?? 0) > 0 && (
+                                <p
+                                  style={{
+                                    fontSize: 10,
+                                    color: "#9ca3af",
+                                    margin: "3px 0 0",
+                                  }}
+                                >
+                                  {lead.daysRemaining}d left
+                                </p>
+                              )}
+                            </div>
+                          ) : (
+                            <p
+                              style={{
+                                fontSize: 11,
+                                color: "#d1d5db",
+                                margin: 0,
+                              }}
+                            >
+                              —
+                            </p>
+                          )}
+                        </td>
+                        <td style={{ padding: "12px 16px" }}>
+                          <StatusBadge status={lead.status} />
+                          <p
+                            style={{
+                              fontSize: 10,
+                              color: "#9ca3af",
+                              margin: "4px 0 0",
+                            }}
+                          >
+                            {fmtDate(lead.createdAt)}
+                          </p>
+                        </td>
+                        <td style={{ padding: "12px 16px" }}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelected(lead);
+                            }}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 4,
+                              padding: "6px 12px",
+                              borderRadius: 9,
+                              fontSize: 11,
+                              fontWeight: 700,
+                              background: `${PURPLE}10`,
+                              color: PURPLE,
+                              border: "none",
+                              cursor: "pointer",
+                            }}
+                          >
+                            View <ArrowRight size={11} />
+                          </button>
+                        </td>
+                      </motion.tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {(data?.pages ?? 0) > 1 && (
+            <div
+              style={{
+                padding: "14px 20px",
+                borderTop: "1px solid rgba(0,0,0,0.06)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <span style={{ fontSize: 12, color: "#9ca3af" }}>
+                Page {page} of {data.pages}
+              </span>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  disabled={page === 1}
+                  onClick={() => setPage((p) => p - 1)}
+                  style={{
+                    padding: "6px 14px",
+                    borderRadius: 10,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    border: "1px solid rgba(0,0,0,0.1)",
+                    background: "#fff",
+                    color: "#6b7280",
+                    cursor: page === 1 ? "not-allowed" : "pointer",
+                    opacity: page === 1 ? 0.4 : 1,
+                  }}
+                >
+                  ← Prev
+                </button>
+                <button
+                  disabled={page === data.pages}
+                  onClick={() => setPage((p) => p + 1)}
+                  style={{
+                    padding: "6px 14px",
+                    borderRadius: 10,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    border: "1px solid rgba(0,0,0,0.1)",
+                    background: "#fff",
+                    color: "#6b7280",
+                    cursor: page === data.pages ? "not-allowed" : "pointer",
+                    opacity: page === data.pages ? 0.4 : 1,
+                  }}
+                >
+                  Next →
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      <AnimatePresence>
+        {selected && (
+          <InvestmentDrawer
+            lead={selected}
+            onClose={() => setSelected(null)}
+            onRefresh={refresh}
+          />
+        )}
       </AnimatePresence>
     </div>
   );

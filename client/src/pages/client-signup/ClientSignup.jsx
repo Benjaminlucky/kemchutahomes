@@ -250,11 +250,15 @@ function StepDot({ idx, current }) {
 // ── Main component ────────────────────────────────────────────────────────────
 export default function ClientSignup() {
   const [step, setStep] = useState(0); // 0 = personal info, 1 = password
+  // Pre-fill from URL params (passed from Buy2SellPage after submission)
+  const _params = new URLSearchParams(window.location.search);
+  const _redirect = _params.get("redirect") || "/client/portal/investments";
+
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
+    firstName: _params.get("firstName") || "",
+    lastName: _params.get("lastName") || "",
+    email: _params.get("email") || "",
+    phone: _params.get("phone") || "",
     password: "",
     confirmPassword: "",
   });
@@ -352,8 +356,8 @@ export default function ClientSignup() {
       setStep(2);
       setSuccess(true);
       setTimeout(() => {
-        window.location.href = "/client/portal";
-      }, 3000);
+        window.location.href = _redirect;
+      }, 1500);
     } catch (err) {
       setErrors({
         general: err.message || "Something went wrong. Please try again.",

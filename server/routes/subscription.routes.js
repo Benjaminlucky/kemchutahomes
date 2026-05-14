@@ -1,4 +1,5 @@
 import express from "express";
+import jwt from "jsonwebtoken";
 import {
   createSubscription,
   getAllSubscriptions,
@@ -20,29 +21,40 @@ import {
 
 const router = express.Router();
 
-// Middleware that accepts EITHER an admin token OR a client token
-// Used for routes that both admin and client need to access (e.g. document download)
+// ── protectAdminOrClient ──────────────────────────────────────────────────────
+// Decodes the JWT first to check role, then runs the correct middleware.
+// This avoids protect() calling res.status(401) directly for client tokens
+// (which breaks the callback chain and causes "User not found").
 const protectAdminOrClient = (req, res, next) => {
-  // Try admin auth first
-  protect(req, res, (adminErr) => {
-    if (!adminErr) {
-      // Admin token valid — check isAdmin
-      isAdmin(req, res, (adminRoleErr) => {
-        if (!adminRoleErr) return next(); // admin passes
-        // Valid token but not admin — try client auth
-        protectClient(req, res, next);
-      });
-    } else {
-      // Not an admin token — try client auth
-      protectClient(req, res, next);
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Not authorized. No token." });
     }
-  });
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Route to the correct middleware based on role in the token
+    if (decoded.role === "client") {
+      return protectClient(req, res, next);
+    }
+    // Admin or Realtor — run protect then isAdmin
+    protect(req, res, (err) => {
+      if (err) return next(err);
+      isAdmin(req, res, (err2) => {
+        if (err2) return res.status(403).json({ message: "Access denied." });
+        next();
+      });
+    });
+  } catch (err) {
+    return res.status(401).json({ message: "Invalid or expired token." });
+  }
 };
 
 // ── Public
 router.post("/", createSubscription);
 
-// ── Shared (admin OR client) — must be registered before the specific /:id routes
+// ── Shared (admin OR client)
 router.get("/:id/documents/:docType", protectAdminOrClient, downloadDocument);
 
 // ── Client portal

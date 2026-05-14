@@ -165,19 +165,28 @@ export default function ClientSubscriptionDetail({ sub, onBack, authFetch }) {
   const downloadDoc = async (docType, label) => {
     setDownloading(docType);
     try {
-      const res = await authFetch(
-        `/api/subscriptions/${sub._id}/documents/${docType}`,
+      // authFetch sets Content-Type: application/json which breaks binary downloads.
+      // We build the request directly using the token, without a Content-Type header.
+      const tok = localStorage.getItem("clientToken") || "";
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/subscriptions/${sub._id}/documents/${docType}`,
+        { headers: { Authorization: `Bearer ${tok}` } },
       );
-      if (!res.ok) throw new Error("Download failed");
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message || `Download failed (${res.status})`);
+      }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${label}.pdf`;
+      a.download = `${label.replace(/\s+/g, "-")}-${sub.referenceNumber || sub._id}.pdf`;
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
-    } catch {
-      alert("Download failed. Please try again.");
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    } catch (e) {
+      alert(`Download failed: ${e.message}`);
     } finally {
       setDownloading(null);
     }
