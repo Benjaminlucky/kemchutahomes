@@ -4,7 +4,7 @@ import crypto from "crypto";
 import Client from "../models/client.model.js";
 import Subscription from "../models/Subscription.model.js";
 import Inspection from "../models/inspection.model.js";
-import { Buy2SellLead } from "../models/buy2sell.model.js";
+import { Buy2SellLead } from "../models/Buy2sell.model.js";
 import { sendEmail } from "../utils/notifications.js";
 
 const JWT_SECRET = () => process.env.JWT_SECRET || "kemchuta_jwt_secret";
