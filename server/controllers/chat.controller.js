@@ -22,7 +22,7 @@
  */
 
 import Estate from "../models/estate.model.js";
-import { ROISettings } from "../models/buy2sell.model.js";
+import { ROISettings } from "../models/Buy2sell.model.js";
 import { KnowledgeBase } from "../models/knowledgeBase.model.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
