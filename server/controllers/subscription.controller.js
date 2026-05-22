@@ -13,7 +13,7 @@ import {
   calculateCommissions,
   clawbackCommissions,
 } from "../utils/commissionCalculator.js";
-import { getActiveBankAccounts } from "./bankAccount.controller.js";
+import { getActiveBankAccounts } from "./Bankaccount.controller.js";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const FRONTEND = () =>
