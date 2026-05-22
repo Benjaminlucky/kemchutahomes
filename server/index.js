@@ -15,8 +15,10 @@ import buy2sellRoutes from "./routes/Buy2sell.routes.js";
 import branchRoutes from "./routes/branch.routes.js";
 import contactRoutes from "./routes/contact.routes.js";
 import clientRoutes from "./routes/client.routes.js";
-import commissionRoutes from "./routes/commission.routes.js"; // ← NEW
-import bankAccountRoutes from "./routes/Bankaccount.routes.js"; // ← NEW
+import commissionRoutes from "./routes/commission.routes.js";
+import bankAccountRoutes from "./routes/Bankaccount.routes.js";
+import chatRoutes from "./routes/chat.routes.js";
+import knowledgeBaseRoutes from "./routes/knowledgeBase.routes.js";
 
 // ── Scheduler ─────────────────────────────────────────────────────────────────
 import { startScheduler } from "./utils/followup.js";
@@ -52,7 +54,7 @@ mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => {
     console.log("✅ Connected to MongoDB");
-    startScheduler(); // cron jobs — inspection reminders, follow-ups, payment reminders
+    startScheduler();
   })
   .catch((err) => console.error("MongoDB connection error:", err));
 
@@ -69,6 +71,8 @@ app.use("/api/contact", contactRoutes);
 app.use("/api/clients", clientRoutes);
 app.use("/api/commissions", commissionRoutes);
 app.use("/api/bank-accounts", bankAccountRoutes);
+app.use("/api/chat", chatRoutes);
+app.use("/api/knowledge-base", knowledgeBaseRoutes);
 
 // ── Cloudinary health check ───────────────────────────────────────────────────
 const result = await cloudinary.api.ping();

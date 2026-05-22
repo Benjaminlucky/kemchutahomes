@@ -13,6 +13,7 @@ import {
   FaLandmark,
   FaAddressCard,
   FaCreditCard,
+  FaRobot,
 } from "react-icons/fa";
 import { useLocation, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -69,6 +70,11 @@ export default function DashboardLayout({ children }) {
             name: "Bank Accounts",
             path: "/dashboard/bank-accounts",
             icon: <FaCreditCard />,
+          },
+          {
+            name: "AI Knowledge Base",
+            path: "/dashboard/knowledge-base",
+            icon: <FaRobot />,
           },
           { name: "Reports", path: "/admin/reports", icon: <FaChartLine /> },
         ]
@@ -164,7 +170,9 @@ export default function DashboardLayout({ children }) {
       )}
 
       <main
-        className={`flex-1 p-6 sm:p-8 bg-[#fafafa] overflow-y-auto transition-all duration-300 ${isOpen ? "pointer-events-none blur-sm" : ""}`}
+        className={`flex-1 p-6 sm:p-8 bg-[#fafafa] overflow-y-auto transition-all duration-300 ${
+          isOpen ? "pointer-events-none blur-sm" : ""
+        }`}
       >
         {children}
       </main>

@@ -13,7 +13,8 @@ import ManageInspections from "./ManageInspections";
 import ManageSubscriptions from "./ManageSubscriptions";
 import ManageBuy2Sell from "./ManageBuy2Sell";
 import ManageContact from "./ManageContact";
-import ManageBankAccounts from "./ManageBankAccounts"; // ← Bank accounts
+import ManageBankAccounts from "./ManageBankAccounts";
+import ManageKnowledgeBase from "./ManageKnowledgeBase"; // ← AI Knowledge Base
 
 export default function Dashboard() {
   return (
@@ -28,6 +29,8 @@ export default function Dashboard() {
         <Route path="buy2sell" element={<ManageBuy2Sell />} />
         <Route path="contact" element={<ManageContact />} />
         <Route path="bank-accounts" element={<ManageBankAccounts />} />
+        <Route path="knowledge-base" element={<ManageKnowledgeBase />} />{" "}
+        {/* ← AI Knowledge Base */}
         <Route path="reports" element={<Reports />} />
         {/* Realtor routes */}
         <Route path="earnings" element={<Earnings />} />

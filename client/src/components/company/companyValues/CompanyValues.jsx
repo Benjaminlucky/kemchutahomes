@@ -1,82 +1,226 @@
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { values } from "../../../../data";
 
 function CompanyValues() {
+  const [active, setActive] = useState(0);
+
   return (
-    <section className="w-full">
-      <div className="value__wrapper w-10/12 mx-auto pt-16 pb-32">
-        <div className="value__content w-full mx-auto">
-          {/* Title Animation */}
+    <section
+      className="w-full"
+      style={{ background: "#0f0a1e", overflow: "hidden" }}
+    >
+      <div className="w-11/12 mx-auto py-20 md:py-32">
+        {/* Header */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-end",
+            flexWrap: "wrap",
+            gap: 24,
+            marginBottom: 64,
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            paddingBottom: 32,
+          }}
+        >
           <motion.div
-            className="values__title text-center w-full"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 1 }}
+            transition={{ duration: 0.9 }}
           >
-            <h3 className="text-3xl md:text-6xl font-bold text-center text-customBlack-900 uppercase">
-              Our <span className="text-customPurple-500">Values</span>
-            </h3>
-          </motion.div>
-
-          {/* Subtitle Animation */}
-          <motion.div
-            className="subTitle"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1, delay: 0.2 }}
-          >
-            <p className="text-center md:text-xl">
-              We are an Expression of our Core Values -{" "}
-              <span className="text-customPurple-600 uppercase font-bold">
-                Kemchuta
-              </span>
-            </p>
-          </motion.div>
-
-          {/* Cards Animation */}
-          <div className="values__wrapper w-full mt-16">
-            <motion.div
-              className="values grid grid-cols-1 md:grid-cols-4 gap-8"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={{
-                hidden: { opacity: 0 },
-                visible: { opacity: 1, transition: { staggerChildren: 0.2 } },
+            <p
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                color: "#700CEB",
+                margin: "0 0 12px",
               }}
             >
-              {values.map((value, index) => (
-                <motion.div
-                  key={index}
-                  className={`p-8 rounded-sm transition duration-300 ${
-                    index === 0
-                      ? "bg-customPurple-800 text-white"
-                      : "hover:bg-customPurple-800 hover:text-white"
-                  }`}
-                  variants={{
-                    hidden: { opacity: 0, y: 20 },
-                    visible: { opacity: 1, y: 0 },
+              Our Values
+            </p>
+            <h3
+              style={{
+                fontSize: "clamp(2.5rem, 6vw, 5.5rem)",
+                fontWeight: 900,
+                letterSpacing: "-0.04em",
+                lineHeight: 0.95,
+                color: "#fff",
+                margin: 0,
+              }}
+            >
+              We Are
+              <br />
+              <span style={{ color: "#700CEB", fontStyle: "italic" }}>
+                Kemchuta.
+              </span>
+            </h3>
+          </motion.div>
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.9, delay: 0.2 }}
+            style={{
+              color: "rgba(255,255,255,0.45)",
+              fontSize: "0.95rem",
+              maxWidth: 360,
+              lineHeight: 1.7,
+              margin: 0,
+            }}
+          >
+            Every letter in our name is a value we live by. These are not
+            aspirations — they are commitments.
+          </motion.p>
+        </div>
+
+        {/* Values list — horizontal tab + detail panel layout */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gap: 48,
+          }}
+        >
+          {/* Letter tabs */}
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.9 }}
+            style={{ display: "flex", flexDirection: "column", gap: 0 }}
+          >
+            {values.map((value, i) => (
+              <button
+                key={i}
+                onClick={() => setActive(i)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 20,
+                  padding: "20px 0",
+                  borderTop: "1px solid rgba(255,255,255,0.08)",
+                  background: "none",
+                  border: "none",
+                  borderTop: "1px solid rgba(255,255,255,0.08)",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  transition: "all 0.2s",
+                }}
+              >
+                <span
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 10,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "1.3rem",
+                    fontWeight: 900,
+                    letterSpacing: "-0.02em",
+                    flexShrink: 0,
+                    background:
+                      active === i ? "#700CEB" : "rgba(255,255,255,0.06)",
+                    color: active === i ? "#fff" : "rgba(255,255,255,0.4)",
+                    transition: "all 0.3s",
                   }}
-                  whileHover={{ scale: 1.05 }}
                 >
-                  <div className="value__content">
-                    <div className="maintitle flex items-center gap-3 py-4 text-2xl">
-                      <div className="icon bg-customPurple-100 rounded-sm font-bold text-customPurple-700 px-3 py-2 w-fit">
-                        {value.letter}
-                      </div>
-                      <div className="title font-bold">{value.title}</div>
-                    </div>
-                    <div className="desc text-justify hyphens-auto !leading-[1.75]">
-                      {value.text}
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
+                  {value.letter}
+                </span>
+                <span
+                  style={{
+                    fontSize: "1rem",
+                    fontWeight: 700,
+                    color: active === i ? "#fff" : "rgba(255,255,255,0.4)",
+                    letterSpacing: "-0.01em",
+                    transition: "color 0.2s",
+                  }}
+                >
+                  {value.title}
+                </span>
+                {active === i && (
+                  <span
+                    style={{
+                      marginLeft: "auto",
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      background: "#700CEB",
+                      flexShrink: 0,
+                    }}
+                  />
+                )}
+              </button>
+            ))}
+            <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }} />
+          </motion.div>
+
+          {/* Active value detail panel */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.9, delay: 0.1 }}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+            }}
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={active}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                style={{
+                  background: "rgba(112,12,235,0.08)",
+                  border: "1px solid rgba(112,12,235,0.2)",
+                  borderRadius: 20,
+                  padding: "clamp(24px, 4vw, 48px)",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "clamp(4rem, 10vw, 8rem)",
+                    fontWeight: 900,
+                    color: "rgba(112,12,235,0.15)",
+                    lineHeight: 1,
+                    letterSpacing: "-0.05em",
+                    marginBottom: 16,
+                  }}
+                >
+                  {values[active]?.letter}
+                </div>
+                <h4
+                  style={{
+                    fontSize: "clamp(1.5rem, 3vw, 2.5rem)",
+                    fontWeight: 900,
+                    color: "#fff",
+                    letterSpacing: "-0.03em",
+                    margin: "0 0 16px",
+                  }}
+                >
+                  {values[active]?.title}
+                </h4>
+                <p
+                  style={{
+                    fontSize: "1rem",
+                    lineHeight: 1.8,
+                    color: "rgba(255,255,255,0.6)",
+                    margin: 0,
+                  }}
+                >
+                  {values[active]?.text}
+                </p>
+              </motion.div>
+            </AnimatePresence>
+          </motion.div>
         </div>
       </div>
     </section>

@@ -5,6 +5,7 @@ import {
 } from "../utils/notifications.js";
 
 // ── POST /api/inspections ────────────────────────────────────────────────────
+// Books an inspection and fires email + SMS to admin and client simultaneously.
 export const bookInspection = async (req, res) => {
   try {
     const {
@@ -19,7 +20,6 @@ export const bookInspection = async (req, res) => {
       notes,
     } = req.body;
 
-    // Basic validation — unchanged
     if (
       !estateName ||
       !firstName ||
@@ -53,7 +53,7 @@ export const bookInspection = async (req, res) => {
       notes,
     });
 
-    // Multi-channel notifications (email + WhatsApp + SMS to admin AND client)
+    // Fire dual-channel notification (email + SMS) — non-blocking
     notifyInspectionBooked(inspection).catch((err) =>
       console.error("Inspection notification failed:", err.message),
     );
@@ -80,7 +80,7 @@ export const bookInspection = async (req, res) => {
   }
 };
 
-// ── GET /api/inspections — Admin ─────────────────────────────────────────────
+// ── GET /api/inspections — Admin: get all ────────────────────────────────────
 export const getAllInspections = async (req, res) => {
   try {
     const { page = 1, limit = 20, status, search } = req.query;
@@ -114,7 +114,9 @@ export const getAllInspections = async (req, res) => {
   }
 };
 
-// ── PATCH /api/inspections/:id/status — Admin ────────────────────────────────
+// ── PATCH /api/inspections/:id/status — Admin: update status ─────────────────
+// Fires email + SMS to the client for confirmed, cancelled, and completed.
+// Was previously silent — clients received nothing on status change.
 export const updateInspectionStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -122,6 +124,7 @@ export const updateInspectionStatus = async (req, res) => {
     if (!valid.includes(status)) {
       return res.status(400).json({ message: "Invalid status value." });
     }
+
     const inspection = await Inspection.findByIdAndUpdate(
       req.params.id,
       { status },
@@ -130,10 +133,12 @@ export const updateInspectionStatus = async (req, res) => {
     if (!inspection)
       return res.status(404).json({ message: "Inspection not found." });
 
-    // Notify client of status change — fire-and-forget
-    notifyInspectionStatusChanged(inspection).catch((err) =>
-      console.error("Inspection status notification failed:", err.message),
-    );
+    // Notify client on every meaningful status change (fire and forget)
+    if (["confirmed", "cancelled", "completed"].includes(status)) {
+      notifyInspectionStatusChanged(inspection).catch((err) =>
+        console.error("Inspection status notification failed:", err.message),
+      );
+    }
 
     res.json({ message: "Status updated.", inspection });
   } catch (err) {
@@ -141,7 +146,7 @@ export const updateInspectionStatus = async (req, res) => {
   }
 };
 
-// ── PATCH /api/inspections/:id/notes — Admin ─────────────────────────────────
+// ── PATCH /api/inspections/:id/notes — Admin: update notes ───────────────────
 export const updateInspectionNotes = async (req, res) => {
   try {
     const { notes } = req.body;

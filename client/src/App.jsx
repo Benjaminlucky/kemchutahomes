@@ -33,7 +33,7 @@ import AdminForgotPassword from "./pages/admin-forgot-password/AdminForgotPasswo
 import AdminResetPassword from "./pages/admin-reset-password/AdminResetPassword";
 import Buy2SellPage from "./pages/buy2sell/Buy2SellPage";
 
-// ── NEW CLIENT IMPORTS ───────────────────────────────────────────────────────
+// ── Client portal ────────────────────────────────────────────────────────────
 import ClientLogin from "./pages/client-login/ClientLogin";
 import ClientSignup from "./pages/client-signup/ClientSignup";
 import ClientForgotPassword from "./pages/client-forgot-password/ClientForgotPassword";
@@ -41,22 +41,32 @@ import ClientResetPassword from "./pages/client-reset-password/ClientResetPasswo
 import ClientPortal from "./pages/client-portal/ClientPortal";
 import ClientProtectedRoute from "./components/client-portal/ClientProtectedRoute";
 
+// ── AI chat widget — floats on all public pages ──────────────────────────────
+import ChatWidget from "./components/chat/ChatWidget";
+
+// ── Announcement bar — sits above header, driven by knowledge base notices ───
+import AnnouncementBar from "./components/announcements/AnnouncementBar";
+
 function AppWrapper() {
   const location = useLocation();
 
-  // ── UPDATED: also hide layout for client portal ──────────────────────────
+  // Hide header/footer inside dashboard and client portal
   const hideLayout =
     location.pathname.startsWith("/dashboard") ||
     location.pathname.startsWith("/client/portal");
 
+  // Hide chat widget inside admin dashboard (not needed there)
+  const hideChatWidget = location.pathname.startsWith("/dashboard");
+
   return (
     <>
+      {!hideLayout && <AnnouncementBar />}
       {!hideLayout && <Header />}
       <main
         className={`${hideLayout ? "" : "pt-0"} relative overflow-x-hidden bg-white min-h-screen`}
       >
         <Routes>
-          // ── All existing routes UNCHANGED ──────────────────────────────────
+          {/* ── Public routes ─────────────────────────────────────────────── */}
           <Route path="/" element={<Home />} />
           <Route path="/company" element={<Company />} />
           <Route path="/developments" element={<Developments />} />
@@ -77,6 +87,8 @@ function AppWrapper() {
             path="/admin/reset-password"
             element={<AdminResetPassword />}
           />
+
+          {/* ── Admin dashboard ───────────────────────────────────────────── */}
           <Route
             path="/dashboard/*"
             element={
@@ -85,7 +97,8 @@ function AppWrapper() {
               </ProtectedRoute>
             }
           />
-          // ── NEW CLIENT ROUTES ─────────────────────────────────────────────
+
+          {/* ── Client portal ─────────────────────────────────────────────── */}
           <Route path="/client/login" element={<ClientLogin />} />
           <Route path="/client/register" element={<ClientSignup />} />
           <Route
@@ -104,11 +117,16 @@ function AppWrapper() {
               </ClientProtectedRoute>
             }
           />
-          // ── 404 — ALWAYS LAST ─────────────────────────────────────────────
+
+          {/* ── 404 — always last ─────────────────────────────────────────── */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+
         {!hideLayout && <Footer />}
       </main>
+
+      {/* ── AI Chat Widget — visible on all pages except admin dashboard ──── */}
+      {!hideChatWidget && <ChatWidget />}
     </>
   );
 }

@@ -8,12 +8,12 @@ import {
   generateAllocationLetter,
   generateDeedOfAssignment,
 } from "../utils/pdfGenerator.js";
-import { sendEmail } from "../utils/notifications.js";
+import { sendEmail, sendSMS } from "../utils/notifications.js";
 import {
   calculateCommissions,
   clawbackCommissions,
 } from "../utils/commissionCalculator.js";
-import { getActiveBankAccounts } from "./Bankaccount.controller.js";
+import { getActiveBankAccounts } from "./bankAccount.controller.js";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const FRONTEND = () =>
@@ -330,6 +330,11 @@ export const createSubscription = async (req, res) => {
         console.log(
           `✅ Subscription created ${ref} — docs emailed to ${sub.email}`,
         );
+        // SMS to client — fires alongside email confirmation
+        sendSMS(
+          sub.phone,
+          `Hi ${sub.firstName}, your KHL land subscription for ${sub.estateName} (Ref: ${ref}) is received. Check your email for invoice & payment details. - Kemchuta Homes`,
+        ).catch(() => null);
       })
       .catch((err) =>
         console.error("❌ Subscription email failed:", err.message),
@@ -705,6 +710,11 @@ export const confirmSubscription = async (req, res) => {
           `),
         });
         console.log(`✅ Confirmation email sent to ${sub.email}`);
+        // SMS to client
+        sendSMS(
+          sub.phone,
+          `Hi ${sub.title} ${sub.firstName}, your ${sub.estateName} subscription is CONFIRMED (Ref: ${ref}). Check email for invoice. Quote ${ref} on all transfers. - KHL`,
+        ).catch(() => null);
       })
       .catch((err) =>
         console.error("❌ Confirmation email failed:", err.message),
@@ -981,6 +991,13 @@ export const confirmPayment = async (req, res) => {
         console.log(
           `✅ Payment #${confirmedN} confirmed [${ref}] → ${sub.email} (${sub.status})`,
         );
+        // SMS to client
+        const _smsBalance = Math.max(0, sub.totalAmount - sub.amountPaid);
+        const _smsMsg =
+          sub.status === "completed"
+            ? `Congrats ${sub.firstName}! All payments received for ${sub.estateName} (Ref: ${ref}). Plot allocation in progress. - KHL`
+            : `Hi ${sub.firstName}, payment of NGN ${Number(payment.amount).toLocaleString("en-NG")} confirmed for ${sub.estateName} (Ref: ${ref}). Balance: NGN ${_smsBalance.toLocaleString("en-NG")}. - KHL`;
+        sendSMS(sub.phone, _smsMsg).catch(() => null);
       })
       .catch((err) => console.error("❌ Payment docs failed:", err.message));
 
@@ -1095,6 +1112,11 @@ export const allocatePlot = async (req, res) => {
           $push: { documents: { $each: newDocs } },
         });
 
+        // SMS to client
+        sendSMS(
+          sub.phone,
+          `Congratulations ${sub.title} ${sub.firstName}! Your plot at ${sub.estateName} has been ALLOCATED (Plot: ${plotNumber}, Ref: ${ref}). Check email for docs. - KHL`,
+        ).catch(() => null);
         console.log(`✅ Plot allocated [${ref}] → ${sub.email}`);
       })
       .catch((err) => console.error("❌ Allocation docs failed:", err.message));

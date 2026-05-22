@@ -2,11 +2,16 @@ import Realtor from "../models/realtor.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import cloudinary from "../utils/cloudinary.config.js";
-import { sendWelcomeEmail, sendPasswordResetEmail } from "../utils/email.js";
-import { notifyRealtorWelcome } from "../utils/notifications.js";
 import crypto from "crypto";
+import {
+  sendEmail,
+  sendSMS,
+  notifyRealtorWelcomeSMS,
+} from "../utils/notifications.js";
 
-/* ──────────────────────────── HELPERS ──────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────────
+   HELPERS
+──────────────────────────────────────────────────────────────────────────── */
 
 const generateReferralCode = async () => {
   let code,
@@ -20,7 +25,12 @@ const generateReferralCode = async () => {
   return code;
 };
 
-/* ──────────────────────────── AUTH ─────────────────────────────────────── */
+const FRONTEND = () =>
+  process.env.FRONTEND_URL || "https://kemchutahomesltd.com";
+
+/* ────────────────────────────────────────────────────────────────────────────
+   AUTH
+──────────────────────────────────────────────────────────────────────────── */
 
 export const signup = async (req, res) => {
   try {
@@ -46,9 +56,8 @@ export const signup = async (req, res) => {
     let recruiter = null;
     if (ref?.trim()) {
       recruiter = await Realtor.findOne({ referralCode: ref.trim() });
-      if (!recruiter) {
+      if (!recruiter)
         return res.status(400).json({ message: "Invalid referral code" });
-      }
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
@@ -70,19 +79,50 @@ export const signup = async (req, res) => {
       recruitedBy: recruiter?._id || null,
     });
 
-    // Email welcome — existing function, unchanged
-    sendWelcomeEmail({
-      email: realtor.email,
-      firstName: realtor.firstName,
-    }).catch(() => null);
+    // ── Welcome email ─────────────────────────────────────────────────────
+    const referralLink = `${FRONTEND()}/signup?ref=${referralCode}`;
+    const welcomeHtml = `
+      <!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+      <body style="margin:0;padding:0;background:#f5f5f5;font-family:'Segoe UI',Arial,sans-serif;">
+      <div style="max-width:600px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(112,12,235,0.1);">
+        <div style="background:linear-gradient(135deg,#3F0C91,#700CEB);padding:44px 32px;text-align:center;">
+          <h1 style="color:#fff;margin:0;font-size:24px;font-weight:800;text-transform:uppercase;letter-spacing:-0.5px;">Kemchuta Homes</h1>
+          <span style="display:inline-block;background:rgba(255,255,255,0.2);color:#fff;font-size:11px;font-weight:700;padding:4px 14px;border-radius:20px;margin-top:10px;letter-spacing:1px;">REALTOR WELCOME</span>
+        </div>
+        <div style="padding:40px 36px;">
+          <h2 style="color:#0f0a1e;font-size:22px;font-weight:900;margin:0 0 12px;">Welcome, ${firstName}! 🎉</h2>
+          <p style="color:#374151;font-size:15px;line-height:1.75;margin:0 0 24px;">
+            You have been successfully registered as a Kemchuta Homes realtor. You can now start earning commissions by referring clients to our estates.
+          </p>
+          <div style="background:#f9f6ff;border-radius:12px;padding:20px 24px;margin:0 0 24px;border-left:4px solid #700CEB;">
+            <p style="margin:5px 0;font-size:13px;color:#374151;"><strong>Your Referral Code:</strong> <strong style="color:#700CEB;font-size:16px;">${referralCode}</strong></p>
+            <p style="margin:5px 0;font-size:13px;color:#374151;"><strong>Your Referral Link:</strong></p>
+            <p style="margin:5px 0;font-size:12px;word-break:break-all;"><a href="${referralLink}" style="color:#700CEB;">${referralLink}</a></p>
+          </div>
+          <div style="text-align:center;margin:28px 0;">
+            <a href="${FRONTEND()}/login" style="display:inline-block;background:linear-gradient(135deg,#3F0C91,#700CEB);color:#fff;padding:14px 32px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none;">Log In to Your Dashboard</a>
+          </div>
+          <p style="color:#6b7280;font-size:13px;text-align:center;margin:0;">Share your referral link and earn commissions on every successful subscription.</p>
+        </div>
+        <div style="background:#0f0a1e;padding:20px 36px;text-align:center;">
+          <p style="color:#6b7280;font-size:11px;margin:0;">© ${new Date().getFullYear()} Kemchuta Homes Limited · info@kemchutahomesltd.com</p>
+        </div>
+      </div></body></html>`;
 
-    // WhatsApp + SMS welcome — new multi-channel addition
-    notifyRealtorWelcome({
-      firstName: realtor.firstName,
-      phone: realtor.phone,
-      referralCode: realtor.referralCode,
-      referralLink: realtor.referralLink,
-    }).catch(() => null);
+    // Fire email + SMS — non-blocking
+    Promise.allSettled([
+      sendEmail({
+        to: realtor.email,
+        subject: "Welcome to Kemchuta Homes — Your Realtor Account is Ready!",
+        html: welcomeHtml,
+      }),
+      notifyRealtorWelcomeSMS({
+        firstName,
+        phone,
+        referralCode,
+        referralLink,
+      }),
+    ]).catch(() => null);
 
     return res.status(201).json({
       message: "Registration successful",
@@ -140,7 +180,9 @@ export const login = async (req, res) => {
   }
 };
 
-/* ──────────────────────────── DASHBOARD ────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────────
+   DASHBOARD
+──────────────────────────────────────────────────────────────────────────── */
 
 export const getDashboard = async (req, res) => {
   try {
@@ -149,9 +191,7 @@ export const getDashboard = async (req, res) => {
       .populate("recruitedBy", "firstName lastName role")
       .exec();
 
-    if (!realtor) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!realtor) return res.status(404).json({ message: "User not found" });
 
     const realtorObj = realtor.toObject({ virtuals: true });
     const recruitCount = await Realtor.countDocuments({ recruitedBy: userId });
@@ -180,7 +220,9 @@ export const getDashboard = async (req, res) => {
   }
 };
 
-/* ──────────────────────────── MY RECRUITS ──────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────────
+   MY RECRUITS
+──────────────────────────────────────────────────────────────────────────── */
 
 export const getMyRecruits = async (req, res) => {
   try {
@@ -188,6 +230,7 @@ export const getMyRecruits = async (req, res) => {
       .select("firstName lastName email phone avatar referralCode createdAt")
       .sort("-createdAt")
       .lean();
+
     return res.json({ recruits, total: recruits.length });
   } catch (error) {
     console.error("Get My Recruits Error:", error);
@@ -195,7 +238,9 @@ export const getMyRecruits = async (req, res) => {
   }
 };
 
-/* ──────────────────────────── PROFILE ──────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────────
+   PROFILE
+──────────────────────────────────────────────────────────────────────────── */
 
 export const updateAvatar = async (req, res) => {
   try {
@@ -240,7 +285,9 @@ export const updateAvatar = async (req, res) => {
   }
 };
 
-/* ──────────────────────────── ADMIN ────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────────
+   ADMIN — REALTOR MANAGEMENT
+──────────────────────────────────────────────────────────────────────────── */
 
 export const getRealtors = async (req, res) => {
   try {
@@ -327,7 +374,9 @@ export const deleteRealtor = async (req, res) => {
   }
 };
 
-/* ──────────────────────────── FORGOT PASSWORD ──────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────────
+   FORGOT / RESET PASSWORD
+──────────────────────────────────────────────────────────────────────────── */
 
 export const forgotPassword = async (req, res) => {
   try {
@@ -337,6 +386,7 @@ export const forgotPassword = async (req, res) => {
     const realtor = await Realtor.findOne({
       email: email.toLowerCase().trim(),
     });
+    // Always 200 — prevents email enumeration
     if (!realtor) {
       return res
         .status(200)
@@ -350,17 +400,24 @@ export const forgotPassword = async (req, res) => {
       .digest("hex");
 
     realtor.resetPasswordToken = hashedToken;
-    realtor.resetPasswordExpiry = Date.now() + 60 * 60 * 1000;
+    realtor.resetPasswordExpiry = Date.now() + 60 * 60 * 1000; // 1 hour
     await realtor.save({ validateBeforeSave: false });
 
-    const FRONTEND_URL =
-      process.env.FRONTEND_URL || "https://kemchutahomesltd.com/";
-    const resetUrl = `${FRONTEND_URL}/reset-password?token=${rawToken}`;
+    const resetUrl = `${FRONTEND()}/reset-password?token=${rawToken}`;
 
-    sendPasswordResetEmail({
-      email: realtor.email,
-      firstName: realtor.firstName,
-      resetUrl,
+    sendEmail({
+      to: realtor.email,
+      subject: "Reset Your Kemchuta Homes Password",
+      html: `
+        <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px;">
+          <h2 style="color:#0f0a1e;">Password Reset Request</h2>
+          <p style="color:#374151;">Hi ${realtor.firstName},</p>
+          <p style="color:#374151;">Click the button below to reset your password. This link expires in 1 hour.</p>
+          <div style="text-align:center;margin:32px 0;">
+            <a href="${resetUrl}" style="background:#700CEB;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:700;display:inline-block;">Reset Password</a>
+          </div>
+          <p style="color:#9ca3af;font-size:12px;">If you did not request this, ignore this email.</p>
+        </div>`,
     }).catch(async () => {
       realtor.resetPasswordToken = undefined;
       realtor.resetPasswordExpiry = undefined;
@@ -377,8 +434,6 @@ export const forgotPassword = async (req, res) => {
       .json({ message: "Something went wrong. Please try again." });
   }
 };
-
-/* ──────────────────────────── RESET PASSWORD ───────────────────────────── */
 
 export const resetPassword = async (req, res) => {
   try {

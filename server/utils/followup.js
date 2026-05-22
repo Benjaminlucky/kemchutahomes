@@ -12,8 +12,13 @@
 
 import cron from "node-cron";
 import Inspection from "../models/inspection.model.js";
-import { Buy2SellLead } from "../models/Buy2sell.model.js";
-import { sendEmail } from "./notifications.js";
+import { Buy2SellLead } from "../models/buy2sell.model.js";
+import {
+  sendEmail,
+  sendSMS,
+  sendPostInspectionFollowUp,
+  notifyB2SMatured,
+} from "./notifications.js";
 import { sendPaymentReminders } from "../controllers/subscription.controller.js";
 import { finalisePendingCommissions } from "./commissionCalculator.js";
 
@@ -231,6 +236,11 @@ export function startScheduler() {
           console.log(
             `📅 Cron: matured ${inv.referenceNumber} — ${inv.fullName}`,
           );
+          // SMS to client
+          sendSMS(
+            inv.phone,
+            `🎊 Hi ${inv.fullName.split(" ")[0]}, your Buy2Sell investment (Ref: ${inv.referenceNumber}) has MATURED! Payout of NGN ${(inv.expectedPayout || 0).toLocaleString("en-NG")} is being processed. - KHL`,
+          ).catch(() => null);
         }
 
         console.log(

@@ -2,15 +2,22 @@ import {
   ROISettings,
   Buy2SellLead,
   B2S_STATUSES,
-} from "../models/Buy2sell.model.js";
+} from "../models/buy2sell.model.js";
 import Client from "../models/client.model.js";
 import {
   generateInvestmentCertificate,
   generateInvestmentAgreement,
   generatePayoutConfirmation,
 } from "../utils/pdfGenerator.js";
-import { sendEmail } from "../utils/notifications.js";
-import { getActiveBankAccounts } from "./Bankaccount.controller.js";
+import {
+  sendEmail,
+  sendSMS,
+  notifyB2SSubmitted,
+  notifyB2SActivated,
+  notifyB2SMatured,
+  notifyB2SPaidOut,
+} from "../utils/notifications.js";
+import { getActiveBankAccounts } from "./bankAccount.controller.js";
 
 const ADMIN_EMAIL = () =>
   process.env.ADMIN_EMAIL || "info@kemchutahomesltd.com";
@@ -302,6 +309,12 @@ export const submitBuy2SellLead = async (req, res) => {
       `),
     }).catch(() => null);
 
+    // SMS to investor — investment received
+    sendSMS(
+      lead.phone,
+      `Hi ${lead.fullName.split(" ")[0]}, your Buy2Sell investment of NGN ${lead.principalAmount.toLocaleString("en-NG")} for ${lead.duration} has been received (Ref: ${referenceNumber}). ROI: ${roiPercent}%. Check email for agreement. - KHL`,
+    ).catch(() => null);
+
     // Save investment agreement doc record
     await Buy2SellLead.findByIdAndUpdate(lead._id, {
       $push: {
@@ -533,12 +546,22 @@ export const recordPayment = async (req, res) => {
             },
           },
         });
+        // SMS — investment activated
+        sendSMS(
+          updatedLead.phone,
+          `Congratulations ${updatedLead.fullName.split(" ")[0]}! Your Buy2Sell investment (Ref: ${updatedLead.referenceNumber}) is ACTIVE. Maturity: ${updatedLead.maturityDate ? new Date(updatedLead.maturityDate).toLocaleDateString("en-NG") : "TBC"}. ROI: ${updatedLead.roiPercent}%. - KHL`,
+        ).catch(() => null);
       } catch (e) {
         console.error("Activation email failed:", e.message);
       }
     } else if (newStatus === "partial_paid") {
       const ref = updatedLead.referenceNumber;
       const balance2 = updatedLead.principalAmount - updatedLead.amountPaid;
+      // SMS — partial payment received
+      sendSMS(
+        updatedLead.phone,
+        `Hi ${updatedLead.fullName.split(" ")[0]}, payment of NGN ${Number(amount).toLocaleString("en-NG")} received for your Buy2Sell investment (Ref: ${ref}). Balance: NGN ${balance2.toLocaleString("en-NG")}. - KHL`,
+      ).catch(() => null);
       await sendEmail({
         to: updatedLead.email,
         subject: `Payment Received — Buy2Sell [${ref}]`,
@@ -599,6 +622,12 @@ export const markMatured = async (req, res) => {
         ${btn("View My Dashboard", `${FRONTEND()}/client/portal`)}
       `),
     }).catch(() => null);
+
+    // SMS — investment matured
+    sendSMS(
+      lead.phone,
+      `🎊 Hi ${lead.fullName.split(" ")[0]}, your Buy2Sell investment (Ref: ${lead.referenceNumber}) has MATURED! Payout of NGN ${(lead.expectedPayout || 0).toLocaleString("en-NG")} is being processed. - KHL`,
+    ).catch(() => null);
 
     res.json({ message: "Investment marked as matured.", lead });
   } catch (err) {
@@ -674,6 +703,11 @@ export const processPayout = async (req, res) => {
           },
         },
       });
+      // SMS — payout sent
+      sendSMS(
+        updated.phone,
+        `Hi ${updated.fullName.split(" ")[0]}, your Buy2Sell payout of NGN ${Number(payout || 0).toLocaleString("en-NG")} (Ref: ${updated.referenceNumber}) has been SENT. Thank you for investing with Kemchuta Homes! - KHL`,
+      ).catch(() => null);
     } catch (e) {
       console.error("Payout email failed:", e.message);
     }
