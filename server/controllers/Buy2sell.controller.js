@@ -2,7 +2,7 @@ import {
   ROISettings,
   Buy2SellLead,
   B2S_STATUSES,
-} from "../models/buy2sell.model.js";
+} from "../models/Buy2sell.model.js";
 import Client from "../models/client.model.js";
 import {
   generateInvestmentCertificate,
@@ -17,7 +17,7 @@ import {
   notifyB2SMatured,
   notifyB2SPaidOut,
 } from "../utils/notifications.js";
-import { getActiveBankAccounts } from "./bankAccount.controller.js";
+import { getActiveBankAccounts } from "./Bankaccount.controller.js";
 
 const ADMIN_EMAIL = () =>
   process.env.ADMIN_EMAIL || "info@kemchutahomesltd.com";
